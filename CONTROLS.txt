@@ -1,0 +1,26 @@
+SHADOW THE HEDGEHOG - NATIVE PC PORT - CONTROLS
+================================================
+
+Controllers: Xbox, PlayStation and Switch controllers work automatically (plug in any time).
+Keyboard:    always on, and works together with a controller.
+
+KEYBOARD                        CONTROLLER BUTTON
+--------                        -----------------
+W A S D                         Left stick (move)
+  hold Left Alt                   walk (half tilt)
+I J K L                         Right stick (camera)
+Arrow keys                      D-pad
+Space                           A   (jump / confirm)
+Left Shift  or  Backspace       B   (action / back)
+F                               X
+R                               Y
+C                               Black
+V                               White
+Q                               Left trigger
+E                               Right trigger
+Enter  or  Escape               Start (pause, "press start")
+Tab                             Back
+Z                               Left stick click
+T                               Right stick click
+
+To turn the keyboard off, set   keyboard = false   in settings.toml beside Shadow.exe.

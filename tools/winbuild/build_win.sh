@@ -36,12 +36,16 @@ if has exe; then
         -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS -DXBE_PREBUILT_GAME_CODE -DNOMINMAX -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -DNTDDI_VERSION=0x0A000008
         -I$REPO/src -I$RT -I$GEN -isystem $IMGUI -isystem $TOML -isystem $SDL/include"
     export CXX FLAGS
+    # any header of the runtime, the game or the generated image (image_symbols.h carries the hand-mapped
+    # addresses) rebuilds every object
+    NEWEST_H=$(find "$RT" "$REPO/src" "$GEN/image_symbols.h" "$GEN/hook_exports.h" -name '*.h' -printf '%T@ %p\n' \
+        | sort -n | tail -1 | cut -d' ' -f2)
     fail=0
     objs=()
     for f in $SRC; do
         o="$OUT/obj/exe/$(echo "${f#/}" | tr / _ | sed 's/\.cpp$/.o/')"
         objs+=("$o")
-        if [ ! "$o" -nt "$f" ]; then
+        if [ ! "$o" -nt "$f" ] || [ ! "$o" -nt "$NEWEST_H" ]; then
             ( $CXX $FLAGS -c "$f" -o "$o.tmp" 2> "$o.err" && mv "$o.tmp" "$o" || echo "FAILED $f" ) &
             [ "$(jobs -r | wc -l)" -ge "$JOBS" ] && wait -n
         fi

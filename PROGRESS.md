@@ -97,21 +97,39 @@ Each session ends by saving to this folder on the user's PC:
 ### Local SDK patches (keep when updating the SDK)
 - `sdk/harness/compat/windows.h`: `MessageBoxW` + `MB_*` added.
 - `sdk/runtime/app/game_code.cpp`: `XBE_PREBUILT_GAME_CODE` early return in `StaleTargets`.
+- `sdk/harness/reference_renderer.cpp`: P8 textures decoded with the stage palette (`FindImage` takes the palette).
 - Harness built with `-x texturedumper`.
 
 ---
 
-## Next session (3): start here
-1. **Get the user's Windows test result** (`ShadowNativePort\Game\logs\*.log`, stage it). Does the movie show on a real GPU?
-   Do the logos show? Crashes? If it fails to start, check: VC++ redistributable, D3D12 support.
-2. If the movie is black on Windows too: the 03A2B080 render-target path. Check what draws into rt data 03A2B080
-   during the movie (CAP draw lists show only an untextured quad into it). Maybe a YUV/combiner path or
-   `D3DDevice_SwitchTexture` / `SetRenderTargetFast` (unmapped) sets things up.
-3. Script START presses (`SCRIPT=`) to skip the movie and reach the title screen and menus; then into a stage.
+### Session 3 (2026-10-30, 23:26 to about 23:50): keyboard controls, title screen fixed
+- User tested session 2's build on Windows 11 (i7-6820HQ, Quadro M5000M): **ran clean, opening movie plays**
+  (the black movie was only the headless reference renderer). Render scale 2.25 at 1080p worked.
+  User reported: title screen "a bit broken", no keyboard control.
+- **Keyboard controls**: `src/common/keyboard.{h,cpp}`, hooked as `GameInfo::window` + `GameInfo::pad`.
+  Merges into port 1 with a real controller; keeps port 1 connected even unfocused (no "controller removed" pause);
+  reads keys only while the game window has focus. Option `keyboard` in settings.toml. Layout in `CONTROLS.txt`.
+- **Title screen fix: `D3DDevice_SetPalette = 0x3D0E80`** (mapped by hand). Title art is P8 (palettized, fmt 0x0B);
+  without SetPalette the renderer had no palettes and drew grey noise. Found by searching D3D code for the NV2A
+  texture palette method 0x1B20 (0x41B20 push header); CDevice_Palettes 0xF98 matches the SDK layout.
+- Harness reference renderer patched to decode P8 with the stage palette (it passed nullptr before).
+- Verified headless: title screen, autosave prompt, **Story Mode menu (NEW/CONTINUE/LIBRARY)** render correctly,
+  scripted START presses navigate the menus (`notes/session3_title.png`).
+- build_win.sh now rebuilds exe objects when any header changes (image_symbols.h carries hand-mapped addresses;
+  without this the exe silently missed SetPalette).
+- Skip-movie pad script: `120.. START` every 50 frames (`SCRIPT=<file>`, see harness README).
+
+## Next session (4): start here
+1. Ask the user how the new build looks on Windows (title art, menus, keyboard). Stage `Game\logs\*.log`.
+2. **Loading screen after Story Mode > NEW looks wrong headless** (dark, dithered, text garbled; frames 1100+ of the skip
+   script). Check its texture formats (`CAP=` draw list), then whether the first stage (Westopolis) loads and renders.
+3. Intermittent: the harness sometimes stops logging around the first REF frame when started through `run.sh`
+   (direct runs and gdb runs are fine). Not seen on Windows. Watch for it; may be a reference-renderer race.
 4. Remaining unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
-   InsertFence/BlockOnFence, SetPalette, GetTile/SetTile, PersistDisplay, FlushVertexCache, D3DResource_IsBusy,
-   crt_atan/log/log10/tan. Map the ones the game actually reaches (gdb dprintf trick, see below).
-5. Later: settings (resolution, widescreen, 60 FPS+) per the goals below.
+   InsertFence/BlockOnFence, GetTile/SetTile, PersistDisplay, FlushVertexCache, D3DResource_IsBusy,
+   crt_atan/log/log10/tan. Map the ones the game reaches. Also unmapped D3D .XTLID exports seen running:
+   GetSurfaceLevel2 `003DD7C0`, LockRect `003DD810`, AddRef `003D5ED0`, Release `003D5F10`.
+5. PC polish after it is playable: settings menu, widescreen, 60 FPS+, resolution options (render scale already works).
 
 ### Handy techniques (worked well)
 - **Which unnamed export runs:** dump `.XTLID` (id>>16: 8 = D3D, 0xB = DSOUND), then gdb `dprintf sub_<addr>,"HIT ..."` on each
