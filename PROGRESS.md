@@ -73,7 +73,7 @@ Each session ends by saving to this folder on the user's PC:
   the sound effects image, and vertex shaders.
 - **But:** reference-rendered frames 400/800/1200 are **all black**.
 
-### Session 2 (2026-10-30, 23:02 to about 23:35): Windows build made here; intro logos render
+### Session 2 (2026-10-30, 23:02 to 23:22): Windows build made here; intro logos render
 - **Windows cross-build working on Linux** (user does NOT need Visual Studio): `tools/winbuild/` (see its README).
   `Shadow.exe` = runtime via llvm-mingw; `Shadow.dll` = game code via clang MSVC target, freestanding.
   `host_def.py` maps the 6 C++ runtime entry points (MSVC mangling to Itanium) in the DLL's import lib.
