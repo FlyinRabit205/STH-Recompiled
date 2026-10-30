@@ -1,0 +1,105 @@
+[    0.017] [info] [t8843] memory: guest space at 0x100000000
+[    0.017] [info] [t8843] boot: title 53450086, entry 002AFB53, 13 sections
+[    0.017] [info] [t8843] boot: library XAPILIB  1.0.5849
+[    0.017] [info] [t8843] boot: library D3D8     1.0.5849
+[    0.017] [info] [t8843] boot: library DSOUND   1.0.5849
+[    0.017] [info] [t8843] boot: library XBOXKRNL 1.0.5849
+[    0.017] [info] [t8843] boot: library LIBCPMT  1.0.5849
+[    0.017] [info] [t8843] boot: library LIBCMT   1.0.5849
+[    0.017] [info] [t8843] boot: library D3DX8    1.0.5849
+[    0.017] [info] [t8843] boot: library XGRAPHC  1.0.5849
+[    0.031] [info] [t8843] dispatch: 39447 functions over 00011000..00429ADC
+[    0.031] [info] [t8843] boot: kernel imports resolved, 0 missing
+[    0.031] [info] [t8843] files: D: is /home/claude/rungame, hard disk under /home/claude/run2/hdd
+[    0.031] [info] [t4559] thread 10 starts at 002AFB53 (002AFB53, 00000000)
+[    0.031] [info] [t4559] thread 10 returned 00000001
+[    0.031] [info] [t85be] thread 14 starts at 002ADE73 (002AFADF, 00000000)
+[    0.032] [info] [t85be] ExQueryNonVolatileSetting 11 -> 0
+[    0.032] [info] [t85be] files: link \??\D: -> \Device\CdRom0
+[    0.032] [info] [t85be] files: link \??\T: -> \Device\Harddisk0\partition1\TDATA\53450086
+[    0.032] [info] [t85be] open \Device\Harddisk0\partition1\UDATA\53450086\TitleMeta.xbx
+[    0.032] [info] [t85be] open \Device\Harddisk0\partition1\UDATA\53450086\TitleImage.xbx
+[    0.032] [info] [t85be] XeLoadSection $$XTIMAGE at 0069CBA0
+[    0.032] [info] [t85be] open \Device\Harddisk0\partition1\UDATA\53450086\SaveImage.xbx
+[    0.032] [info] [t85be] XeLoadSection $$XSIMAGE at 0069F3A0
+[    0.032] [info] [t85be] files: link \??\U: -> \Device\Harddisk0\partition1\UDATA\53450086
+[    0.032] [info] [t85be] files: link \??\Z: -> \Device\Harddisk0\Partition5
+[    0.032] [info] [t85be] ExQueryNonVolatileSetting A -> 0
+[    0.032] [info] [t85be] missing t:\$u\contentmeta.xbx
+[    0.032] [info] [t85be] ExQueryNonVolatileSetting 8 -> 90000
+[    0.032] [info] [t85be] ExQueryNonVolatileSetting 103 -> 400100
+[    0.032] [info] [t85be] d3d: CreateDevice 640x480 format 1E buffers 1 depth 1 format 2A interval 80000000 flags 120
+[    0.034] [info] [t85be] renderer: headless 640x480
+[    0.034] [info] [t85be] d3d: vertex shader B0000C61, 5 decl tokens, 4 instructions, type 2078
+[    0.034] [info] [t85be] d3d: vertex shader B0000C71, 4 decl tokens, 3 instructions, type 2078
+[    0.034] [info] [t85be] d3d: vertex shader B0001281, 4 decl tokens, 3 instructions, type 2078
+[    0.034] [info] [t85be] xapi: controller ports now 1
+[    0.036] [info] [t85be] open d:\nukkoro.inf
+[    0.036] [info] [t85be] ExQueryNonVolatileSetting 7 -> 1
+[    0.036] [info] [t85be] ExQueryNonVolatileSetting 7 -> 1
+[    0.036] [info] [t85be] ExQueryNonVolatileSetting 104 -> 1
+[    0.036] [info] [t85be] open d:\nukkoro2.inf
+[    0.036] [info] [t85be] ExQueryNonVolatileSetting 7 -> 1
+[    0.036] [info] [t85be] open d:\discError\DiscErrorEN.txd
+[    0.036] [info] [t85be] ExQueryNonVolatileSetting 9 -> 0
+[    0.036] [warn] [t85be] dsound: exports running their original code: B00A3 at 003E34F2 B0076 at 003E4148 B0061 at 003E4932 B0046 at 003E577A
+[    0.036] [info] [t85be] open d:\sound\sonicteamfx.bin
+[    0.036] [info] [t85be] dsound: effects image from memory, 13 effects
+[    0.037] [info] [t85be] dsound: effects image, reverb 0, effects 0 reverb, 1 crosstalk, 2 not reproduced, 3 not reproduced, 4 not reproduced, 5 not reproduced, 6 filter, 7 filter, 8 reverb, 9 not reproduced, 10 not reproduced, 11 not reproduced, 12 not reproduced,
+[    0.037] [info] [tf2e2] thread 20 starts at 002ADE73 (00332BD0, 00000000)
+[    0.037] [info] [tde99] thread 28 starts at 002ADE73 (00329260, 00000000)
+[    0.037] [info] [ta9fe] thread 2C starts at 002ADE73 (00328E80, 00000000)
+[    0.037] [info] [t771c] thread 24 starts at 002ADE73 (003291E0, 00000000)
+[    0.037] [info] [t85be] missing d:\dvd\
+[    0.038] [info] [t85be] missing d:\dvd\
+[    0.038] [info] [t85be] open d:\sound\bank0.pac
+[    0.038] [info] [t85be] open d:\sound\AudioDataSystem.bin
+[    0.038] [info] [t85be] open d:\sound\AudioDataWeapon.bin
+[    0.038] [info] [t85be] open d:\sound\AudioDataPlayer.bin
+[    0.038] [info] [t85be] open d:\sound\AudioDataGadget.bin
+[    0.038] [info] [t85be] open d:\sound\AudioDataEnemy.bin
+[    0.038] [info] [t85be] open d:\sound\AudioDataPlayerHero.bin
+[    0.038] [info] [t85be] open d:\sound\AudioDataPlayerDark.bin
+[    0.038] [info] [t85be] open d:\PRS_VOICE_E.afs
+[    0.047] [info] [t85be] open d:\csdFiles\Loading_EN.xncp
+[    0.047] [info] [t85be] open d:\csdFiles\Loading_EN.xncp
+[    0.047] [info] [t85be] open d:\csdFiles\Loading_EN.xncp
+[    0.047] [info] [t85be] open d:\DebugModels.one
+[    0.047] [info] [t85be] open d:\FadeLogo.txd
+[    0.047] [info] [t85be] open d:\character\shadow.one
+[    0.048] [info] [t0ad3] thread 30 starts at 002ADE73 (0004F440, 006BE510)
+[    0.053] [info] [t85be] open d:\common\CommonEffect.one
+[    0.057] [info] [t85be] open d:\fonts\Advertise\Advertise_EN.fnt
+[    0.057] [info] [t85be] open d:\fonts\Advertise\Advertise_EN.txd
+[    0.057] [info] [t85be] open d:\fonts\Advertise\Advertise_EN00.met
+[    0.057] [info] [t85be] missing d:\fonts\mAdvertise_EN00
+[    0.058] [info] [t85be] open d:\number.txd
+[    0.058] [info] [t0ad3] thread 30 exits with 00000000
+[    0.065] [info] [t85be] open d:\csdFiles\Loading_EN.xncp
+[    0.065] [info] [t85be] open d:\csdFiles\Loading_EN.xncp
+[    0.065] [info] [t85be] open d:\csdFiles\Loading_EN.xncp
+[    0.065] [info] [t85be] open d:\csdFiles\Logo.xncp
+[    0.065] [info] [t85be] open d:\csdFiles\Logo.xncp
+[    0.065] [info] [t85be] open d:\csdFiles\Logo.xncp
+[    1.031] [info] [t85be] renderer: frame 60, 896 draws, 0 empty frames
+[    1.116] [info] [tde99] open D:\Op.sfd
+[    2.940] [info] [t85be] renderer: frame 120, 1216 draws, 0 empty frames
+[    4.882] [info] [t85be] renderer: frame 180, 1516 draws, 0 empty frames
+[    6.563] [info] [t85be] d3d: MakeSpace from 003D8BC9, some caller still pushes hardware commands
+[    6.821] [info] [t85be] renderer: frame 240, 1816 draws, 0 empty frames
+[    8.761] [info] [t85be] renderer: frame 300, 2116 draws, 0 empty frames
+[   11.180] [info] [t85be] renderer: frame 360, 2497 draws, 0 empty frames
+[   13.665] [info] [t85be] renderer: frame 420, 2617 draws, 0 empty frames
+[   16.003] [info] [t85be] d3d: MakeSpace from 003D8BC9, some caller still pushes hardware commands
+[   16.130] [info] [t85be] renderer: frame 480, 2737 draws, 0 empty frames
+[   18.613] [info] [t85be] renderer: frame 540, 2857 draws, 0 empty frames
+[   21.080] [info] [t85be] renderer: frame 600, 2977 draws, 0 empty frames
+[   23.562] [info] [t85be] renderer: frame 660, 3097 draws, 0 empty frames
+[   26.033] [info] [t85be] renderer: frame 720, 3217 draws, 0 empty frames
+[   26.403] [info] [t85be] d3d: MakeSpace from 003D8BC9, some caller still pushes hardware commands
+[   28.506] [info] [t85be] renderer: frame 780, 3337 draws, 0 empty frames
+[   30.971] [info] [t85be] renderer: frame 840, 3457 draws, 0 empty frames
+[   33.450] [info] [t85be] renderer: frame 900, 3577 draws, 0 empty frames
+[   35.916] [info] [t85be] renderer: frame 960, 3697 draws, 0 empty frames
+[   36.785] [info] [t85be] d3d: MakeSpace from 003D8BC9, some caller still pushes hardware commands
+[   38.391] [info] [t85be] renderer: frame 1020, 3817 draws, 0 empty frames
