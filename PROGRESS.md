@@ -119,17 +119,39 @@ Each session ends by saving to this folder on the user's PC:
   without this the exe silently missed SetPalette).
 - Skip-movie pad script: `120.. START` every 50 frames (`SCRIPT=<file>`, see harness README).
 
-## Next session (4): start here
-1. Ask the user how the new build looks on Windows (title art, menus, keyboard). Stage `Game\logs\*.log`.
-2. **Loading screen after Story Mode > NEW looks wrong headless** (dark, dithered, text garbled; frames 1100+ of the skip
-   script). Check its texture formats (`CAP=` draw list), then whether the first stage (Westopolis) loads and renders.
-3. Intermittent: the harness sometimes stops logging around the first REF frame when started through `run.sh`
-   (direct runs and gdb runs are fine). Not seen on Windows. Watch for it; may be a reference-renderer race.
-4. Remaining unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
-   InsertFence/BlockOnFence, GetTile/SetTile, PersistDisplay, FlushVertexCache, D3DResource_IsBusy,
-   crt_atan/log/log10/tan. Map the ones the game reaches. Also unmapped D3D .XTLID exports seen running:
-   GetSurfaceLevel2 `003DD7C0`, LockRect `003DD810`, AddRef `003D5ED0`, Release `003D5F10`.
-5. PC polish after it is playable: settings menu, widescreen, 60 FPS+, resolution options (render scale already works).
+### User test after session 3 (2026-10-30, 23:50)
+- **Works:** title screen (much better), movies play, graphics load, **first stage (Westopolis) loads and runs.**
+- **Problems reported:**
+  - Text is badly garbled (title screen and elsewhere), subtitles too.
+  - Cutscenes (in-engine) need work: rendering issues.
+  - **In-stage picture is very low resolution** (even though the log shows render scale 2.25 at 1080p, so some
+    render targets / passes are probably still at 640x480 and stretched; check render-to-texture targets the game makes
+    itself, and copies/blits back to the back buffer).
+
+## Plan for the next sessions (set by the user)
+**Session 4, first task: let the player SKIP CUTSCENES even on a first playthrough** (the game normally only allows
+skipping cutscenes already seen). Needed for fast testing. Find the "event/cutscene seen" check (event files are in
+`/event`, cutscene IDs like E1001 match the `.sfd` names; also look for the skip-input check in the event player)
+and force "seen" or bypass the check. Ideally a settings.toml option (`skip_cutscenes_always = true`, default on for now).
+
+Then, in order:
+1. **Higher resolution in stages:** find why stages render low-res (game-created 640x480 render targets, viewport
+   or scissor not scaled, or a final copy pass). Goal: everything at the window's native resolution (1080p, 1440p, 4K).
+2. **Fix garbled text and subtitles** (font textures `/fonts/*.txd`, `.met`, `.fnt`; check formats with CAP draw lists,
+   likely another texture format or palette issue, or a texture-coordinate precision issue at high render scale).
+3. **Cutscene rendering issues.**
+4. **HD HUD / GUI / subtitles:** render 2D UI at native resolution (sharp), proper widescreen placement.
+5. Later goals stay: settings menu, widescreen, 60 FPS+.
+
+### Still open from session 3
+- Loading screen after Story Mode > NEW looked wrong headless (dark, dithered, garbled text). Probably the same
+  text/font problem as above.
+- Intermittent harness stop around the first REF frame via `run.sh` (direct and gdb runs fine).
+- Unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
+  InsertFence/BlockOnFence, GetTile/SetTile, PersistDisplay, FlushVertexCache, D3DResource_IsBusy,
+  crt_atan/log/log10/tan. Unmapped D3D .XTLID exports seen running: GetSurfaceLevel2 `003DD7C0`,
+  LockRect `003DD810`, AddRef `003D5ED0`, Release `003D5F10`. Map the ones the game reaches; some may explain the
+  low resolution or text problems (e.g. SetRenderTargetFast, SwitchTexture).
 
 ### Handy techniques (worked well)
 - **Which unnamed export runs:** dump `.XTLID` (id>>16: 8 = D3D, 0xB = DSOUND), then gdb `dprintf sub_<addr>,"HIT ..."` on each
