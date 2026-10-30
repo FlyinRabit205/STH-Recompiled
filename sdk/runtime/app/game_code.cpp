@@ -169,6 +169,12 @@ bool ReadXbe(const GameFiles& game, const char* name, std::vector<uint8_t>& out)
 
 std::vector<Target> StaleTargets(const GameFiles& game, const std::vector<Image>& images) {
     std::vector<Target> stale;
+#ifdef XBE_PREBUILT_GAME_CODE
+    // ShadowNativePort: the game code DLL ships prebuilt beside the exe (cross-built), nothing to compile here
+    (void)game;
+    (void)images;
+    return stale;
+#endif
     for (const Image& image : images) {
         Target target{&image};
         if (!ReadXbe(game, image.xbe.c_str(), target.xbe)) {
