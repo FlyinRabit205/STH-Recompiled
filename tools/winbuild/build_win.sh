@@ -62,16 +62,19 @@ fi
 
 # ---------------------------------------------------------------- dll
 if has dll; then
-    # MSVC-format import library of what the exe exports, for the DLL
-    "${MINGW}bin/llvm-readobj" --coff-exports "$OUT/bin/Shadow.exe" | awk '/Name: /{print $2}' > "$OUT/obj/exe_exports.txt"
-    { echo "LIBRARY Shadow.exe"; echo "EXPORTS"; sed 's/^/    /' "$OUT/obj/exe_exports.txt"; } > "$OUT/obj/host.def"
-    lld-link /lib /machine:x64 /def:"$OUT/obj/host.def" /out:"$OUT/obj/host.lib" > /dev/null
     DFLAGS="--target=x86_64-pc-windows-msvc -std=c++20 -fms-compatibility-version=19.40 -O2 -march=x86-64-v2
         -fno-strict-aliasing -nostdinc -nostdinc++ -w -DX86_GAME_CODE -I$RT -I$GEN -isystem $RT/cpu/freestanding"
     export DFLAGS GEN
     ls "$GEN"/x86_recomp.*.cpp "$GEN"/x86_func_mapping.cpp | xargs -P "$JOBS" -I{} sh -c '
         o="'"$OUT"'/obj/dll/$(basename {} .cpp).obj"; [ "$o" -nt {} ] && exit 0
         clang++ $DFLAGS -c {} -o "$o.tmp" && mv "$o.tmp" "$o"'
+    # MSVC-format import library of what the exe exports, with the DLL's C++ imports mapped to the exe's
+    # Itanium-mangled names (tools/winbuild/host_def.py)
+    "${MINGW}bin/llvm-readobj" --coff-exports "$OUT/bin/Shadow.exe" | awk '/Name: /{print $2}' > "$OUT/obj/exe_exports.txt"
+    llvm-nm --undefined-only "$OUT"/obj/dll/*.obj 2>/dev/null | awk '{print $2}' | grep '^__imp_' | sed 's/^__imp_//' \
+        | sort -u > "$OUT/obj/dll_imports.txt"
+    python3 -I "$REPO/tools/winbuild/host_def.py" "$OUT/obj/exe_exports.txt" "$OUT/obj/dll_imports.txt" "$OUT/obj/host.def"
+    lld-link /lib /machine:x64 /def:"$OUT/obj/host.def" /out:"$OUT/obj/host.lib" > /dev/null
     lld-link /dll /noentry /nodefaultlib /opt:noicf /machine:x64 /out:"$OUT/bin/Shadow.dll" \
         /def:"$GEN/exports.def" "$OUT"/obj/dll/*.obj "$OUT/obj/host.lib"
     echo "built $OUT/bin/Shadow.dll"

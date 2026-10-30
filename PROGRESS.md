@@ -33,7 +33,9 @@ Each session ends by saving to this folder on the user's PC:
 5. Recompile: `xbe_recomp config/game.toml --xdk sdk/xdk` (about 3 s).
 6. Headless build: `JOBS=2 bash sdk/harness/build.sh -r . -g generated/game -o /home/claude/hb -n shadow -x texturedumper`
    (about 3 min clean, seconds incremental).
-7. Run: `timeout 40 /home/claude/hb/shadow /home/claude/rungame` or
+7. Windows build: set up per `tools/winbuild/README.md`, then `JOBS=2 tools/winbuild/build_win.sh exe dll`
+   and send `Shadow.exe` + `Shadow.dll` to `ShadowNativePort\Game\` on the user's PC (device_commit_files).
+8. Run: `timeout 40 /home/claude/hb/shadow /home/claude/rungame` or
    `REF=400 bash sdk/harness/run.sh -x /home/claude/hb/shadow -g /home/claude/rungame -o /home/claude/run -t 50`
    (reference frames land in `<run>/1/cap/ref_*.tga`).
 
@@ -55,7 +57,7 @@ Each session ends by saving to this folder on the user's PC:
 
 ## Status
 
-### Session 1 (2026-10-30, 22:28 to 23:15): game boots and renders frames headless
+### Session 1 (2026-10-30, 22:28 to 23:00): game boots and renders frames headless
 - Rebuilt and verified the ISO; wrote XISO and XBE readers (`tools/host/`).
 - Built `xbe_recomp` + `xbe_symbols` on Linux. `xbe_symbols` matched **135/243** XDK functions and 8/12 data.
   Most misses are libraries Shadow does not use (Bink, XNet/Winsock).
@@ -71,34 +73,63 @@ Each session ends by saving to this folder on the user's PC:
   the sound effects image, and vertex shaders.
 - **But:** reference-rendered frames 400/800/1200 are **all black**.
 
-### Local SDK patch
-- `sdk/harness/compat/windows.h`: added `MessageBoxW` + `MB_*` (newer runtime d3d8.cpp uses them; the harness shim lagged).
-  The harness is also built with `-x texturedumper` (Windows-only WIC code).
+### Session 2 (2026-10-30, 23:02 to about 23:35): Windows build made here; intro logos render
+- **Windows cross-build working on Linux** (user does NOT need Visual Studio): `tools/winbuild/` (see its README).
+  `Shadow.exe` = runtime via llvm-mingw; `Shadow.dll` = game code via clang MSVC target, freestanding.
+  `host_def.py` maps the 6 C++ runtime entry points (MSVC mangling to Itanium) in the DLL's import lib.
+  Patch: `XBE_PREBUILT_GAME_CODE` in `sdk/runtime/app/game_code.cpp` skips the on-PC compile.
+- **Fixed: `D3DDevice_BeginPush = 0x3D4740`, `D3DDevice_EndPush = 0x3D4760`** (mapped by hand in config). Found via gdb
+  breakpoint on `__imp__sub_003D8860` (texture-stage program writer); the game's raw push-buffer draws now reach
+  the renderer (+27% draws, no more MakeSpace warning).
+- **Headless frames now show the SEGA / Sonic Team / Dolby Digital logos with fades** (`notes/session2_logos.png`).
+- Boot sequence seen in the log: sound banks, character/shadow.one, fonts, Logo.xncp, then **`Op.sfd` (opening movie) at 1.1 s**.
+- **Movie still black headless.** Findings:
+  - Per movie frame the game calls GetSurfaceLevel2 (`003DD7C0`), AddRef (`003D5ED0`), Release x2 (`003D5F10`).
+    `003DD810` is LockRect (5 args). None of these are mapped yet (original code runs on guest objects; seems OK).
+  - The game renders into its own render targets (surface objects 0077E5D0 / 00A285B0 / ...), all at memory **03A2B080**,
+    then draws that as texture `006E7F10` (512x512 X8R8G8B8) onto the back buffer, plus texture `00A0CFD0` (1024x512 A8R8G8B8
+    at 03228080, alpha-blended, **has data**: the decoder works).
+  - 03A2B080 reads all zero. Likely a **harness limitation** (the reference renderer only draws captured frames, so
+    render-to-texture from other frames never lands in memory). **Test on a real GPU before chasing further.**
+  - Physical addresses read through the 0x8xxxxxxx view (runtime design), not 0x0xxxxxxx.
+- Unmapped DSOUND .XTLID exports are not called during the movie (stream functions are not the problem).
+
+### Local SDK patches (keep when updating the SDK)
+- `sdk/harness/compat/windows.h`: `MessageBoxW` + `MB_*` added.
+- `sdk/runtime/app/game_code.cpp`: `XBE_PREBUILT_GAME_CODE` early return in `StaleTargets`.
+- Harness built with `-x texturedumper`.
 
 ---
 
-## Next session (2): start here
-1. **Black frames.** Log line `d3d: MakeSpace from 003D8BC9, some caller still pushes hardware commands`: some caller
-   writes raw NV2A push-buffer commands. Missing symbols from `xbe_symbols` that fit: `D3DDevice_BeginPush`,
-   `D3DDevice_EndPush`, `D3DDevice_SetVertexShaderConstant1/4`, `D3DDevice_SetIndices`, `D3DDevice_SwitchTexture`,
-   `D3DDevice_SetRenderTargetFast`, `D3DDevice_InsertFence/BlockOnFence`, `D3DDevice_SetPalette`. Find who calls
-   MakeSpace (`003D8BC9` caller) and map these by hand (Ghidra via `python sdk/tools/symbols/xbe2pe.py config/game.toml game.exe`,
-   or objdump). Fill `[symbols]` in `config/game.toml`.
-   - Also check whether the game is just in an intro movie (Sofdec `.sfd`) or a fade from black: use `CAP=60` draw lists and longer runs.
-2. **Music/streams.** `DirectSoundCreateStream` + all `CDirectSoundStream_*` are 0 in config. CRI ADX probably streams through them. Locate and map.
-3. `crt_atan`, `crt_log`, `crt_log10`, `crt_tan` are 0: map them (CRT math fixes) once found.
-4. Script pad input (`SCRIPT=`) to press START through menus once frames show.
-5. Then the first **Windows build** on the user's PC (see below).
+## Next session (3): start here
+1. **Get the user's Windows test result** (`ShadowNativePort\Game\logs\*.log`, stage it). Does the movie show on a real GPU?
+   Do the logos show? Crashes? If it fails to start, check: VC++ redistributable, D3D12 support.
+2. If the movie is black on Windows too: the 03A2B080 render-target path. Check what draws into rt data 03A2B080
+   during the movie (CAP draw lists show only an untextured quad into it). Maybe a YUV/combiner path or
+   `D3DDevice_SwitchTexture` / `SetRenderTargetFast` (unmapped) sets things up.
+3. Script START presses (`SCRIPT=`) to skip the movie and reach the title screen and menus; then into a stage.
+4. Remaining unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
+   InsertFence/BlockOnFence, SetPalette, GetTile/SetTile, PersistDisplay, FlushVertexCache, D3DResource_IsBusy,
+   crt_atan/log/log10/tan. Map the ones the game actually reaches (gdb dprintf trick, see below).
+5. Later: settings (resolution, widescreen, 60 FPS+) per the goals below.
 
-## User's PC setup (needed later, for the real Windows build)
-- Visual Studio 2022 Community with **"Desktop development with C++"** + **"C++ Clang Compiler for Windows"**
-  (`build.bat` offers to add the Clang parts itself).
-- Put `default.xbe` and the game folders (or the .iso) into `ShadowNativePort\assets\`, then run `build.bat`.
+### Handy techniques (worked well)
+- **Which unnamed export runs:** dump `.XTLID` (id>>16: 8 = D3D, 0xB = DSOUND), then gdb `dprintf sub_<addr>,"HIT ..."` on each
+  unmapped address and run (write gdb output to a file; use `timeout -s INT`).
+- **Who reaches a function:** `gdb -batch -ex 'break __imp__sub_XXXXXXXX' -ex run -ex 'bt 14'` on the harness exe.
+- **Direct callers:** `python3 -I tools/host/callers.py <hexaddr>...` (scans E8/E9 rel32).
+- **Disassemble guest code:** `objdump -D -b binary -m i386 --adjust-vma=$((SECTION_VA - SECTION_RAW)) --start-address=... default.xbe`.
+
+## Running the Windows build on the user's PC
+- Files: `ShadowNativePort\Game\Shadow.exe` + `Shadow.dll`.
+- Game: a folder named `assets` beside the exe (or up to 6 folders above) holding the game `.iso`.
+  Plan: `ShadowNativePort\Game\assets\Shadow the Hedgehog (USA) (En,Ja,Fr,De,Es,It).xiso.iso` (moved, not copied).
+- Needs Windows 10/11, a D3D12 GPU, VC++ 2015-2022 x64 redistributable. Logs go to `Game\logs\`.
 
 ## Goals the user asked for (keep in mind)
 - **Fully native** (no emulation): yes, by design.
 - **Best-quality PC port:** resolution options (1440p, 4K and beyond, native internal resolution, not upscaled),
   graphics settings menu (resolution, window mode, V-Sync, AA, texture filtering), proper widescreen (ultrawide as a stretch goal),
   solid **60 FPS**, and **above 60 FPS** later (needs game-logic timing decoupled or interpolated; do after it is playable).
-- **Efficiency:** keep sessions lean; heavy Windows builds run on the user's PC between sessions; test only what changed.
+- **Efficiency:** keep sessions lean; test only what changed. **The user asked Claude to do all building** (cross-build here, ship exe+dll).
 - Order: boot, then playable, then PC polish.
