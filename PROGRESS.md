@@ -314,6 +314,11 @@ Each session ends by saving to this folder on the user's PC:
   (probably push-buffer text, BeginPush/EndPush, not listed). Original font sheets: alpha 255 everywhere (like the HD
   ones). Asked the user for an F3 capture (Capture Frame.bat) with a subtitle on screen in a cutscene.
 
+- 20:10: subtitles clear now (the faint one was a moment in that scene). Still choppy. Windows log shows events
+  present at a steady 60 (no hitches during event1101/event2101), so it is content, not pacing. Remaining 30 Hz
+  movers are actor attachments (0022A240 -> 00049750 LTM writes). Black Doom hologram scene = event2101 (after
+  Westopolis). Options menu has a music room; event replay not found yet (menu nav via harness `cmd` + snap.sh).
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
