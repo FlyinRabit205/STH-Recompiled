@@ -340,6 +340,14 @@ Each session ends by saving to this folder on the user's PC:
   stale-frame root cause (who frees the stage heap with frames still linked: hook RwFrameDestroy/the heap release
   at stage end, or make the game unlink), then sweep stage transitions (all stages, events, menus) headless.
 
+- 20:38 run (shadow_018.log): no black screen. event2101 -> RouteDisplay (63.45 s) -> stg0201 + event2102 at
+  69.7 s, no errors. F3 was pressed during event2101 (21.8 s), so no stacks from a hang. The black-screen run sat
+  31 s after RouteDisplay with nothing loading. Intermittent; root cause still the stale-frame family (suspected).
+  Idea for next session: an automatic watchdog that logs every guest thread's stack when the main game thread stops
+  making progress (no file opens / no stage loop updates for N s while presents continue).
+- Load hitches seen: event start 23-39 ms (event texture uploads, frames 938-1146), stage load up to 57 ms (54
+  textures). Candidates for the performance pass (upload on the background loader, prewarm).
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
