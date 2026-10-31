@@ -276,6 +276,8 @@ Remaining, in order:
 4. **HD HUD / GUI / subtitles** (2D at native resolution, widescreen placement).
 5. Later: 60 FPS+ (frame rate options stop at 60 until game timing is handled), ultrawide.
 
+- Exe icon (16:25): the game's red emblem from the title sheet, `tools/winbuild/res/shadow.{ico,rc}`, linked by build_win.sh.
+
 ### Still open
 - **HUD ring icon missing on Windows** (user, 16:10). It is a 2D sprite: back buffer draw, tex 128x64 P8 with a
   32-colour palette (palette Common C00B0001), runtime key 8a06c7d9402cb96b, at (57,364), pretransformed with rhw 1
