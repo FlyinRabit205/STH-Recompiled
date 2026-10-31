@@ -308,6 +308,12 @@ Each session ends by saving to this folder on the user's PC:
   /tmp/find_alt.py (alternating draws + their matrix in guest memory), gdb `watch *(int*)0x1<guest addr>`.
 - Harness intermittent early crash seen again (run14 died at 8.7 s); rerun.
 
+- User test 20:04 (Black Doom hologram event, Westopolis end): still choppy; **event subtitles very faint**
+  (whole text incl. outline semi-transparent). Event font = fonts/stg0904 (HD sheet replaced). In events everything
+  incl. 2D goes to the 512 scene target 03A2B080 then one blit; the harness CAP lists show no font-sheet draw there
+  (probably push-buffer text, BeginPush/EndPush, not listed). Original font sheets: alpha 255 everywhere (like the HD
+  ones). Asked the user for an F3 capture (Capture Frame.bat) with a subtitle on screen in a cutscene.
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
