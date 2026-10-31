@@ -185,17 +185,32 @@ Each session ends by saving to this folder on the user's PC:
   Happens with pad scripts / REF captures under harness timing, with and without the render thread. Not seen on
   Windows. Investigate if the user ever crashes.
 
+### Session 5 (2026-10-31, 15:13 to about 15:30): the blur
+- User video: blur at every resolution; polygon edges soft while HUD sharp (so not textures, not resolution).
+- In-stage frame (harness CAP draw list, `tostage.txt` = START every 50 frames to 1150, stage at ~frame 1260):
+  136 draws scene -> 03A2B080 (512, scale 3.75 = 1920); glow objects -> 032F6080; blur chain 128/64 (03400280,
+  03414380, 03410300, 03424400); glow 00BDF5A0 added ONE/ONE onto the scene; **scene texture 006E7F10 (fmt 7, data
+  03A2B080) drawn to the back buffer**; then HUD.
+- **Cause:** `BindTargetTexture` (sdk/runtime/gpu/d3d12.cpp) marks a sampled target "wide" (glow box taps, 3 console
+  texels each, `kGlowBoxTexels`) whenever the target is larger than the destination in ANY guest dimension. The scene
+  (512 tall) drawn to the back buffer (480 tall) qualified, so every frame was box-averaged over ~11 host pixels.
+- **Fix:** wide only when the source is >= 1.5x the destination in a dimension (`kShrinkMin`). Glow chain steps (2x, 4x)
+  keep their look. **Needs the user's eyes.**
+
 ### Local SDK patches (add to the list above)
 - `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
 - `sdk/runtime/app/settings.cpp`: RenderScale uses the width too when widescreen.
 - `sdk/runtime/xdk/d3d8.cpp`: DrawSnapshot / DrawIndexedSnapshot (call-time vertex copy for small draws).
 - `sdk/harness/build_rt.sh`: harness build with the render thread on.
+- `sdk/runtime/gpu/d3d12.cpp`: BindTargetTexture `kShrinkMin` (wide glow taps only for real shrinks).
 
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
 1. **Confirm on Windows**: stages sharp now? cutscene skip works for movies AND in-engine events? Read `Game\logs`.
-2. **Blurry picture** (see above): find what softens the image after the scene renders at 1920.
+2. Blur fix (session 5) to confirm; then texture pack (user downloads Cyb3rtron's "Shadow the Hedgehog HD" Dolphin pack
+   zip into ShadowNativePort; match GameCube images to dumped Xbox textures by image similarity, write to the
+   runtime's textures\replacement\ folder) and HD fonts.
 3. **Cutscene rendering issues** (in-engine events).
 4. **HD HUD / GUI / subtitles** (2D at native resolution, widescreen placement).
 5. Later: 60 FPS+ (frame rate options stop at 60 until game timing is handled), ultrawide.

@@ -1704,7 +1704,12 @@ ID3D12Resource* D3D12Backend::BindTargetTexture(const State& s, int stage, const
     // a pass shrinking it averages each tap over a console texel, else upscaled taps skip texels and ghost
     Target* rt = FindTarget(s.rt, false);
     float k = float(t.w) / (t.gw * stages.k[stage]);
-    if (!t.depth && box && k > kUpscaledMin && rt && rt != &t && (t.gw > rt->gw || t.gh > rt->gh)) {
+    // ShadowNativePort: only a real shrink (a glow chain's 2x or 4x step) is a shrinking pass. A target about the
+    // size of the one it is drawn to (Shadow's 512x512 scene stretched over the 640x480 back buffer) is a plain
+    // copy; box taps there averaged 3 console texels and blurred the whole picture back to console sharpness.
+    constexpr float kShrinkMin = 1.5f;
+    bool shrinks = rt && (float(t.gw) >= kShrinkMin * float(rt->gw) || float(t.gh) >= kShrinkMin * float(rt->gh));
+    if (!t.depth && box && k > kUpscaledMin && rt && rt != &t && shrinks) {
         stages.wide[stage] = k;
         info.flags |= kTexWide;
     }
