@@ -369,7 +369,7 @@ Each session ends by saving to this folder on the user's PC:
 - **Hang recorder**: if presents stop for 4 s after the first frame, every guest thread's stack is logged once
   ("hang watch:" in the log). F3 still dumps on demand.
 - DBG left on: `stale frame:` report in 002E1300 (cheap; never fired). Event timing log removed.
-- Delivered build b210056 (md5 verified on the PC).
+- Delivered build b210056, then exe b210428 (hitch lines now add texture create/upload/pack ms) (md5 verified).
 - Sweep (headless, user's save): stg0100 -> pause-menu stage change -> stg0201 + event2102 (skipped) -> stg0201
   play with 3 pause cycles: 60 FPS throughout, no hang, no stale frame, no exception.
 - Next performance item: first-use texture uploads at event/stage start (9-54 textures in one frame, 23-57 ms,

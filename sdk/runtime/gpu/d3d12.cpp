@@ -221,6 +221,16 @@ private:
     std::vector<std::thread> workers_;
 };
 AsyncCompiler g_async;
+// always-on timings of the texture path, for the hitch log (a few calls a frame normally)
+struct HitchTimes {
+    double create = 0, upload = 0, pack = 0;
+} g_hitch;
+struct HitchScope {
+    double& acc;
+    std::chrono::steady_clock::time_point t = std::chrono::steady_clock::now();
+    ~HitchScope() { acc += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t).count(); }
+};
+
 struct PerfScope {
     double& acc;
     bool on = diag::Perf();
@@ -1928,14 +1938,16 @@ void D3D12Backend::LogHitch() {
         double ms = std::chrono::duration<double, std::milli>(now - hitch_t_).count();
         if (ms > 22.0) {
             hitch_logged_++;
-            LOGI("hitch: frame %llu took %.1f ms: %llu shaders compiled, %llu pipelines made, %llu textures uploaded (%.1f MB)",
+            LOGI("hitch: frame %llu took %.1f ms: %llu shaders compiled, %llu pipelines made, %llu textures uploaded (%.1f MB); "
+                 "texture create %.1f ms, upload %.1f ms, pack %.1f ms",
                  static_cast<unsigned long long>(presents_), ms, static_cast<unsigned long long>(c[0] - hitch_counts_[0]),
                  static_cast<unsigned long long>(c[1] - hitch_counts_[1]), static_cast<unsigned long long>(c[2] - hitch_counts_[2]),
-                 double(c[3] - hitch_counts_[3]) / (1024.0 * 1024.0));
+                 double(c[3] - hitch_counts_[3]) / (1024.0 * 1024.0), g_hitch.create, g_hitch.upload, g_hitch.pack);
         }
     }
     hitch_t_ = now;
     std::copy(c, c + 4, hitch_counts_);
+    g_hitch = HitchTimes{};
 }
 
 TexKind TextureKind(const TextureDesc& d) {
@@ -2118,7 +2130,10 @@ ID3D12Resource* D3D12Backend::BindGuestTexture(const State& s, int stage, const 
     Tex& tx = textures_[key];
     uint32_t total = TotalSize(d);
     bool same = SameTexture(tx, d);
-    if (!same && !CreateTexture(tx, d, fi, key)) return nullptr;
+    if (!same) {
+        HitchScope hs{g_hitch.create};
+        if (!CreateTexture(tx, d, fi, key)) return nullptr;
+    }
     // cheap change check once per frame: lock epochs plus a sample of the bytes
     if (tx.frame != presents_ + 1 || !same || tx.palette != palette.hash) {
         tx.frame = presents_ + 1;
@@ -2129,6 +2144,7 @@ ID3D12Resource* D3D12Backend::BindGuestTexture(const State& s, int stage, const 
         g_perf.sig += PerfMs(perf_t);
         if (sig != tx.sig || !same) {
             PerfScope perf_up{g_perf.texup};
+            HitchScope hs{g_hitch.upload};
             g_perf.texups++;
             g_perf.texup_bytes += total;
             tx.sig = sig;
@@ -2136,8 +2152,11 @@ ID3D12Resource* D3D12Backend::BindGuestTexture(const State& s, int stage, const 
             tx.pack_gen = 0;
         }
     }
-    if (tx.pack_gen != texturedumper::Generation()) LatchPackKey(tx, d, fi, colours);
-    if (tx.pack_key) LatchPackImage(tx);
+    {
+        HitchScope hs{g_hitch.pack};
+        if (tx.pack_gen != texturedumper::Generation()) LatchPackKey(tx, d, fi, colours);
+        if (tx.pack_key) LatchPackImage(tx);
+    }
     const Tex& drawn = tx.swap ? *tx.swap : tx;
     FillTextureView(drawn, d, stages.sv[stage]);
     if (fi.depth) info.shadow = ShadowDepthKind(d.format);
