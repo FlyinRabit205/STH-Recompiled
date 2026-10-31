@@ -24,12 +24,17 @@ SS = 4  # supersampling for drawing
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 # Duke / Controller S colours: (base, dark)
 COL = {"A": ((86, 190, 40), (20, 80, 10)), "B": ((220, 40, 35), (90, 8, 8)),
-       "X": ((40, 110, 230), (10, 30, 100)), "Y": ((250, 200, 30), (120, 80, 0))}
+       "X": ((40, 110, 230), (10, 30, 100)), "Y": ((250, 200, 30), (120, 80, 0)),
+       "Yd": ((120, 120, 125), (30, 30, 34))}  # the dimmed (not available) Y
 # slots: sheet name -> list of ((x, y) inside the slot, Xbox letter)
 SLOTS = {
     "gamemenu": [((242, 189), "B"), ((142, 217), "A"), ((169, 216), "X"), ((198, 218), "Y"), ((226, 217), "A"),
                  ((142, 244), "Y"), ((170, 244), "B"), ((198, 244), "A"), ((226, 244), "Y")],
     "pause_main": [((184, 109), "Y"), ((212, 110), "Y"), ((242, 108), "Y")],
+    # HUD sheets from the csdFiles/*.xncp layouts
+    "001_command_icons_xbox": [((234, 60), "X"), ((234, 82), "A"), ((234, 104), "B")],
+    "000_squarebuttons": [((47, 16), "Y"), ((15, 47), None), ((47, 47), "Yd")],  # None: keep the pack's art
+    "000_VHArrow_xbox": [((21, 21), "WHITE"), ((66, 18), "B")],
 }
 
 
@@ -67,6 +72,7 @@ def button(d, letter):
     im.putalpha(Image.fromarray(img[..., 3].astype(np.uint8)))
     # letter: white, dark outline
     f = ImageFont.truetype(FONT, int(n * 0.56))
+    letter = letter[:1]
     dr = ImageDraw.Draw(im)
     bb = dr.textbbox((0, 0), letter, font=f)
     pos = (c - (bb[0] + bb[2]) / 2, c - (bb[1] + bb[3]) / 2)
@@ -75,33 +81,64 @@ def button(d, letter):
     return im.resize((d, d), Image.LANCZOS)
 
 
-def main(work, out):
+def white_disc(d):
+    """The white glow mask behind a button, as a soft-edged disc."""
+    n = d * SS
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float32) + 0.5
+    r = np.hypot(xx - n / 2, yy - n / 2) / (n / 2)
+    a = np.clip((1.0 - r) * n * 0.5, 0, 1) * 255
+    img = np.zeros((n, n, 4), np.uint8)
+    img[..., :3] = 255
+    img[..., 3] = a.astype(np.uint8)
+    return Image.fromarray(img, "RGBA").resize((d, d), Image.LANCZOS)
+
+
+def main(work, out, *more_matches):
     ix = json.load(open(os.path.join(work, "index.json")))
     m = json.load(open(os.path.join(work, "match_ui.json")))
+    for extra in more_matches:
+        m.update(json.load(open(extra)))
     os.makedirs(out, exist_ok=True)
     made = {}
     for k, e in ix.items():
         slots = SLOTS.get(e["name"])
-        if not slots or not any(s.endswith("_EN.txd") for s in e["sources"]) or k not in m:
+        if not slots or k not in m or not any(s.endswith(("_EN.txd", ".xncp")) for s in e["sources"]):
             continue
         x = dec(work, k)
         h, w = x.shape[:2]
         hd = Image.open(m[k]["pack"]).convert("RGBA").resize((w * S, h * S), Image.LANCZOS)
         arr = np.asarray(hd).copy()
         lab, _ = ndimage.label(x[..., 3] > 8)
+        plab, _ = ndimage.label(arr[..., 3] > 8)  # the pack's pieces, before anything is painted
+        pslices = ndimage.find_objects(plab)
+        todo = []
         for (px, py), letter in slots:
+            if letter is None:
+                continue
             comp = lab == lab[py, px]
             ys, xs = np.where(comp)
             x0, y0, x1, y1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
-            clear = ndimage.binary_dilation(comp, iterations=1)
-            big = np.kron(clear, np.ones((S, S), bool))
+            big = np.kron(ndimage.binary_dilation(comp, iterations=1), np.ones((S, S), bool))
+            # the pack's own button may sit a little off the Xbox slot: clear its pieces that touch the slot too
+            slot_area = (x1 - x0) * (y1 - y0) * S * S
+            for i, sl in enumerate(pslices, 1):
+                if sl is None:
+                    continue
+                bx0, bx1, by0, by1 = sl[1].start, sl[1].stop, sl[0].start, sl[0].stop
+                touches = bx0 < (x1 + 2) * S and bx1 > (x0 - 2) * S and by0 < (y1 + 2) * S and by1 > (y0 - 2) * S
+                if touches and (bx1 - bx0) * (by1 - by0) < 3 * slot_area:
+                    big |= plab == i
             arr[big] = 0
+            todo.append((x0, y0, x1, y1, letter))
+        tmp = Image.fromarray(arr, "RGBA")
+        for x0, y0, x1, y1, letter in todo:  # paint after all clearing, so no button is cleared by its neighbour
             d = min(max(int(max(x1 - x0, y1 - y0)), 21), 23) * S  # kidney slots get a full-size button
-            b = button(d, letter)
-            tmp = Image.fromarray(arr, "RGBA")
+            if letter == "WHITE":
+                d = int(max(x1 - x0, y1 - y0)) * S
+            b = white_disc(d) if letter == "WHITE" else button(d, letter)
             cx, cy = int(x0 + x1) * S // 2, int(y0 + y1) * S // 2
             tmp.alpha_composite(b, (cx - d // 2, cy - d // 2))
-            arr = np.asarray(tmp).copy()
+        arr = np.asarray(tmp).copy()
         Image.fromarray(arr, "RGBA").save(os.path.join(out, k + ".png"))
         made[k] = e["name"]
     json.dump(made, open(os.path.join(out, "buttons.json"), "w"), indent=1)
@@ -109,4 +146,4 @@ def main(work, out):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(*sys.argv[1:])

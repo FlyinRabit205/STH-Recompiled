@@ -376,6 +376,22 @@ Each session ends by saving to this folder on the user's PC:
   inside fades/loads). Options: create D3D12 textures from a placed-resource heap, or prepare them on the
   background loader before first use.
 
+- 21:14 user test: no crashes. Requests: HD weapon prompt (gun + X), quit to desktop, pack fonts instead of mine.
+- **HUD textures were never indexed**: they live inside csdFiles/*.xncp (RW TXDs embedded in the layouts):
+  001_command_icons_xbox (weapon icons + X/A/B), 000_windowitem (ring/face/key icons, key 8a06c7d9...),
+  000_squarebuttons, 000_VHArrow_xbox, 000_hud_meter, mchara_* portraits, loading, results, logos, ...
+  index_textures.py now reads .xncp (62 new textures). Matched to the pack (notes/match_xncp_keep.json); non-EN and
+  wrong-language matches dropped. The three button sheets get the pack's HD art with Xbox buttons painted in
+  (xbox_buttons.py: all slots cleared first, incl. the pack's own off-position buttons, then painted).
+  Shipped hud_00..02.pak (23 textures) + buttons_00.pak (7 sheets).
+- **Pack-style fonts**: tools/host/pack_fonts.py harvests each character's 4x glyph from the pack's GameCube font
+  sheets (cell-by-cell match against the Xbox glyphs, 86 characters found; blanks/full-width ？ keep mine) and
+  rebuilds the 55 Xbox sheets. Shipped as font_00..03.pak (my earlier HD fonts stay in xbtex/paks_font to switch back).
+- **QUIT TO DESKTOP** row in the GAME tab (press twice; posts WM_CLOSE).
+- Harness note: one run died silently at 11 s right after the first stage-heap release (REF+TEXKEY on); not seen
+  again in 6 later runs. Keep an eye out.
+- Delivery d212431 (exe + 8 paks), md5 verified.
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:

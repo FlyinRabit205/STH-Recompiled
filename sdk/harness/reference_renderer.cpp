@@ -229,6 +229,26 @@ std::shared_ptr<Image> FindImage(uint32_t header, uint32_t palette_header = 0) {
             for (int i = 0; i < 48; i++) std::snprintf(hex + i * 2, 3, "%02x", q[i]);
             LOGI("texkey %016llx fmt %02X %ux%u lv %u pal %08X head %s", (unsigned long long)k, d.format, d.width, d.height,
                  d.levels, palette_header ? kernel::R32(palette_header) : 0, hex);
+            // TEXDUMP=1: the texture as tools/host/xbtex.py reads it (fmt, w, h, 1 KB palette for P8, level 0)
+            if (std::getenv("TEXDUMP")) {
+                char name[64];
+                std::snprintf(name, sizeof(name), "cap/texkey_%016llx.bin", (unsigned long long)k);
+                if (FILE* fo = std::fopen(name, "wb")) {
+                    uint8_t hdr[5] = {uint8_t(d.format), uint8_t(d.width), uint8_t(d.width >> 8), uint8_t(d.height),
+                                      uint8_t(d.height >> 8)};
+                    std::fwrite(hdr, 1, 5, fo);
+                    if (d.format == 0x0B) {
+                        uint32_t pal[256] = {};
+                        if (palette_header) {
+                            uint32_t n = 256u >> (kernel::R32(palette_header) >> 30);
+                            std::memcpy(pal, kernel::HostPtr(mem::VirtualFromPhysical(kernel::R32(palette_header + 4))), n * 4);
+                        }
+                        std::fwrite(pal, 1, sizeof pal, fo);
+                    }
+                    std::fwrite(kernel::HostPtr(d.data), 1, LevelSize(d, 0), fo);
+                    std::fclose(fo);
+                }
+            }
         }
     }
     uint64_t key = (uint64_t(d.data) << 32 ^ uint64_t(d.format) << 24 ^ uint64_t(d.width) << 12 ^ d.height ^ (d.cube ? 1ull << 63 : 0)) ^ (uint64_t(pal_va) * 0x9E3779B97F4A7C15ull);

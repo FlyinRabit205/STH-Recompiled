@@ -30,7 +30,7 @@ def main(game, work):
             subprocess.run([EXTRACT, path, out], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             for n in os.listdir(out):
                 blobs.append((rel + ":" + n, os.path.join(out, n)))
-        elif low.endswith((".txd", ".dff", ".bsp")):
+        elif low.endswith((".txd", ".dff", ".bsp", ".xncp")):
             blobs.append((rel, path))
         for src, p in blobs:
             try:

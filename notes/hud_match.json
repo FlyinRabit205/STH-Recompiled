@@ -1,0 +1,186 @@
+{
+ "486828762577f248": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_95d41717da1a462e_fc8d0f77ce2a019c_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_hud_2P",
+  "w": 128,
+  "h": 128
+ },
+ "39f7f87b03e366a4": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_e94789188fe554c0_558454a17b9f01cb_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_hud_2P",
+  "w": 128,
+  "h": 128
+ },
+ "5c9a6fb912f88bce": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_b1d620aedd5805bc_da2d14ba3c88dc3a_9.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_bossHPgauge",
+  "w": 128,
+  "h": 128
+ },
+ "83896defa0b446a8": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x512_36bbd1caf1169461_25c8dd62d0757303_9.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_eggboss",
+  "w": 256,
+  "h": 512
+ },
+ "d06db271555c8440": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x256_521a24fbce243442_36fb791a4d31a347_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_loading",
+  "w": 128,
+  "h": 256
+ },
+ "b4b93f09c973825c": {
+  "pack": "/home/claude/pack/GUP/Startup/tex1_512x256_be2006d9345ae529_bd973bca3fdd3c8f_9.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "001_sonicteam",
+  "w": 512,
+  "h": 256
+ },
+ "61729ef9d99d9d15": {
+  "pack": "/home/claude/pack/GUP/Startup/tex1_512x256_6226ba2ac1d15558_4.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_sega",
+  "w": 512,
+  "h": 256
+ },
+ "023a22e91a0dee50": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_7fb516393086a66a_41ed7f032b0e41f1_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_amy",
+  "w": 256,
+  "h": 128
+ },
+ "9e36ed5c117d7e9e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_22af7a64b80ab95e_2f5f7ddbd052c024_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_charmy",
+  "w": 256,
+  "h": 128
+ },
+ "53d3c2eb447d18b1": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_9c8ca0ef9b81b2ee_66e11c2102fbb47a_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_doomeye",
+  "w": 256,
+  "h": 128
+ },
+ "e7fbdfd136d7d0dc": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_7546945350bc7390_0c121ec3059c6983_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_eggman",
+  "w": 256,
+  "h": 128
+ },
+ "42b0120b53ad317b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_336f9a179fb68970_f074aeeffce8a830_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_espio",
+  "w": 256,
+  "h": 128
+ },
+ "38c2a00128936372": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_c01626398eaa6929_8ac48394e2ce8ea1_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_knuckles",
+  "w": 256,
+  "h": 128
+ },
+ "a1709af4650943fa": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_92e1ab30f7cb63ef_f12aa5d5d769ed32_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_maria",
+  "w": 256,
+  "h": 128
+ },
+ "3507759f2bae944d": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_bec3fbcaefea7787_465a9531073323fb_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_omega",
+  "w": 256,
+  "h": 128
+ },
+ "7f8268e0e151181b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_05460a34648ed0a8_22653066a8743b36_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_rouge",
+  "w": 256,
+  "h": 128
+ },
+ "0f3f3493e82873a9": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_39448ba51267baf0_e46139822ad0b789_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_sonic",
+  "w": 256,
+  "h": 128
+ },
+ "7e40b9b460714761": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_e72587d8d0faf2d2_cbd7d6f579399abd_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_tails",
+  "w": 256,
+  "h": 128
+ },
+ "62f16f844abd86c5": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_e4556daaa34b930b_2efe7e411b24df1d_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_mchara_vector",
+  "w": 256,
+  "h": 128
+ },
+ "ec46f927d1900724": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_9494388654bf048f_d02857d95bd5072d_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_missionfialed",
+  "w": 256,
+  "h": 128
+ },
+ "650955414bfc5474": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_9dcf746d44c31cdf_5737c92eb456b716_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_result",
+  "w": 512,
+  "h": 512
+ },
+ "1d4b1845bb442e9a": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_8f45dd68096d4665_1db8734681d4c1dc_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_hud_meter",
+  "w": 128,
+  "h": 128
+ },
+ "8a06c7d9402cb96b": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x64_924376c246b3c129_8b4d2b91ee1243fa_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_windowitem",
+  "w": 128,
+  "h": 64
+ }
+}

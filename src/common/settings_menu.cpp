@@ -203,7 +203,7 @@ std::vector<Row> GameRows() {
                      g_cutscene_60 = !g_cutscene_60;
                      Saved(false);
                  },
-                 "In-game cutscenes run at 60 FPS like the stages. The Xbox ran them at 30. Applies from the next cutscene."});
+                 "In-game cutscenes run at 60 FPS like the stages. The Xbox ran them at 30. Takes effect at once."});
     r.push_back({"KEYBOARD CONTROLS", [] { return std::string(keyboard::g_enabled ? "ON" : "OFF"); },
                  [](int) {
                      keyboard::g_enabled = !keyboard::g_enabled;
@@ -216,6 +216,17 @@ std::vector<Row> GameRows() {
                      Saved(false);
                  },
                  "Frame counter in the top left corner."});
+    // two presses: the first arms it, so a stray press never closes the game
+    static bool quit_armed = false;
+    r.push_back({"QUIT TO DESKTOP", [] { return std::string(quit_armed ? "PRESS AGAIN TO QUIT" : "SELECT"); },
+                 [](int) {
+                     if (!quit_armed) {
+                         quit_armed = true;
+                         return;
+                     }
+                     if (g_hwnd) PostMessageW(g_hwnd, WM_CLOSE, 0, 0);
+                 },
+                 "Closes the game. Progress is saved by the game itself at its save points."});
     return r;
 }
 

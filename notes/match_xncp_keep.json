@@ -1,0 +1,210 @@
+{
+ "03c321b9482d8769": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x128_09d976ea25d1c1c0_10ad82008942c7ef_8.dds",
+  "err": 0.006975087337195873,
+  "second": 0.06030488386750221,
+  "name": "001_command_icons_xbox",
+  "w": 256,
+  "h": 128
+ },
+ "486828762577f248": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_95d41717da1a462e_fc8d0f77ce2a019c_8.dds",
+  "err": 0.0011339428601786494,
+  "second": 0.1830817461013794,
+  "name": "000_hud_2P",
+  "w": 128,
+  "h": 128
+ },
+ "39f7f87b03e366a4": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_e94789188fe554c0_558454a17b9f01cb_8.dds",
+  "err": 0.0010714775417000055,
+  "second": 0.0787205696105957,
+  "name": "000_hud_2P",
+  "w": 128,
+  "h": 128
+ },
+ "5c9a6fb912f88bce": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_b1d620aedd5805bc_da2d14ba3c88dc3a_9.dds",
+  "err": 0.00010894333536271006,
+  "second": 0.058622993528842926,
+  "name": "000_bossHPgauge",
+  "w": 128,
+  "h": 128
+ },
+ "83896defa0b446a8": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x512_36bbd1caf1169461_25c8dd62d0757303_9.dds",
+  "err": 3.02203516184818e-05,
+  "second": 1.0,
+  "name": "000_eggboss",
+  "w": 256,
+  "h": 512
+ },
+ "d06db271555c8440": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x256_521a24fbce243442_36fb791a4d31a347_8.dds",
+  "err": 0.0001179489991045557,
+  "second": 0.14955595135688782,
+  "name": "000_loading",
+  "w": 128,
+  "h": 256
+ },
+ "b4b93f09c973825c": {
+  "pack": "/home/claude/pack/GUP/Startup/tex1_512x256_be2006d9345ae529_bd973bca3fdd3c8f_9.dds",
+  "err": 5.121227331983391e-06,
+  "second": 0.04336843639612198,
+  "name": "001_sonicteam",
+  "w": 512,
+  "h": 256
+ },
+ "61729ef9d99d9d15": {
+  "pack": "/home/claude/pack/GUP/Startup/tex1_512x256_6226ba2ac1d15558_4.dds",
+  "err": 3.350574115756899e-05,
+  "second": 0.04625610262155533,
+  "name": "000_sega",
+  "w": 512,
+  "h": 256
+ },
+ "023a22e91a0dee50": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_7fb516393086a66a_41ed7f032b0e41f1_8.dds",
+  "err": 1.7059672927643987e-06,
+  "second": 0.009373074397444725,
+  "name": "000_mchara_amy",
+  "w": 256,
+  "h": 128
+ },
+ "9e36ed5c117d7e9e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_22af7a64b80ab95e_2f5f7ddbd052c024_8.dds",
+  "err": 2.687148025870556e-06,
+  "second": 0.008636624552309513,
+  "name": "000_mchara_charmy",
+  "w": 256,
+  "h": 128
+ },
+ "53d3c2eb447d18b1": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_9c8ca0ef9b81b2ee_66e11c2102fbb47a_8.dds",
+  "err": 4.498175712797092e-06,
+  "second": 0.027263730764389038,
+  "name": "000_mchara_doomeye",
+  "w": 256,
+  "h": 128
+ },
+ "e7fbdfd136d7d0dc": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_7546945350bc7390_0c121ec3059c6983_8.dds",
+  "err": 4.159890977462055e-06,
+  "second": 0.015866011381149292,
+  "name": "000_mchara_eggman",
+  "w": 256,
+  "h": 128
+ },
+ "42b0120b53ad317b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_336f9a179fb68970_f074aeeffce8a830_8.dds",
+  "err": 1.952840193553129e-06,
+  "second": 0.0017795051680877805,
+  "name": "000_mchara_espio",
+  "w": 256,
+  "h": 128
+ },
+ "38c2a00128936372": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_c01626398eaa6929_8ac48394e2ce8ea1_8.dds",
+  "err": 1.9482563402561937e-06,
+  "second": 0.015823299065232277,
+  "name": "000_mchara_knuckles",
+  "w": 256,
+  "h": 128
+ },
+ "a1709af4650943fa": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_92e1ab30f7cb63ef_f12aa5d5d769ed32_8.dds",
+  "err": 2.518105475246557e-06,
+  "second": 0.003078382695093751,
+  "name": "000_mchara_maria",
+  "w": 256,
+  "h": 128
+ },
+ "3507759f2bae944d": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_bec3fbcaefea7787_465a9531073323fb_8.dds",
+  "err": 2.291346390848048e-06,
+  "second": 0.0028214729391038418,
+  "name": "000_mchara_omega",
+  "w": 256,
+  "h": 128
+ },
+ "7f8268e0e151181b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_05460a34648ed0a8_22653066a8743b36_8.dds",
+  "err": 2.1562204892688897e-06,
+  "second": 0.002783450996503234,
+  "name": "000_mchara_rouge",
+  "w": 256,
+  "h": 128
+ },
+ "0f3f3493e82873a9": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_39448ba51267baf0_e46139822ad0b789_8.dds",
+  "err": 1.7629935200602631e-06,
+  "second": 0.001794606912881136,
+  "name": "000_mchara_sonic",
+  "w": 256,
+  "h": 128
+ },
+ "7e40b9b460714761": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_e72587d8d0faf2d2_cbd7d6f579399abd_8.dds",
+  "err": 1.8997752704308368e-06,
+  "second": 0.0061630746349692345,
+  "name": "000_mchara_tails",
+  "w": 256,
+  "h": 128
+ },
+ "62f16f844abd86c5": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_e4556daaa34b930b_2efe7e411b24df1d_8.dds",
+  "err": 2.924053433162044e-06,
+  "second": 0.007680688984692097,
+  "name": "000_mchara_vector",
+  "w": 256,
+  "h": 128
+ },
+ "ec46f927d1900724": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x128_9494388654bf048f_d02857d95bd5072d_8.dds",
+  "err": 5.158241492608795e-06,
+  "second": 0.08341518044471741,
+  "name": "000_missionfialed",
+  "w": 256,
+  "h": 128
+ },
+ "650955414bfc5474": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_9dcf746d44c31cdf_5737c92eb456b716_8.dds",
+  "err": 3.0198496460798196e-05,
+  "second": 0.09725189208984375,
+  "name": "000_result",
+  "w": 512,
+  "h": 512
+ },
+ "1d4b1845bb442e9a": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x128_8f45dd68096d4665_1db8734681d4c1dc_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_hud_meter",
+  "w": 128,
+  "h": 128
+ },
+ "1908d27fb5b7e02e": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_64x64_cc9e9b4f27f7130b_d28ca1e543d25903_9.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_squarebuttons",
+  "w": 64,
+  "h": 64
+ },
+ "8a06c7d9402cb96b": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x64_924376c246b3c129_8b4d2b91ee1243fa_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_windowitem",
+  "w": 128,
+  "h": 64
+ },
+ "20af7434f4dfc9ed": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x64_f044169b53dba310_a8be49c7b1655ce5_8.dds",
+  "err": 0.0,
+  "second": 1.0,
+  "name": "000_VHArrow_xbox",
+  "w": 128,
+  "h": 64
+ }
+}
