@@ -601,7 +601,39 @@ namespace {
 std::atomic<uint32_t> g_presents{0};
 }  // namespace
 
+// Hang recorder: when the title stops presenting for 4 s after it has started, every guest thread's stack goes to
+// the log once (a black screen or a freeze leaves the evidence without anyone pressing F3).
+static void StartHangWatch() {
+    static std::atomic<bool> started{false};
+    if (started.exchange(true)) return;
+    std::thread([] {
+        uint32_t last = 0, still = 0;
+        bool dumped = false;
+        for (;;) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            uint32_t now = g_presents;
+            if (now != last) {
+                last = now;
+                still = 0;
+                dumped = false;
+                continue;
+            }
+            if (++still >= 4 && !dumped) {
+                dumped = true;
+                LOGE("hang watch: no frame for %u s after frame %u; guest threads:", still, now);
+                for (auto& t : kernel::Threads())
+                    if (t->ctx) {
+                        LOGE("thread %X", t->id);
+                        kernel::LogGuestStack(*t->ctx, 32);
+                    }
+            }
+        }
+    }).detach();
+}
+
 HLE_STDCALL(D3DDevice_Swap, 1) {
+    kernel::GuestCpuIdle idle;  // presenting and pacing: other guest threads may run
+    StartHangWatch();
     app::SplashFirstFrame();
     // handed over from the previous instance: the window opens on the second frame, the first picture with
     // anything drawn over it right after

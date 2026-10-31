@@ -169,6 +169,17 @@ void StartHostThread(const char* name, std::function<void(X86Context&)> fn);
 void RunDpcs(X86Context& ctx);
 void InitKernelData();
 void LogGuestStack(X86Context& ctx, int words);
+
+// The guest CPU: the Xbox ran every thread on one core, so title code that two threads touch without locks (Shadow's
+// loader tasks and its RenderWare frame lists) was safe there. A title hook takes this around such code; blocking
+// kernel calls let it go while they wait, so a holder that waits never stalls the others.
+void GuestCpuAcquire();
+void GuestCpuRelease();
+struct GuestCpuIdle {  // inside a blocking call: lets the guest CPU go if this thread holds it
+    GuestCpuIdle();
+    ~GuestCpuIdle();
+    bool released;
+};
 X86Context& CurrentContext();
 ThreadRef CreateThread(uint32_t stack_size, uint32_t tls_size, uint32_t system_routine, uint32_t start_routine,
                        uint32_t start_context, bool suspended);

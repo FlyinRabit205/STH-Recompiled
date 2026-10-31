@@ -29,6 +29,7 @@ bool IsCommitted(uint32_t va);
 // user virtual space, NTSTATUS results
 uint32_t AllocateVirtual(uint32_t& base, uint32_t& size, uint32_t type, uint32_t protect);
 uint32_t FreeVirtual(uint32_t& base, uint32_t& size, uint32_t type);
+bool IsFreed(uint32_t va);  // a user page that is not committed (freed or never allocated)
 struct RegionInfo {
     uint32_t base, alloc_base, alloc_protect, size, state, protect, type;
 };

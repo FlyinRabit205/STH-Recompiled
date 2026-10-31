@@ -261,6 +261,7 @@ KERNEL_EXPORT(99, KeDelayExecutionThread, 3) {
     Thread* t = Current();
     if (alertable && t && RunApcs(*t)) return kUserApc;
     int64_t deadline = ToDeadline(interval);
+    GuestCpuIdle idle;
     auto now = [] {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
     };
@@ -840,6 +841,7 @@ KERNEL_EXPORT(140, KeResumeThread, 1) {
 KERNEL_EXPORT(92, KeAlertResumeThread, 1) { return kimpl_KeResumeThread(ctx, a); }
 
 KERNEL_EXPORT(238, NtYieldExecution, 0) {
+    GuestCpuIdle idle;
     SuspendPoint();
     std::this_thread::yield();
     return kSuccess;

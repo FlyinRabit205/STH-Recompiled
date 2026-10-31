@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "kernel/kernel.h"
+#include "kernel/memory.h"
 #include "xdk/hle.h"
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -57,22 +58,28 @@ bool g_cutscene_60 = true;
 // periods of 1/[0x54DD64] s per update; the event start (002291AA) sets 2, i.e. 30 FPS, sets [0x54D481] while the
 // event plays, and the event end puts the saved [0x54DD40] back. Checked every frame, so the option takes effect at
 // once: 1 while an event plays with the option on, the game's 2 with it off.
+// Shadow's loader tasks (thread proc 0004F440, a step at a time) build RenderWare objects while the main thread's
+// frame updates and syncs the same frame lists. One core on the Xbox kept them apart; here they ran at once and
+// corrupted the dirty frame list (self-linked frame, main thread looping in 002EC720 = the black screen after
+// event2101 / on pause). Each task step and the main thread's frame (from the end of the frame wait to the next
+// one) now hold the guest CPU; blocking kernel calls and the present let it go.
+X86_HOST_API void ShadowTaskEnter(X86Context& ctx, uint8_t* base) {
+    (void)ctx, (void)base;
+    kernel::GuestCpuAcquire();
+}
+X86_HOST_API void ShadowTaskLeave(X86Context& ctx, uint8_t* base) {
+    (void)ctx, (void)base;
+    kernel::GuestCpuRelease();
+}
+X86_HOST_API void ShadowMainEnter(X86Context& ctx, uint8_t* base) {
+    (void)ctx, (void)base;
+    kernel::GuestCpuAcquire();
+}
+
 X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
     (void)ctx;
+    kernel::GuestCpuRelease();  // the frame wait starts: the loader tasks may run
     if (base[0x54D481]) *reinterpret_cast<uint32_t*>(base + 0x54DD40) = shadow::g_cutscene_60 ? 1u : 2u;
-    // DBG-EVENT-TIMING: the first 240 updates of each event: event time [0x54D498], frames elapsed [0x54DD3C]
-    static int logged = 0;
-    static bool was = false;
-    bool now = base[0x54D481] != 0;
-    if (now && !was) logged = 0;
-    was = now;
-    if (now && logged < 240) {
-        logged++;
-        float t;
-        std::memcpy(&t, base + 0x54D498, 4);
-        LOGI("event timing: time %.3f elapsed %u wait %u", t, *reinterpret_cast<uint32_t*>(base + 0x54DD3C),
-             *reinterpret_cast<uint32_t*>(base + 0x54DD40));
-    }
 }
 
 // The event scene player (event+0x180; set time 0022BDE0 -> 0022BBE0) seeks its scene to the event time cut to a
@@ -81,6 +88,22 @@ X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
 // as it is; at 30 the time is whole anyway.
 X86_HOST_API void ShadowEventSceneTime(X86Context& ctx, uint8_t* base) {
     if (shadow::g_cutscene_60) ctx.xmm[0].f[0] = *reinterpret_cast<const float*>(base + ctx.esi + 8);
+}
+
+// DBG-STALE-FRAME: a RenderWare frame added to the dirty list (002E1300) whose own memory or root's is freed: the
+// use-after-free behind the stage-end crashes and the black screen. Logs the guest stack the first times.
+X86_HOST_API void ShadowCheckDirtyFrame(X86Context& ctx, uint8_t* base) {
+    static int reports = 0;
+    const uint32_t frame = ctx.eax;
+    if (!frame || reports >= 8) return;
+    const bool frame_freed = mem::IsFreed(frame);
+    const uint32_t root = frame_freed ? 0 : *reinterpret_cast<const uint32_t*>(base + frame + 0xA0);
+    if (frame_freed || (root && mem::IsFreed(root))) {
+        reports++;
+        LOGE("stale frame: frame %08X%s root %08X%s", frame, frame_freed ? " (freed)" : "", root,
+             root && mem::IsFreed(root) ? " (freed)" : "");
+        kernel::LogGuestStack(ctx, 40);
+    }
 }
 
 // The frame wait busy-loops on the CPU clock (rdtsc / 733 = microseconds, 000116B0) until the elapsed time, counted

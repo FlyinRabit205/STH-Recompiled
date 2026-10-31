@@ -290,6 +290,36 @@ call = "ShadowEventFrameRate"
 after = true
 
 [[hook]]
+at = 0x0004F458          # loader task thread (00004F440): before a step, mov eax, [esi] (take the guest CPU)
+call = "ShadowTaskEnter"
+after = true
+
+[[hook]]
+at = 0x0004F45C          # after the step returns: call [eax+4]
+call = "ShadowTaskLeave"
+after = true
+
+[[hook]]
+at = 0x0004F46A          # before the finish call: mov edx, [esi]
+call = "ShadowTaskEnter"
+after = true
+
+[[hook]]
+at = 0x0004F472          # after the finish call: call [edx+8]
+call = "ShadowTaskLeave"
+after = true
+
+[[hook]]
+at = 0x00057149          # stage loop: frame wait over (the main thread takes the guest CPU for the frame)
+call = "ShadowMainEnter"
+after = true
+
+[[hook]]
+at = 0x002E1300          # RenderWare: frame onto the dirty list (mov eax, [esp+4] = frame): report frames in freed memory
+call = "ShadowCheckDirtyFrame"
+after = true
+
+[[hook]]
 at = 0x0022BD2C          # event scene player: cvtsi2ss xmm0, edx (the event time cut to a whole 30 FPS frame)
 call = "ShadowEventSceneTime"
 after = true

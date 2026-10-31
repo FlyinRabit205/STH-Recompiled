@@ -348,6 +348,29 @@ Each session ends by saving to this folder on the user's PC:
 - Load hitches seen: event start 23-39 ms (event texture uploads, frames 938-1146), stage load up to 57 ms (54
   textures). Candidates for the performance pass (upload on the background loader, prewarm).
 
+### Session 10 (2026-10-31, 20:42 to about 21:40): the black screen, found and fixed
+- **Reproduced headless**: pausing in Westopolis (pause opens RouteDisplay) hung 2 of 3 runs. Main guest thread
+  looping in 002EC720 (RwFrame dirty-list sync, head 0x57DEBC) -> 002EC670 -> 002EC610; the list held a frame
+  linked to itself, flags 0 (a frame re-added while still linked).
+- **Cause**: guest threads run truly in parallel here; the Xbox had one core. Shadow's loader task threads (thread
+  proc 0004F440: virtual step [obj+4] in a loop with a yield, then finish [obj+8]) build RenderWare objects while the
+  main thread updates/syncs the same frame lists. Unsafe without the single core.
+- **Fix**: a "guest CPU" lock (kernel::GuestCpuAcquire/Release, GuestCpuIdle in objects.cpp/kernel.h). Held by each
+  loader task step (hooks after 0004F458 / 0004F45C and 0004F46A / 0004F472) and by the main thread for its frame
+  (taken after the frame wait 00057149, let go at the frame wait 00056FC0). Every blocking kernel call (Wait,
+  KeDelayExecutionThread, NtYieldExecution) and D3DDevice_Swap let it go while they wait, so a holder that waits
+  never stalls the others. Tests: 11 pause/unpause cycles + a pause-menu stage change (stg0100 -> stg0201 +
+  event2102), no hang, steady 60 FPS, stage load time unchanged (30.4 s mark).
+- Also found: the "intermittent harness crash at frame 300 / 8.7 s" was the same use-after-free with the OLD memory
+  behaviour (SHADOW_MEM_ORIG=1 reproduces it); the keep-mapped memory fix had already removed it.
+- Quarantine bug fixed: commits to existing reservations (base set, no reserve) flushed the quarantine; now only
+  fixed-base reservations do. MEM_RELEASE now follows NT (base must be the reservation base, size 0; refusals logged
+  as warnings, none seen).
+- **Hang recorder**: if presents stop for 4 s after the first frame, every guest thread's stack is logged once
+  ("hang watch:" in the log). F3 still dumps on demand.
+- DBG left on: `stale frame:` report in 002E1300 (cheap; never fired). Event timing log removed.
+- Delivered build b210056 (md5 verified on the PC).
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -92,8 +93,9 @@ bool Commit(uint32_t va, uint32_t size) {
     }
 #endif
     // pages freed earlier stay mapped (see Decommit): a fresh commit reads as zeros, as on the console
+    static const bool orig = std::getenv("SHADOW_MEM_ORIG") != nullptr;  // DBG: the old behaviour, for comparison
     for (uint64_t p = first; p < end; p += kPage) {
-        if (!g_committed[size_t(p >> 12)]) std::memset(g_base + p, 0, kPage);
+        if (!orig && !g_committed[size_t(p >> 12)]) std::memset(g_base + p, 0, kPage);
         g_committed[size_t(p >> 12)] = 1;
     }
     return true;
@@ -107,6 +109,14 @@ void Decommit(uint32_t va, uint32_t size) {
     // Freed pages stay mapped with their bytes. Shadow touches a RenderWare frame in memory it freed when a stage
     // ends (RwFrame root dirty-list link, 002E1300 from 00059A76): evidently harmless on the console (its
     // allocators leave those pages mapped or reuse them), an access violation here when they were decommitted. Only the accounting forgets them.
+    if (std::getenv("SHADOW_MEM_ORIG")) {
+#ifdef _WIN32
+        VirtualFree(g_base + first, size_t(end - first), MEM_DECOMMIT);
+#else
+        madvise(g_base + first, size_t(end - first), MADV_DONTNEED);
+        mprotect(g_base + first, size_t(end - first), PROT_NONE);
+#endif
+    }
     for (uint64_t p = first; p < end; p += kPage) g_committed[size_t(p >> 12)] = 0;
 }
 
@@ -279,11 +289,12 @@ static void ReleaseQuarantined(bool all) {
 uint32_t AllocateVirtual(uint32_t& base, uint32_t& size, uint32_t type, uint32_t protect) {
     std::lock_guard<std::recursive_mutex> lock(g_lock);
     EnsureRanges();
-    ReleaseQuarantined(base != 0);
     if (!size) return 0xC000000D;  // STATUS_INVALID_PARAMETER
     bool reserve = type & kMemReserve;
     bool commit = type & kMemCommit;
     if (!base && commit) reserve = true;
+    // a reservation at a fixed address may need quarantined space back; plain commits leave the quarantine alone
+    ReleaseQuarantined(reserve && base != 0);
     if (reserve) {
         uint32_t sz = (size + 0xFFFF) & ~0xFFFFu;
         uint32_t a;
@@ -326,10 +337,17 @@ uint32_t FreeVirtual(uint32_t& base, uint32_t& size, uint32_t type) {
     Reservation* r = FindReservation(base, &start);
     if (!r) return 0xC000009F;  // STATUS_MEMORY_NOT_ALLOCATED
     if (type & kMemRelease) {
+        // NT: a release names the reservation's own base with size 0; anything else fails and frees nothing
+        if (base != start || size != 0) {
+            LOGW("memory: release %08X+%X inside %08X+%X refused", base, size, start, r->size);
+            return base != start ? 0xC000009F : 0xC00000F0;  // STATUS_FREE_VM_NOT_AT_BASE, STATUS_INVALID_PARAMETER_2
+        }
         uint32_t sz = r->size;
         Decommit(start, sz);
         g_reserved.erase(start);
-        g_quarantine.push_back({start, sz, std::chrono::steady_clock::now()});
+        if (std::getenv("SHADOW_MEM_ORIG")) g_user.Release(start, sz);
+        else g_quarantine.push_back({start, sz, std::chrono::steady_clock::now()});
+        LOGI("memory: released %08X+%X", start, sz);
         base = start;
         size = sz;
         return 0;
@@ -341,6 +359,11 @@ uint32_t FreeVirtual(uint32_t& base, uint32_t& size, uint32_t type) {
     base = first;
     size = end - first;
     return 0;
+}
+
+bool IsFreed(uint32_t va) {
+    if (va < kUserLow || va >= kUserHigh || InPhysical(va)) return false;
+    return !g_committed[size_t(va >> 12)];
 }
 
 bool QueryVirtual(uint32_t addr, RegionInfo& out) {
