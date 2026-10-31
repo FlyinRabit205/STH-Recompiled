@@ -278,6 +278,12 @@ Remaining, in order:
 
 - Exe icon (16:25): the game's red emblem from the title sheet, `tools/winbuild/res/shadow.{ico,rc}`, linked by build_win.sh.
 
+### User test 16:25
+- Ring icon fine now; **in-engine cutscene skip confirmed working.**
+- User decisions: English-only HD fonts are enough (no other languages). Ultrawide and above-60 FPS deferred until
+  after the user's first full playtest. **Next: user playtests and reports issues** (screenshots / F3 captures via
+  `Game\Capture Frame.bat`).
+
 ### Still open
 - **HUD ring icon missing on Windows** (user, 16:10). It is a 2D sprite: back buffer draw, tex 128x64 P8 with a
   32-colour palette (palette Common C00B0001), runtime key 8a06c7d9402cb96b, at (57,364), pretransformed with rhw 1
