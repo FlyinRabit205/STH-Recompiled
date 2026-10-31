@@ -284,6 +284,16 @@ Remaining, in order:
   after the user's first full playtest. **Next: user playtests and reports issues** (screenshots / F3 captures via
   `Game\Capture Frame.bat`).
 
+### Playtest 16:36 (for session 8)
+1. In-engine cutscenes do NOT skip (16:25 "do skip" was a misread). Hook at 0022879B never seen running; trace the
+   event START path on Windows.
+2. In-engine cutscenes run at 30 FPS; user wants 60. Find the event frame-interval switch; check animation speed.
+3. **Crash after Westopolis + its events** (log shadow_011.log): C0000005 on guest thread 14 (main), write to guest
+   00C5D1BC (unmapped), eip host 7FF8C95EF74F; stack 002E1866 00059A7B 0039BA18 00059EC3 0039BA3B 00021E2A 00057247
+   0005725A 00021E32 00057730 0001D80A 00011294 00011C60. Just before: stg0100_*.one loads, `open d:\sng_EV2101_E.adx`
+   then `open d:\` (empty name). Plan: map 002E1866's caller chain, find who owns 00C5D1BC (freed/decommitted heap?),
+   reproduce headless from the user's save (hdd\E\UDATA) to start right at that point.
+
 ### Still open
 - **HUD ring icon missing on Windows** (user, 16:10). It is a 2D sprite: back buffer draw, tex 128x64 P8 with a
   32-colour palette (palette Common C00B0001), runtime key 8a06c7d9402cb96b, at (57,364), pretransformed with rhw 1
