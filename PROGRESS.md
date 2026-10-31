@@ -213,7 +213,7 @@ Each session ends by saving to this folder on the user's PC:
 
 ### User test after session 6: no stutter in two runs. User asks: keep re-optimizing after every change.
 
-### Session 7 (2026-10-31, 15:33 to ...): HD environment textures from Cyb3rtron's GameCube pack
+### Session 7 (2026-10-31, 15:33 to about 16:10): HD environment textures from Cyb3rtron's GameCube pack
 - Pack: `shadow_the_hedgehog_hd.zip` (user put it in ShadowNativePort\), 3235 Dolphin DDS (DXT5, 6x, 1 mip), folders
   GUP/Stages (23 stages), Backgrounds, Crates, Characters, Effects, HUD, Menu, Text, ... User's split: **environment
   from the pack; fonts/text redone by Claude in HD; GameCube buttons replaced by Xbox buttons made by Claude.**
@@ -232,6 +232,22 @@ Each session ends by saving to this folder on the user's PC:
   `Game\textures\replacement\env_NN.pak`.
 - Runtime: `sdk/runtime/gpu/texturedumper.cpp` reads `.pak` (ListPak, pak_at, ReadDdsBytes); loose files override.
   Loads stay on the existing background loader (no stutter).
+- **HD fonts (made by Claude):** `hd_fonts.py` redraws every English `fonts/<set>/<set>_EN.txd` sheet at 4x from its
+  `.met` (METRICS1, codes are Unicode, rects inclusive): cap height/baseline calibrated from the original capitals
+  and digits, Noto Sans Mono CJK JP (Medium) drawn per cell, condensed horizontally to the cell, long descenders
+  squeezed to fit, white on black. `pak_images.py` packs `<key>.png` images (cap 1). **55 sheets, 1024x1024 BC1,
+  `font_00..03.pak` (36 MB).** Only EN made; other languages fall back to the originals.
+- **HD menus/UI from the pack:** match_pack on Menu, Pause Menu, HUD, Text, Multiplayer, Stage Names, ... ->
+  `notes/match_ui.json` (in xbtex). Diffed every match at full size: EN UI sheets are identical art to the GameCube
+  ones (non-EN GameCube sheets differ, rejected; also many false Multiplayer matches on effects, rejected by keeping
+  only csdFiles/number/stafroll sources with no differing regions). **80 textures, 63 MB, `ui_00..06.pak`.**
+- **Xbox buttons (made by Claude):** the multi-platform button sheets (`gamemenu`, `pause_main` EN) hold PS, GameCube
+  and Xbox buttons side by side. `xbox_buttons.py` takes the pack's HD sheet, clears every button slot and paints a
+  glossy Xbox button (Duke colours A green, B red, X blue, Y yellow; dark rim, top highlight, white letter with
+  outline) with the slot's meaning (PS x/GC A -> A, PS o -> B, PS triangle/GC Y -> Y, GC X -> X). `buttons_00.pak`.
+  Pause/HUD `micon` sheets have no buttons.
+- Re-optimization check: all replacement textures are BC1/BC3 with mips (GPU memory ~1/4 to 1/8 of RGBA), loaded by
+  the background loader, so no frame-time cost. Paks are read per texture on demand (no full-pak loads).
 
 ### Local SDK patches (add to the list above)
 - `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
@@ -246,6 +262,8 @@ Each session ends by saving to this folder on the user's PC:
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
+0. **Confirm session 7 on Windows**: HD stages, HD fonts (subtitles), HD menus, Xbox buttons in menus/pause.
+   If a texture looks wrong, `Game\logs` + a screenshot; a bad key can be dropped by rebuilding its pak.
 1. **Confirm on Windows**: stages sharp now? cutscene skip works for movies AND in-engine events? Read `Game\logs`.
 2. Blur fix (session 5) to confirm; then texture pack (user downloads Cyb3rtron's "Shadow the Hedgehog HD" Dolphin pack
    zip into ShadowNativePort; match GameCube images to dumped Xbox textures by image similarity, write to the

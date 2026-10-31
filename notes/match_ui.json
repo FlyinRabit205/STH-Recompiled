@@ -1,0 +1,2898 @@
+{
+ "7d7f57a7a87f1f3b": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_64x128_62f51ff1e1bb0c01_244a21459cdcb554_8.dds",
+  "err": 0.003017942188307643,
+  "second": 0.21451938152313232,
+  "name": "logo",
+  "w": 64,
+  "h": 128
+ },
+ "87b2b0e0a8fdf84f": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_4dc0e56b024349d5_ae707c5678527a8c_8.dds",
+  "err": 0.004437551833689213,
+  "second": 0.058426566421985626,
+  "name": "pl_2pswg",
+  "w": 128,
+  "h": 128
+ },
+ "88db958a8e22da86": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 3.439182182773948e-05,
+  "second": 0.04410383477807045,
+  "name": "pl_2psw0",
+  "w": 128,
+  "h": 128
+ },
+ "63d19f8f55f66151": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_538f7b5f14d26693_483c8a1fa6923c3a_8.dds",
+  "err": 0.005961738992482424,
+  "second": 0.0152842216193676,
+  "name": "pl_2pswo",
+  "w": 128,
+  "h": 128
+ },
+ "edb10a5807eea226": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_22c99705e2b18264_ac1a6c3d24aa49c6_8.dds",
+  "err": 0.0016950061544775963,
+  "second": 0.050070300698280334,
+  "name": "pl_2pswb",
+  "w": 128,
+  "h": 128
+ },
+ "a95f67ad3512a1ce": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_74ab517b2fa53b13_dbb9b519fdc6d661_8.dds",
+  "err": 0.0008937368402257562,
+  "second": 0.04815777391195297,
+  "name": "pl_2pswp",
+  "w": 128,
+  "h": 128
+ },
+ "554768e72e0d739e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_d693d2d82809aa85_f42d7d75123510bc_8.dds",
+  "err": 0.000686394632793963,
+  "second": 0.03516317903995514,
+  "name": "pl_2pswy",
+  "w": 128,
+  "h": 128
+ },
+ "21a3a1b923b912fb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_512x256_368615c820e5a37d_250a4dcfe54b441e_8.dds",
+  "err": 3.3282142339885468e-06,
+  "second": 0.19422072172164917,
+  "name": "2P",
+  "w": 512,
+  "h": 256
+ },
+ "4db9aa4c797b52c9": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_512x256_368615c820e5a37d_250a4dcfe54b441e_8.dds",
+  "err": 0.011245187371969223,
+  "second": 0.20085465908050537,
+  "name": "2P",
+  "w": 512,
+  "h": 256
+ },
+ "ecdfef4d22dc896d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_512x128_c664dcc72942721d_090e017d658db4e0_8.dds",
+  "err": 5.141877863934496e-06,
+  "second": 1.0,
+  "name": "2P_start",
+  "w": 512,
+  "h": 128
+ },
+ "bdeb48ca16c5afa1": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x256_143a9a3691ec2fe3_efabe8033e55bf28_9.dds",
+  "err": 0.007350273430347443,
+  "second": 0.0773770734667778,
+  "name": "002_gamemenu",
+  "w": 256,
+  "h": 256
+ },
+ "183f7f822c92ad17": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x256_143a9a3691ec2fe3_efabe8033e55bf28_9.dds",
+  "err": 3.20991784974467e-06,
+  "second": 0.07657124847173691,
+  "name": "gamemenu",
+  "w": 256,
+  "h": 256
+ },
+ "635f12e77e0130a4": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_7158e90e29bbee7c_0efe3255e81c028d_9.dds",
+  "err": 3.7095109291840345e-05,
+  "second": 0.01264084130525589,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "48566f80faeb619f": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x1024_c515e04961e3fc08_49477a49b18c3f92_9.dds",
+  "err": 1.5144439203140792e-05,
+  "second": 1.0,
+  "name": "battlemode",
+  "w": 1024,
+  "h": 1024
+ },
+ "9551caeb919c1776": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x1024_c515e04961e3fc08_49477a49b18c3f92_9.dds",
+  "err": 0.0003340072580613196,
+  "second": 1.0,
+  "name": "battlemode",
+  "w": 1024,
+  "h": 1024
+ },
+ "9e5e9fcf23ddf576": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x1024_c515e04961e3fc08_49477a49b18c3f92_9.dds",
+  "err": 0.000613090640399605,
+  "second": 1.0,
+  "name": "battlemode",
+  "w": 1024,
+  "h": 1024
+ },
+ "262e3dedf3e36cf0": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x1024_c515e04961e3fc08_49477a49b18c3f92_9.dds",
+  "err": 0.0020783955696970224,
+  "second": 1.0,
+  "name": "battlemode",
+  "w": 1024,
+  "h": 1024
+ },
+ "9d81e3cccae7ab74": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x1024_c515e04961e3fc08_49477a49b18c3f92_9.dds",
+  "err": 0.0005191287491470575,
+  "second": 1.0,
+  "name": "battlemode",
+  "w": 1024,
+  "h": 1024
+ },
+ "d9ad870127f85190": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x1024_c515e04961e3fc08_49477a49b18c3f92_9.dds",
+  "err": 0.0005033279885537922,
+  "second": 1.0,
+  "name": "battlemode",
+  "w": 1024,
+  "h": 1024
+ },
+ "daff436253d9b1aa": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x256_90d39f6f06c8ff26_ff6ba8b97853e69c_8.dds",
+  "err": 2.9258917493280023e-06,
+  "second": 0.047546643763780594,
+  "name": "gameover",
+  "w": 256,
+  "h": 256
+ },
+ "531875bc1fdb0179": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x256_90d39f6f06c8ff26_ff6ba8b97853e69c_8.dds",
+  "err": 0.00823255069553852,
+  "second": 0.05186288803815842,
+  "name": "gameover",
+  "w": 256,
+  "h": 256
+ },
+ "7484e7dd64358eab": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_917a152c3fb8cc0c_5.dds",
+  "err": 0.00014027855650056154,
+  "second": 0.09000082314014435,
+  "name": "Options2",
+  "w": 512,
+  "h": 512
+ },
+ "11f8f1ec38ef12a8": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_406526ab0cdc51a8_0af77698d8fa7d7b_9.dds",
+  "err": 2.1229237972875126e-05,
+  "second": 0.06634988635778427,
+  "name": "Options",
+  "w": 512,
+  "h": 512
+ },
+ "6265c60216f2b7d9": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_580a55bac9e48450_1dbbcc24f816828c_9.dds",
+  "err": 0.00229430990293622,
+  "second": 0.011926978826522827,
+  "name": "TitleBg",
+  "w": 512,
+  "h": 512
+ },
+ "8977b396aa5b3266": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_406526ab0cdc51a8_0af77698d8fa7d7b_9.dds",
+  "err": 0.0016418060986325145,
+  "second": 0.06475242972373962,
+  "name": "Options",
+  "w": 512,
+  "h": 512
+ },
+ "d324d4e332c28714": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_406526ab0cdc51a8_0af77698d8fa7d7b_9.dds",
+  "err": 0.0076387482695281506,
+  "second": 0.0672881007194519,
+  "name": "Options",
+  "w": 512,
+  "h": 512
+ },
+ "6adca36115583d41": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_406526ab0cdc51a8_0af77698d8fa7d7b_9.dds",
+  "err": 0.0037198145873844624,
+  "second": 0.06616834551095963,
+  "name": "Options",
+  "w": 512,
+  "h": 512
+ },
+ "8daedbb4cac1d0c3": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_406526ab0cdc51a8_0af77698d8fa7d7b_9.dds",
+  "err": 0.00589979812502861,
+  "second": 0.06401088833808899,
+  "name": "Options",
+  "w": 512,
+  "h": 512
+ },
+ "161edc9c226285eb": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_406526ab0cdc51a8_0af77698d8fa7d7b_9.dds",
+  "err": 0.003821639809757471,
+  "second": 0.06799072027206421,
+  "name": "Options",
+  "w": 512,
+  "h": 512
+ },
+ "475596920e55c068": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_8435a3940c003445_15511e2b7c0d0993_9.dds",
+  "err": 0.0028165250550955534,
+  "second": 0.009291604161262512,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "81a46e224a0df58f": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_73962f92710e9e9e_402bc18ce903b7a9_9.dds",
+  "err": 0.003084278665482998,
+  "second": 0.028614966198801994,
+  "name": "routedisplay",
+  "w": 256,
+  "h": 128
+ },
+ "4399fd592b281b2e": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_8435a3940c003445_15511e2b7c0d0993_9.dds",
+  "err": 0.0029199710115790367,
+  "second": 0.009322181344032288,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "2807a05830d4aa29": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_8435a3940c003445_15511e2b7c0d0993_9.dds",
+  "err": 0.002963433740660548,
+  "second": 0.009311548434197903,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "7cabf8439b6118ab": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_8435a3940c003445_15511e2b7c0d0993_9.dds",
+  "err": 0.0037936284206807613,
+  "second": 0.009593666531145573,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "a4b45e5f8854ea26": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_8435a3940c003445_15511e2b7c0d0993_9.dds",
+  "err": 0.0029494818300008774,
+  "second": 0.009320875629782677,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "1bf88349119fd96e": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_c1a8be3ee037dd86_ddc73227bc7a508f_9.dds",
+  "err": 2.705213410081342e-05,
+  "second": 0.06939473748207092,
+  "name": "selectmode",
+  "w": 512,
+  "h": 512
+ },
+ "b70947f0afab3264": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_8435a3940c003445_15511e2b7c0d0993_9.dds",
+  "err": 5.1933144277427346e-05,
+  "second": 0.00916743278503418,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "9dc41a461a853d4f": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_73962f92710e9e9e_402bc18ce903b7a9_9.dds",
+  "err": 1.601936310180463e-05,
+  "second": 0.028634870424866676,
+  "name": "routedisplay",
+  "w": 256,
+  "h": 128
+ },
+ "62e3f713194fae3f": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_1024x512_d35071dfd82af4f7_117474258ccef2f1_9.dds",
+  "err": 2.0407813281053677e-05,
+  "second": 1.0,
+  "name": "missionpics",
+  "w": 1024,
+  "h": 512
+ },
+ "64d5d7ab619635fc": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_c1a8be3ee037dd86_ddc73227bc7a508f_9.dds",
+  "err": 0.002495639258995652,
+  "second": 0.06853275001049042,
+  "name": "selectmode",
+  "w": 512,
+  "h": 512
+ },
+ "5885e99dd3b0d181": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_c1a8be3ee037dd86_ddc73227bc7a508f_9.dds",
+  "err": 0.003340783528983593,
+  "second": 0.06637009233236313,
+  "name": "selectmode",
+  "w": 512,
+  "h": 512
+ },
+ "807ccc0f89952765": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_c1a8be3ee037dd86_ddc73227bc7a508f_9.dds",
+  "err": 0.002724084071815014,
+  "second": 0.06605671346187592,
+  "name": "selectmode",
+  "w": 512,
+  "h": 512
+ },
+ "10fffe8c845f013b": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_c1a8be3ee037dd86_ddc73227bc7a508f_9.dds",
+  "err": 0.0010329916840419173,
+  "second": 0.06820546090602875,
+  "name": "selectmode",
+  "w": 512,
+  "h": 512
+ },
+ "18aa5adc149cb14e": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_c1a8be3ee037dd86_ddc73227bc7a508f_9.dds",
+  "err": 0.0032176231034100056,
+  "second": 0.06711788475513458,
+  "name": "selectmode",
+  "w": 512,
+  "h": 512
+ },
+ "2668160560162489": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x128_60d619c6810689c4_78906293d1a370bd_9.dds",
+  "err": 5.46664841749589e-06,
+  "second": 0.05579311400651932,
+  "name": "text",
+  "w": 128,
+  "h": 128
+ },
+ "a95baefd9ebf1163": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_6dc30788b2a19dfa_74812bedec3f3da1_9.dds",
+  "err": 1.700346365396399e-05,
+  "second": 0.02794174663722515,
+  "name": "storyroute",
+  "w": 256,
+  "h": 128
+ },
+ "62dfc18f2798c263": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x128_d85cf5d1678313c2_d13b81391e441b67_9.dds",
+  "err": 2.1040585124865174e-05,
+  "second": 0.035348471254110336,
+  "name": "fire",
+  "w": 128,
+  "h": 128
+ },
+ "38f7f5345860c709": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_68b85c32b415ddbd_09f06324d0983f1a_9.dds",
+  "err": 1.929751852003392e-05,
+  "second": 0.06653014570474625,
+  "name": "library",
+  "w": 512,
+  "h": 512
+ },
+ "b08e9c2faec10a54": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_7f52ee9cab9e99aa_c2d9c4ad8f8e49f2_9.dds",
+  "err": 3.352076237206347e-05,
+  "second": 0.009615788236260414,
+  "name": "bg",
+  "w": 512,
+  "h": 512
+ },
+ "b188da78c2a90cc7": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_68b85c32b415ddbd_09f06324d0983f1a_9.dds",
+  "err": 0.0012958066072314978,
+  "second": 0.06712643802165985,
+  "name": "library",
+  "w": 512,
+  "h": 512
+ },
+ "d36531c767ee1ea3": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x64_fd056b1c548902b7_0a07d355f0cb316b_9.dds",
+  "err": 9.39221354201436e-06,
+  "second": 0.09199918061494827,
+  "name": "Synopsis",
+  "w": 128,
+  "h": 64
+ },
+ "0a096ac79c87c941": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x64_fd056b1c548902b7_0a07d355f0cb316b_9.dds",
+  "err": 0.006837163586169481,
+  "second": 0.09438950568437576,
+  "name": "Synopsis",
+  "w": 128,
+  "h": 64
+ },
+ "34d45f429ff49058": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x64_fd056b1c548902b7_0a07d355f0cb316b_9.dds",
+  "err": 0.0036672132555395365,
+  "second": 0.09514692425727844,
+  "name": "Synopsis",
+  "w": 128,
+  "h": 64
+ },
+ "15a917ac920cff4f": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x64_fd056b1c548902b7_0a07d355f0cb316b_9.dds",
+  "err": 0.0034050869289785624,
+  "second": 0.09604001045227051,
+  "name": "Synopsis",
+  "w": 128,
+  "h": 64
+ },
+ "a6a16eb7b2361798": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_d12d44827443b185_078373a812f4d9a2_9.dds",
+  "err": 2.1989646484144032e-05,
+  "second": 0.051580801606178284,
+  "name": "TitleAnime",
+  "w": 512,
+  "h": 512
+ },
+ "d2d76307eef93bb1": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_580a55bac9e48450_1dbbcc24f816828c_9.dds",
+  "err": 4.1660659917397425e-05,
+  "second": 0.01587984524667263,
+  "name": "BG",
+  "w": 512,
+  "h": 512
+ },
+ "686a1e45a57a274a": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_84724037de4ae3df_5.dds",
+  "err": 0.0012559478636831045,
+  "second": 0.05253440514206886,
+  "name": "TitleParts",
+  "w": 512,
+  "h": 512
+ },
+ "5f698b3c6c49a6b3": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_84724037de4ae3df_5.dds",
+  "err": 0.0020896345376968384,
+  "second": 0.05308404192328453,
+  "name": "TitleParts",
+  "w": 512,
+  "h": 512
+ },
+ "3e388f5e3031f32e": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_84724037de4ae3df_5.dds",
+  "err": 0.001446292269974947,
+  "second": 0.052576158195734024,
+  "name": "TitleParts",
+  "w": 512,
+  "h": 512
+ },
+ "d4f1946f4bb8a1cf": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_84724037de4ae3df_5.dds",
+  "err": 0.0014518052339553833,
+  "second": 0.05197885259985924,
+  "name": "000_TitleParts_x",
+  "w": 512,
+  "h": 512
+ },
+ "2198114c374eaeb8": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_84724037de4ae3df_5.dds",
+  "err": 0.0011133607476949692,
+  "second": 0.05254249647259712,
+  "name": "TitleParts",
+  "w": 512,
+  "h": 512
+ },
+ "ca3e87703f8dc48b": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_512x512_84724037de4ae3df_5.dds",
+  "err": 0.0013470568228513002,
+  "second": 0.05201425775885582,
+  "name": "TitleParts",
+  "w": 512,
+  "h": 512
+ },
+ "d87d537154379afc": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_00f19c9f6407016f_8617c7e66e2fa3d7_8.dds",
+  "err": 1.7455473425798118e-05,
+  "second": 0.027869706973433495,
+  "name": "storyroute",
+  "w": 256,
+  "h": 128
+ },
+ "1ceb42767f9d7c17": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x256_fb31bc5c96de28fd_2fefe3dc6932e435_9.dds",
+  "err": 2.7028032491216436e-05,
+  "second": 0.0019852619152516127,
+  "name": "pause_main",
+  "w": 256,
+  "h": 256
+ },
+ "e6874ea5bee57ca4": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_1b214a192871a592_24c4ea501db3df74_9.dds",
+  "err": 0.00014940521214157343,
+  "second": 0.00238649919629097,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "357b0aa3c264f637": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_00f19c9f6407016f_8617c7e66e2fa3d7_8.dds",
+  "err": 0.003462426830083132,
+  "second": 0.03157573193311691,
+  "name": "storyroute",
+  "w": 256,
+  "h": 128
+ },
+ "25c9d72998c4bab7": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_00f19c9f6407016f_8617c7e66e2fa3d7_8.dds",
+  "err": 0.0023159701377153397,
+  "second": 0.029450491070747375,
+  "name": "storyroute",
+  "w": 256,
+  "h": 128
+ },
+ "a67c6cb03160c507": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x256_fb31bc5c96de28fd_2fefe3dc6932e435_9.dds",
+  "err": 0.0020441734232008457,
+  "second": 0.0037440164014697075,
+  "name": "pause_main",
+  "w": 256,
+  "h": 256
+ },
+ "3f14f18a632dc3db": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_00f19c9f6407016f_8617c7e66e2fa3d7_8.dds",
+  "err": 0.004298928659409285,
+  "second": 0.03217601031064987,
+  "name": "storyroute",
+  "w": 256,
+  "h": 128
+ },
+ "ca2b3bb8d06a6bca": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x256_fb31bc5c96de28fd_2fefe3dc6932e435_9.dds",
+  "err": 0.001396209467202425,
+  "second": 0.0027235704474151134,
+  "name": "pause_main",
+  "w": 256,
+  "h": 256
+ },
+ "cfcc2d419d5f862f": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_256x128_00f19c9f6407016f_8617c7e66e2fa3d7_8.dds",
+  "err": 0.00483150128275156,
+  "second": 0.03104153461754322,
+  "name": "storyroute",
+  "w": 256,
+  "h": 128
+ },
+ "4c1614893d5f1b79": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_169fa22d4ba5e19a_37c5ae22a947b7a4_9.dds",
+  "err": 8.079088001977652e-05,
+  "second": 0.0011772378347814083,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "d14b3ae9f219850d": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_a0dbc22d5a65cca5_36b133bc2e2273ca_9.dds",
+  "err": 0.0001465745153836906,
+  "second": 0.004901270382106304,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "2debc7b8fa60f03d": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_09769a4f4b2fc146_99dd6702ab6fff10_9.dds",
+  "err": 7.806954818079248e-05,
+  "second": 0.0010092947632074356,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "11e4a3611394e9fb": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_d7ce47fbb7baaa09_28a06ef1fd6c4b5e_9.dds",
+  "err": 0.00015236818580888212,
+  "second": 0.007441767491400242,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "cd0691d58eabfa48": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_b45fe835a0d0a681_a8df3d25e8fc68df_9.dds",
+  "err": 0.00010652175114955753,
+  "second": 0.0048601203598082066,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "5993d5baad49b7bb": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_7c5ef238bdfda3d6_b4b3ae51d4cd3ecc_9.dds",
+  "err": 0.0001724154280964285,
+  "second": 0.006623244844377041,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "38b1d956b445113b": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_4b4166128ac89f4a_3f6ce350124d9545_9.dds",
+  "err": 9.284383850172162e-05,
+  "second": 0.0005929151084274054,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "d73cd240a9fa6028": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x256_d5427e505cf2eaa7_2d42d8e4ae32a5da_9.dds",
+  "err": 2.6380796043667942e-05,
+  "second": 0.00012166939268354326,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "8fe82a0b6aa58b8c": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_e64e67b93b9afee6_1847bf55bf42db8c_9.dds",
+  "err": 0.00011748432007152587,
+  "second": 0.004261623602360487,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "b191084ad8b796ed": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_ea8a42b5d53afb65_7cdbe4e9dac7f732_9.dds",
+  "err": 0.00010678283433662727,
+  "second": 0.004004418849945068,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "b562b6ee149b25d6": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_8a02ab360b5aa777_7ae3fc262adc996d_9.dds",
+  "err": 7.08970837877132e-05,
+  "second": 0.0011667683720588684,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "70697d8291a636b7": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_ab2c384a7a700789_93427fd01e8e8001_9.dds",
+  "err": 0.00010096126061398536,
+  "second": 0.030305499210953712,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "060c44ff2a8d0548": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_83f3d252b4981e87_e98a64e860b00de1_9.dds",
+  "err": 0.00015055658877827227,
+  "second": 0.004712618421763182,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "8b6e9f9516b390f4": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_633b7aeb990eafed_f9c1966475ea3d38_9.dds",
+  "err": 0.00016479453188367188,
+  "second": 0.007168865296989679,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "f03123c2537b25aa": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_a02d8b47fe08c3a8_95aa801931039652_9.dds",
+  "err": 0.00013218926324043423,
+  "second": 0.0025228201411664486,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "627b4489e0e6efbf": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x256_0f5940818ed45528_d1a1e733b2d1ce42_9.dds",
+  "err": 1.3272427167976275e-05,
+  "second": 0.0001078123168554157,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "4409ce9b29b96c9b": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_45ed6a16072342ef_461ed0935693febc_9.dds",
+  "err": 8.087215246632695e-05,
+  "second": 0.0020133957732468843,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "c2b6a16ef989b73c": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_31ad994e98d8eccf_d818908f41e795d0_9.dds",
+  "err": 7.021021883701906e-05,
+  "second": 0.0007329927175305784,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "75fcf07866e65860": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_b81f4a498c3d9d5c_a34c871d8a0c7ad6_9.dds",
+  "err": 0.00011042031110264361,
+  "second": 0.009156694635748863,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "c757ca897813aa21": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_d84c4f977866cfdd_81cd96856b23fa5f_9.dds",
+  "err": 7.979752263054252e-05,
+  "second": 0.0038271790836006403,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "e1b9ac22aa0c70e8": {
+  "pack": "/home/claude/pack/GUP/Pause Menu/tex1_256x256_3dff99fd97da7485_68a3dc6092ce1aaf_9.dds",
+  "err": 7.526694389525801e-05,
+  "second": 0.001052035833708942,
+  "name": "micon",
+  "w": 256,
+  "h": 256
+ },
+ "5e6d440065844883": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_256x256_7cb29588b25458f8_53709788725cd20d_9.dds",
+  "err": 1.0060053682536818e-05,
+  "second": 0.001983117312192917,
+  "name": "pause_main",
+  "w": 256,
+  "h": 256
+ },
+ "61bacc6c12569a9e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_7b083d30575cad4c_ce15b41e107bfa64_8.dds",
+  "err": 8.740807061258238e-06,
+  "second": 0.0016828977968543768,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "1861459c51cc2202": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_dd8ee3fcada1d477_0ff8985a47018e18_8.dds",
+  "err": 0.00025957217440009117,
+  "second": 0.0022929951082915068,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "2fe78ef760307f04": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_b4c6f7b0ceb453e4_8e0ea0ee16179e36_8.dds",
+  "err": 1.0136545824934728e-05,
+  "second": 0.0003000758297275752,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "d26f301e3d6fec36": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_da986faa2bdaf358_b3c4df1d078ea2b1_8.dds",
+  "err": 0.0002448749146424234,
+  "second": 0.003181060776114464,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "5b6af8ef60273932": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_7abeec4b8b1d664a_03d209a5b555c559_8.dds",
+  "err": 0.00024094778927974403,
+  "second": 0.003126071533188224,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "56b643f765be8550": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_886a94ca7ccb4be6_5958e361e917665d_8.dds",
+  "err": 0.00024514063261449337,
+  "second": 0.003892672946676612,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "bbf25200553e047a": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_4ced06a25f95b09b_ab03413ac26f0498_8.dds",
+  "err": 1.00524011941161e-05,
+  "second": 0.0003030943335033953,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "aec2b4981e70ca61": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_b786cff03b0377ea_ba5bfda96117c24d_8.dds",
+  "err": 0.0002460468385834247,
+  "second": 0.0038479932118207216,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "1345513cbee9d899": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_840ae44e8791e761_78261cbfc703b265_8.dds",
+  "err": 0.00024195124569814652,
+  "second": 0.0023765817750245333,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "142a5ef96f82e9df": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_625f14f3733c9c2e_548e6c4805679a77_8.dds",
+  "err": 0.00024345872225239873,
+  "second": 0.002616911195218563,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "4f57ea6d8122b25f": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_9cbb6e83bda44305_559c5695e9b5090b_8.dds",
+  "err": 9.498393410467543e-06,
+  "second": 0.0017009739531204104,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "564f4a3fe2c5af68": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_8a2a84fc946a5fe5_968341104c92a0b1_8.dds",
+  "err": 0.00024410997866652906,
+  "second": 0.00439858203753829,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "f2689700cb6c2fed": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_44704874032fcf33_e67eaab3317ffca0_8.dds",
+  "err": 0.00024073643726296723,
+  "second": 0.00292789563536644,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "fc832aa5216f6cf0": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_7c83b021d9158466_dfab96af37e8363a_8.dds",
+  "err": 0.00024124790797941387,
+  "second": 0.0022783102467656136,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "dfa5b96902b088c0": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_146401a6b28b37fa_f19a6134b73b9d4e_8.dds",
+  "err": 0.0002447504666633904,
+  "second": 0.00228630262427032,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "fe6e30b81bd84b60": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_419e73c334b01fe0_59eb9010b2249011_8.dds",
+  "err": 0.0002444159472361207,
+  "second": 0.0028281444683670998,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "aec0cf1da25e6c13": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_71f2c40added5265_e7ec4f67a413d818_8.dds",
+  "err": 8.825557415548246e-06,
+  "second": 4.98524314025417e-05,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "9244f15151d86159": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_f3d59ffaf534686d_7ce1a976ef847e47_8.dds",
+  "err": 0.00024226175446528941,
+  "second": 0.004264194983989,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "4f6b03d22d61b571": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_c7f76885053e4af0_86aa0b64de82e9ea_8.dds",
+  "err": 0.00024292516172863543,
+  "second": 0.002917258534580469,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "f460973150c42867": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_d404695af9ff4580_436812d911e1ac54_8.dds",
+  "err": 0.0002452670596539974,
+  "second": 0.002680663950741291,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "ffd62d1d25ba370a": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_174a02d21e22ce78_65e0f74f25e8ca99_8.dds",
+  "err": 0.00024477537954226136,
+  "second": 0.0023339909967035055,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "4e69e03ca7b6cab7": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_023f2cf1809feb83_08673d6e10e4a2d9_8.dds",
+  "err": 0.00024272316659335047,
+  "second": 0.005882743746042252,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "5b26e7059ac97578": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_9acd4960053c7a1c_2351d591f45f7638_8.dds",
+  "err": 8.32929254102055e-06,
+  "second": 5.7033041230170056e-05,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "d7237fd951ff8293": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_6c9e26e98dcfa71f_46a4f3eb8b9ec8b9_8.dds",
+  "err": 0.0002441925462335348,
+  "second": 0.003280988894402981,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "cae22267683e50cf": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_f2b3b555af81c217_6e8b31ea8ba3eaec_8.dds",
+  "err": 0.00024592888075858355,
+  "second": 0.0031371088698506355,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "04e17e4fa7e4b1fb": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_498d7d6344648ee2_c7a1495ea1aa9f64_8.dds",
+  "err": 0.00024420450790785253,
+  "second": 0.003846842562779784,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "bc59817c77ce5f2a": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_2ebdec340096eb57_75fdfd73d6ef7074_8.dds",
+  "err": 0.0002453606575727463,
+  "second": 0.003932997118681669,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "dd8c5b7be47e13d0": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_2433e955cc8a6ed9_1632a96e13c4410e_8.dds",
+  "err": 0.00024371198378503323,
+  "second": 0.0034004829358309507,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "69e837ad68247664": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_583365b7c8f0da40_0d2cafbbfce8f2e1_8.dds",
+  "err": 3.990604000136955e-06,
+  "second": 0.03913668170571327,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "e51f9bf0e4951bb2": {
+  "pack": "/home/claude/pack/GUP/Stage Names/tex1_256x128_9d97b449823c175b_17d9ca202e9464c8_8.dds",
+  "err": 0.00024356368521694094,
+  "second": 0.004277455620467663,
+  "name": "stagetitle",
+  "w": 256,
+  "h": 128
+ },
+ "a7b06d4d8b7e9f33": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_128x32_583365b7c8f0da40_0d2cafbbfce8f2e1_8.dds",
+  "err": 0.008505411446094513,
+  "second": 0.04767478257417679,
+  "name": "stage",
+  "w": 128,
+  "h": 32
+ },
+ "f74f476244ae13c9": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.005561052821576595,
+  "second": 0.009823521599173546,
+  "name": "en_hngs0",
+  "w": 128,
+  "h": 128
+ },
+ "1b275822137a4ac5": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.01004254724830389,
+  "second": 0.01762394793331623,
+  "name": "stg0503tn022",
+  "w": 128,
+  "h": 128
+ },
+ "3e2dd8b90aabd2f6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_e1e67a9764b6e8ee_14.dds",
+  "err": 0.008751802146434784,
+  "second": 0.012782540172338486,
+  "name": "s0617_zn014_mp",
+  "w": 256,
+  "h": 256
+ },
+ "af022ba2dd183e26": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.008403470739722252,
+  "second": 0.08681266754865646,
+  "name": "s0610_zn031_mp",
+  "w": 64,
+  "h": 64
+ },
+ "c75929cfcb40dba8": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_e1e67a9764b6e8ee_14.dds",
+  "err": 0.0012924869079142809,
+  "second": 0.00720056751742959,
+  "name": "s0610_zn008_mp",
+  "w": 256,
+  "h": 256
+ },
+ "c09026a8561c1165": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e33d946d103d58f6_6b2bc0db7b641013_8.dds",
+  "err": 0.005437001585960388,
+  "second": 0.008922500535845757,
+  "name": "en_bdom3",
+  "w": 128,
+  "h": 128
+ },
+ "2dd055b08ac928cc": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.005542895756661892,
+  "second": 0.009521158412098885,
+  "name": "en_hngs4",
+  "w": 128,
+  "h": 128
+ },
+ "9660bbf71459a5e0": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_d4b1de23108a40cf_74e4f9591c1bbf33_8.dds",
+  "err": 0.0010201905388385057,
+  "second": 0.025629717856645584,
+  "name": "ob_emeblu",
+  "w": 64,
+  "h": 64
+ },
+ "76fbc4f853d77612": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_85b8bdc7dc59653b_80532fc0047c6d7a_8.dds",
+  "err": 0.0012244239915162325,
+  "second": 0.060922302305698395,
+  "name": "ob_emeylw",
+  "w": 64,
+  "h": 64
+ },
+ "6016173e9020b9ac": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_51530cff5c5d229c_684bcb4039f0694a_8.dds",
+  "err": 0.0003455702099017799,
+  "second": 0.032495737075805664,
+  "name": "ob_emeaqa",
+  "w": 64,
+  "h": 64
+ },
+ "063f50cd922d8fbc": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_fc2ee7d4aaac627b_8b8d07a607d3ac76_8.dds",
+  "err": 0.0007820759783498943,
+  "second": 0.07373162358999252,
+  "name": "ob_emered",
+  "w": 64,
+  "h": 64
+ },
+ "bb745cd2a6dd632f": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_36d151929e55f6a8_3848cdb2df802f39_8.dds",
+  "err": 0.0007341527380049229,
+  "second": 0.03423510491847992,
+  "name": "ob_emeppl",
+  "w": 64,
+  "h": 64
+ },
+ "2ac2ec4795f76082": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_85b8bdc7dc59653b_80532fc0047c6d7a_8.dds",
+  "err": 0.0016649547033011913,
+  "second": 0.06236058846116066,
+  "name": "ob_emeylw",
+  "w": 64,
+  "h": 64
+ },
+ "e0d6018f0c398ac2": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_aac023e96a1f2914_7c459d44aadf22f7_8.dds",
+  "err": 0.00331652769818902,
+  "second": 0.05026420205831528,
+  "name": "ob_emewh",
+  "w": 64,
+  "h": 64
+ },
+ "6a7c1dcf6f976ba3": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_fc2ee7d4aaac627b_8b8d07a607d3ac76_8.dds",
+  "err": 0.0010613705962896347,
+  "second": 0.07347846031188965,
+  "name": "ob_emered",
+  "w": 64,
+  "h": 64
+ },
+ "199db711abf22a8a": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_36d151929e55f6a8_3848cdb2df802f39_8.dds",
+  "err": 0.001580867450684309,
+  "second": 0.03417489677667618,
+  "name": "ob_emeppl",
+  "w": 64,
+  "h": 64
+ },
+ "42a2ce4258776810": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_530509647fa62d35_18f868cbd828d676_8.dds",
+  "err": 0.0027432809583842754,
+  "second": 0.005927197635173798,
+  "name": "ob_emegrn",
+  "w": 64,
+  "h": 64
+ },
+ "f1aac0ff9b382c60": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_d4b1de23108a40cf_74e4f9591c1bbf33_8.dds",
+  "err": 0.001414780505001545,
+  "second": 0.026186024770140648,
+  "name": "ob_emeblu",
+  "w": 64,
+  "h": 64
+ },
+ "f0db030b98c9c30e": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_51530cff5c5d229c_684bcb4039f0694a_8.dds",
+  "err": 0.000825929397251457,
+  "second": 0.03375149145722389,
+  "name": "ob_emeaqa",
+  "w": 64,
+  "h": 64
+ },
+ "aa4d9249d7d9d12a": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.006536984816193581,
+  "second": 0.013240926899015903,
+  "name": "e600kn06",
+  "w": 128,
+  "h": 128
+ },
+ "1384ccecdbfac640": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_530509647fa62d35_18f868cbd828d676_8.dds",
+  "err": 0.0021910143550485373,
+  "second": 0.005430438555777073,
+  "name": "ob_emegrn",
+  "w": 64,
+  "h": 64
+ },
+ "88295fdde06642be": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_aac023e96a1f2914_7c459d44aadf22f7_8.dds",
+  "err": 0.0028837465215474367,
+  "second": 0.04873929172754288,
+  "name": "ob_emewh",
+  "w": 64,
+  "h": 64
+ },
+ "25e50f02584c2f52": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_de667cac9a1ffa31_9329478207daf3ca_8.dds",
+  "err": 0.007741163484752178,
+  "second": 0.011744597926735878,
+  "name": "vh_GUN_tank",
+  "w": 128,
+  "h": 128
+ },
+ "adb40c00f503409d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e01351f85d308aab_14.dds",
+  "err": 0.0008265305659733713,
+  "second": 0.0015797417145222425,
+  "name": "e510_zn091",
+  "w": 128,
+  "h": 128
+ },
+ "237568ba68e70594": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.002746044425293803,
+  "second": 0.005866313353180885,
+  "name": "boo4",
+  "w": 128,
+  "h": 128
+ },
+ "17c31ab9107ec0cb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.007509627379477024,
+  "second": 0.013415183871984482,
+  "name": "boo1",
+  "w": 128,
+  "h": 128
+ },
+ "c94ddc02ee115795": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_a6f9e58ce8b15a75_c7994c66c97e6d32_8.dds",
+  "err": 0.00027342248358763754,
+  "second": 0.005033956840634346,
+  "name": "Advertise_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "95e002309eae6ed7": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_a6f9e58ce8b15a75_c7994c66c97e6d32_8.dds",
+  "err": 0.003956126049160957,
+  "second": 0.006448602303862572,
+  "name": "Advertise_GE00",
+  "w": 256,
+  "h": 256
+ },
+ "d2c4f56fd943651d": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_417db1608f603fe2_c7994c66c97e6d32_8.dds",
+  "err": 8.86077373252192e-07,
+  "second": 0.002578560495749116,
+  "name": "Movie_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "84fc24bcc1843a09": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_3e326e2bf483ce7c_c7994c66c97e6d32_8.dds",
+  "err": 0.0023190153297036886,
+  "second": 0.0039003179408609867,
+  "name": "Save_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "b2933c7b909649ff": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_5b95e32663f70e2a_c7994c66c97e6d32_8.dds",
+  "err": 5.106215894556954e-07,
+  "second": 0.00329407537356019,
+  "name": "stg0005_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "b9682a6729079c0b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_cc80552cae3417e6_c7994c66c97e6d32_8.dds",
+  "err": 2.230212339782156e-05,
+  "second": 0.0004835730651393533,
+  "name": "stg0100_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "9f31fcddcc8ec962": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_cb167c1284b85a50_c7994c66c97e6d32_8.dds",
+  "err": 0.00010356594430049881,
+  "second": 0.00031626957934349775,
+  "name": "stg0200_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "e7c778c9f3889c31": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_ed2bbcfba3bf7129_c7994c66c97e6d32_8.dds",
+  "err": 3.147827374050394e-05,
+  "second": 0.0003357783134561032,
+  "name": "stg0201_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "9ec7c383093cf068": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_218d963696aedea7_c7994c66c97e6d32_8.dds",
+  "err": 5.262398917693645e-05,
+  "second": 0.0005856822244822979,
+  "name": "stg0202_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "3e7c85a82c0431b8": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_7f8210abd59ce4e7_c7994c66c97e6d32_8.dds",
+  "err": 0.0003028432547580451,
+  "second": 0.001331233768723905,
+  "name": "stg0210_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "f7af653aea949438": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_72377482d36fc345_c7994c66c97e6d32_8.dds",
+  "err": 0.0001881337957456708,
+  "second": 0.0014015644555911422,
+  "name": "stg0300_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "5513bcf3243bd6ab": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_60493aa81e5fa324_c7994c66c97e6d32_8.dds",
+  "err": 0.0002994341484736651,
+  "second": 0.0015040189027786255,
+  "name": "stg0301_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "e8f61677a3c5a1ef": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_108ecdf761de0798_c7994c66c97e6d32_8.dds",
+  "err": 7.521147199440747e-05,
+  "second": 0.001246440690010786,
+  "name": "stg0302_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "1e8f57cf4b41e2e4": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_6ead6955ff8915f3_c7994c66c97e6d32_8.dds",
+  "err": 0.00034130504354834557,
+  "second": 0.0017889454029500484,
+  "name": "stg0310_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "3582cf1509b3c39e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_7a25851badcb8c90_c7994c66c97e6d32_8.dds",
+  "err": 0.000116691917355638,
+  "second": 0.00033214391442015767,
+  "name": "stg0400_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "10cdea86e3ad2816": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_458a418fd92c6ea8_c7994c66c97e6d32_8.dds",
+  "err": 0.0002687067608349025,
+  "second": 0.0013619911624118686,
+  "name": "stg0401_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "4340c10c2e1a26c5": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_a1c0e2ee1bf8482d_c7994c66c97e6d32_8.dds",
+  "err": 0.00017792137805372477,
+  "second": 0.00128075759857893,
+  "name": "stg0402_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "52e462fdaf0dd0c1": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_0148659a5e7319e0_c7994c66c97e6d32_8.dds",
+  "err": 0.00018152574193663895,
+  "second": 0.0021703792735934258,
+  "name": "stg0410_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "0d91efc2c123d268": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_c85375b770a6e6d7_c7994c66c97e6d32_8.dds",
+  "err": 0.0003958213492296636,
+  "second": 0.0023073009215295315,
+  "name": "stg0411_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "9aaded3340b7d16a": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_23705ec5eca7c979_c7994c66c97e6d32_8.dds",
+  "err": 0.0001663272560108453,
+  "second": 0.0010424776701256633,
+  "name": "stg0412_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "069c973da0ea120d": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_d8af0fb5a6a49e24_c7994c66c97e6d32_8.dds",
+  "err": 0.0002276168088428676,
+  "second": 0.0006391171482391655,
+  "name": "stg0500_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "d6eaf730b7620a9f": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_2bbb425b72f4d6c7_c7994c66c97e6d32_8.dds",
+  "err": 0.0002704939106479287,
+  "second": 0.0009649234125390649,
+  "name": "stg0501_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "7fd4d8587953ff22": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_64d516df1901c114_c7994c66c97e6d32_8.dds",
+  "err": 0.00014650315279141068,
+  "second": 0.0004963536048308015,
+  "name": "stg0502_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "499b167c6273d16a": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_e1dc839a09741919_c7994c66c97e6d32_8.dds",
+  "err": 0.00020719195890706033,
+  "second": 0.000500979193020612,
+  "name": "stg0503_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "7bf72a42e871296e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_16c79c2140ba4bff_c7994c66c97e6d32_8.dds",
+  "err": 0.00019813596736639738,
+  "second": 0.0014285071520134807,
+  "name": "stg0504_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "10b6c6f7460781b5": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_3259972a26c2eeef_c7994c66c97e6d32_8.dds",
+  "err": 0.0002522467402741313,
+  "second": 0.0013991164742037654,
+  "name": "stg0510_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "b523e0105644b2fa": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_c354c75c8de57546_c7994c66c97e6d32_8.dds",
+  "err": 8.260043387053884e-07,
+  "second": 0.0003982542548328638,
+  "name": "stg0600_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "87b9f517b95e758c": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_53657f4435092d21_c7994c66c97e6d32_8.dds",
+  "err": 0.00014644308248534799,
+  "second": 0.0004895352758467197,
+  "name": "stg0602_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "35449599a09d9107": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_6671858d962d6c89_c7994c66c97e6d32_8.dds",
+  "err": 0.00014214786642696708,
+  "second": 0.0010785366175696254,
+  "name": "stg0603_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "ccc34b65580c5c15": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_3167c9b44b2a9b98_c7994c66c97e6d32_8.dds",
+  "err": 0.00017886751447804272,
+  "second": 0.00034873909316956997,
+  "name": "stg0604_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "a46c100bedfa326a": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_8103dac6f6936c7e_c7994c66c97e6d32_8.dds",
+  "err": 0.00011843401443911716,
+  "second": 0.0010700662387534976,
+  "name": "stg0610_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "feca6c5c372aa601": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_a42bd3ec996e3bbe_c7994c66c97e6d32_8.dds",
+  "err": 0.0003246197011321783,
+  "second": 0.0014520406257361174,
+  "name": "stg0611_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "b05687a1f102a54b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_0ca36c8955e9d739_c7994c66c97e6d32_8.dds",
+  "err": 0.00042620330350473523,
+  "second": 0.0011742629576474428,
+  "name": "stg0612_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "a0f51ad9de35063b": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_2f2bcf06a6025ad9_c7994c66c97e6d32_8.dds",
+  "err": 0.0004769349761772901,
+  "second": 0.0014233558904379606,
+  "name": "stg0614_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "53f6067f9dbce54f": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_a41a062876c65f3b_c7994c66c97e6d32_8.dds",
+  "err": 0.00016317343397531658,
+  "second": 0.0013723538722842932,
+  "name": "stg0615_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "0ad5b21e5cf7a115": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_fd08a27af026912f_c7994c66c97e6d32_8.dds",
+  "err": 0.0003236285410821438,
+  "second": 0.001219302648678422,
+  "name": "stg0616_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "3b73d74edff623a6": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_d14592ac12cbfbf3_c7994c66c97e6d32_8.dds",
+  "err": 0.0001312445820076391,
+  "second": 0.0015186917735263705,
+  "name": "stg0617_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "17f2806598676f23": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_3e24516f7c309d26_c7994c66c97e6d32_8.dds",
+  "err": 0.00010508277046028525,
+  "second": 0.0008713896386325359,
+  "name": "stg0618_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "ff401e97ba29f5fd": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_dbd7233db1bc7a16_c7994c66c97e6d32_8.dds",
+  "err": 8.860774300956109e-07,
+  "second": 0.0018706144765019417,
+  "name": "stg0700_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "6874d98c220dde1c": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_075c33b21d04867c_c7994c66c97e6d32_8.dds",
+  "err": 0.0006243542302399874,
+  "second": 0.0015133604174479842,
+  "name": "stg0710_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "3989f4025dfc3adb": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_5b95e32663f70e2a_c7994c66c97e6d32_8.dds",
+  "err": 0.001393018988892436,
+  "second": 0.00329754501581192,
+  "name": "stg0800_IT00",
+  "w": 256,
+  "h": 256
+ },
+ "d083ecfe892f86d8": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_6a1d58aac07f8c6e_c7994c66c97e6d32_8.dds",
+  "err": 8.86077373252192e-07,
+  "second": 0.0022116045001894236,
+  "name": "stg0901_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "af65f277e78f43ee": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_03bb12dde808d406_c7994c66c97e6d32_8.dds",
+  "err": 4.805843332178483e-07,
+  "second": 0.0016925132367759943,
+  "name": "stg0902_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "98723988d8b1543e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_797d0e91df4a51dd_c7994c66c97e6d32_8.dds",
+  "err": 5.406574246080709e-07,
+  "second": 0.0016896898159757257,
+  "name": "stg0903_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "cb20018dd1b7f72c": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_c4144096710391ce_c7994c66c97e6d32_8.dds",
+  "err": 9.161139473690127e-07,
+  "second": 0.002336556324735284,
+  "name": "stg0904_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "c153185740226784": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_74ef6bd533ca843b_c7994c66c97e6d32_8.dds",
+  "err": 7.509130455218838e-07,
+  "second": 0.001969480188563466,
+  "name": "stg0905_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "f4fc21ed9af8bb78": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_bc7c54f996576cda_c7994c66c97e6d32_8.dds",
+  "err": 1.0062237834063126e-06,
+  "second": 0.0018264760728925467,
+  "name": "stg0906_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "bdc13e4656d66702": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_1d6956e08370ee70_c7994c66c97e6d32_8.dds",
+  "err": 7.959678214319865e-07,
+  "second": 0.0018630755366757512,
+  "name": "stg0907_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "caf551375005f74d": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_8a4c46c2a2c85dfd_c7994c66c97e6d32_8.dds",
+  "err": 7.208769261524139e-07,
+  "second": 0.0019311683718115091,
+  "name": "stg0909_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "e08e96d02f045660": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_64b445235e03a5b4_c7994c66c97e6d32_8.dds",
+  "err": 8.560408559787902e-07,
+  "second": 0.0018499046564102173,
+  "name": "stg0910_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "f6ef497ac964465e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_256x256_d822cdb27771c19b_c7994c66c97e6d32_8.dds",
+  "err": 7.05858269611781e-07,
+  "second": 0.0029713031835854053,
+  "name": "stg0911_EN00",
+  "w": 256,
+  "h": 256
+ },
+ "9bb5ce9682471479": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_64x64_1b15674d61c05ba0_a2368ac84efb3742_9.dds",
+  "err": 3.9286511309910566e-05,
+  "second": 0.11506517231464386,
+  "name": "ad_hpasc1",
+  "w": 64,
+  "h": 64
+ },
+ "b1e79fb79d0bfa2e": {
+  "pack": "/home/claude/pack/GUP/Text/tex1_1024x64_ecaffe3de68e0800_cb330d3350414f56_9.dds",
+  "err": 2.2677572815155145e-06,
+  "second": 1.0,
+  "name": "font",
+  "w": 1024,
+  "h": 64
+ },
+ "a1cf725c26820a97": {
+  "pack": "/home/claude/pack/GUP/Chaos Emeralds/tex1_64x64_8c69c14cdc8d3476_7ab3caa87d838f9b_8.dds",
+  "err": 0.0015360679244622588,
+  "second": 0.039812348783016205,
+  "name": "s0100_dn011",
+  "w": 64,
+  "h": 64
+ },
+ "d9c35bf86f14361e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.002842401620000601,
+  "second": 0.03444022685289383,
+  "name": "ef_s0100_003",
+  "w": 128,
+  "h": 128
+ },
+ "ef5d3265f332cd6e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.010718383826315403,
+  "second": 0.053744833916425705,
+  "name": "s0100_dn029",
+  "w": 64,
+  "h": 64
+ },
+ "b02795761bf30224": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_2293fdffba3b266a_a3c81614b0ee717f_8.dds",
+  "err": 0.010187563486397266,
+  "second": 0.05388966575264931,
+  "name": "s0100_dn005",
+  "w": 64,
+  "h": 64
+ },
+ "b4ddf65f54eb366a": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.004463487304747105,
+  "second": 0.007793561555445194,
+  "name": "s0100_nn059",
+  "w": 128,
+  "h": 128
+ },
+ "4941aba3db4fd4be": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.00385799678042531,
+  "second": 0.006978025659918785,
+  "name": "s0100_nn046",
+  "w": 128,
+  "h": 128
+ },
+ "1da8c1bc5b696d08": {
+  "pack": "/home/claude/pack/GUP/Menu/tex1_128x128_d85cf5d1678313c2_d13b81391e441b67_9.dds",
+  "err": 0.0016773446695879102,
+  "second": 0.02989894524216652,
+  "name": "cn0000flame02",
+  "w": 128,
+  "h": 128
+ },
+ "78c0c03edbc796e6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.008739007636904716,
+  "second": 0.012884903699159622,
+  "name": "s0201_zn090",
+  "w": 128,
+  "h": 128
+ },
+ "7649e2d8bd905a8b": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.003937217872589827,
+  "second": 0.03910815715789795,
+  "name": "plasmaFX2",
+  "w": 128,
+  "h": 128
+ },
+ "153d53f1d0893b5a": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.005388176999986172,
+  "second": 0.03307599574327469,
+  "name": "ef_s0100_003",
+  "w": 128,
+  "h": 128
+ },
+ "61cc8f1966a657fb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.003235204378142953,
+  "second": 0.0057464526034891605,
+  "name": "s0202_nn009",
+  "w": 128,
+  "h": 128
+ },
+ "6d21677742d2975b": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0038587781600654125,
+  "second": 0.006986195687204599,
+  "name": "s0100_nn046",
+  "w": 128,
+  "h": 128
+ },
+ "31209707ffd9ec2d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_6fce5affc9c5c354_14.dds",
+  "err": 0.011505190283060074,
+  "second": 0.016003593802452087,
+  "name": "s0100_nn067",
+  "w": 128,
+  "h": 128
+ },
+ "fa787ac3bedf7fac": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.005133212544023991,
+  "second": 0.008420335128903389,
+  "name": "s0300_dn001",
+  "w": 128,
+  "h": 128
+ },
+ "0663bf95ac4efbc4": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.007653337437659502,
+  "second": 0.04124672710895538,
+  "name": "stg0300tn128",
+  "w": 32,
+  "h": 32
+ },
+ "b07281bd6680b62e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_e1e67a9764b6e8ee_14.dds",
+  "err": 0.005053316708654165,
+  "second": 0.00824852753430605,
+  "name": "stg0300tn026",
+  "w": 256,
+  "h": 256
+ },
+ "59feda52ab7b7ddf": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.010813044384121895,
+  "second": 0.018831897526979446,
+  "name": "stg0300tn005",
+  "w": 128,
+  "h": 128
+ },
+ "3af0e71413ff1a01": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e33d946d103d58f6_6b2bc0db7b641013_8.dds",
+  "err": 0.011875482276082039,
+  "second": 0.016502832993865013,
+  "name": "s0301_nn033",
+  "w": 128,
+  "h": 128
+ },
+ "c31753e6e0f6a1c6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e01351f85d308aab_14.dds",
+  "err": 0.0006676671910099685,
+  "second": 0.0011181399459019303,
+  "name": "s0301_nn008",
+  "w": 128,
+  "h": 128
+ },
+ "0ef5518a1aa78589": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_64x64_d9d0841ee2700ea0_23fc8e2d64069188_8.dds",
+  "err": 9.886333282338455e-05,
+  "second": 0.11237122118473053,
+  "name": "001_s0302_dp091",
+  "w": 64,
+  "h": 64
+ },
+ "89f5a330302e8e71": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_64x64_4cd62ceacef01d23_ae30362f7c0211d5_8.dds",
+  "err": 0.00011001070379279554,
+  "second": 0.16391900181770325,
+  "name": "000_s0302_dp090",
+  "w": 64,
+  "h": 64
+ },
+ "697fc7ebb6d1de5f": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.008579423651099205,
+  "second": 0.03120809979736805,
+  "name": "stg0300tn015",
+  "w": 32,
+  "h": 32
+ },
+ "3e23e9480f993f06": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.011658992618322372,
+  "second": 0.0160609669983387,
+  "name": "stg0300tn005",
+  "w": 128,
+  "h": 128
+ },
+ "34852f94f1c9a807": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0033780583180487156,
+  "second": 0.005773545708507299,
+  "name": "stg0300tn003",
+  "w": 128,
+  "h": 128
+ },
+ "9ee99553a6b9c756": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.0116690993309021,
+  "second": 0.05376867204904556,
+  "name": "s0400_dn015",
+  "w": 64,
+  "h": 64
+ },
+ "8299322abc4170e9": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.005687251687049866,
+  "second": 0.013018940575420856,
+  "name": "stg0401tn017",
+  "w": 128,
+  "h": 128
+ },
+ "d60240f807871c33": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.006877313368022442,
+  "second": 0.03396323323249817,
+  "name": "stg0401tn0142",
+  "w": 128,
+  "h": 128
+ },
+ "798aa0a2535a699c": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e33d946d103d58f6_6b2bc0db7b641013_8.dds",
+  "err": 0.006086481735110283,
+  "second": 0.010612311773002148,
+  "name": "stg0401tn0124",
+  "w": 128,
+  "h": 128
+ },
+ "8a8ee572329e2785": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.008460583165287971,
+  "second": 0.013404430821537971,
+  "name": "stg0401tn0106",
+  "w": 128,
+  "h": 128
+ },
+ "126459df12d8f9c1": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.009740635752677917,
+  "second": 0.013841387815773487,
+  "name": "stg0401tn006",
+  "w": 128,
+  "h": 128
+ },
+ "8678ce78d44198b7": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.006230326369404793,
+  "second": 0.01131135132163763,
+  "name": "stg0401tn001",
+  "w": 128,
+  "h": 128
+ },
+ "a5778edf8b1719b5": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.010999931953847408,
+  "second": 0.03284916281700134,
+  "name": "cn0000rain2",
+  "w": 128,
+  "h": 128
+ },
+ "a74c31e11fddbdca": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.001748336129821837,
+  "second": 0.04453635960817337,
+  "name": "s0201_sa002",
+  "w": 128,
+  "h": 128
+ },
+ "61e6970340d09e84": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.008283457718789577,
+  "second": 0.013017199002206326,
+  "name": "s0402_zn090",
+  "w": 128,
+  "h": 128
+ },
+ "b889698794df6cde": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.00787246786057949,
+  "second": 0.012202698737382889,
+  "name": "s0402_zn014",
+  "w": 128,
+  "h": 128
+ },
+ "3ba92002c9b0247e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.007800500839948654,
+  "second": 0.028360744938254356,
+  "name": "s0404_dn052",
+  "w": 128,
+  "h": 128
+ },
+ "60497cca41032484": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.008043031208217144,
+  "second": 0.03400960937142372,
+  "name": "stg0401tn0142",
+  "w": 128,
+  "h": 128
+ },
+ "a3250c0819f86bb5": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.009798049926757812,
+  "second": 0.014860330149531364,
+  "name": "stg0401tn001",
+  "w": 128,
+  "h": 128
+ },
+ "b18f8e7baaf82eb8": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.005375216715037823,
+  "second": 0.010015424340963364,
+  "name": "s0503_wn013",
+  "w": 128,
+  "h": 128
+ },
+ "aa63aecf526cc24e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.0047857193276286125,
+  "second": 0.032786428928375244,
+  "name": "stg0500tn060",
+  "w": 128,
+  "h": 128
+ },
+ "23653c1274626db7": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0035166768357157707,
+  "second": 0.008035266771912575,
+  "name": "stg0500tn035",
+  "w": 128,
+  "h": 128
+ },
+ "af4f48daf79089ca": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0038718734867870808,
+  "second": 0.008609069511294365,
+  "name": "stg0500tn034",
+  "w": 128,
+  "h": 128
+ },
+ "155716a575ead00f": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.004153946414589882,
+  "second": 0.009657854214310646,
+  "name": "stg0500tn032",
+  "w": 128,
+  "h": 128
+ },
+ "e1343eff463a42cb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.00654787290841341,
+  "second": 0.011571797542273998,
+  "name": "stg0500tn031",
+  "w": 128,
+  "h": 128
+ },
+ "1848f14fef833fcc": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.002236204221844673,
+  "second": 0.03765726089477539,
+  "name": "stg0500tn003",
+  "w": 128,
+  "h": 128
+ },
+ "4253c29e349a9c3c": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.008917935192584991,
+  "second": 0.039805665612220764,
+  "name": "bs0000spark01",
+  "w": 128,
+  "h": 128
+ },
+ "9ba23e4f87ee4939": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.009391325525939465,
+  "second": 0.0376380980014801,
+  "name": "s0501_zn063",
+  "w": 32,
+  "h": 32
+ },
+ "5876abb14b1eefff": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.009705732576549053,
+  "second": 0.05791730433702469,
+  "name": "s0501_sn027",
+  "w": 64,
+  "h": 64
+ },
+ "08ca8c2a56996648": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.003472493030130863,
+  "second": 0.006448707077652216,
+  "name": "s0501_zn068_mp",
+  "w": 128,
+  "h": 128
+ },
+ "cfe6a17b28f90ca1": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.00031245494028553367,
+  "second": 0.034787990152835846,
+  "name": "s0501_zn063",
+  "w": 32,
+  "h": 32
+ },
+ "d2e3ffdec4426c97": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_8bcf7963d31cb459_14.dds",
+  "err": 0.0015793954953551292,
+  "second": 0.0504610612988472,
+  "name": "s0501_zn061",
+  "w": 64,
+  "h": 64
+ },
+ "e40706eabc0d2172": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_6fce5affc9c5c354_14.dds",
+  "err": 4.002366404165514e-05,
+  "second": 0.0032060383819043636,
+  "name": "s0501_zn060",
+  "w": 128,
+  "h": 128
+ },
+ "099e5803097a9eda": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.010877157561480999,
+  "second": 0.04631046950817108,
+  "name": "s0501_zn055",
+  "w": 32,
+  "h": 32
+ },
+ "689e996ab2b9b575": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_3ba7a9c3fea07e49_14.dds",
+  "err": 0.0020578475669026375,
+  "second": 0.036072831600904465,
+  "name": "s0501_zn054",
+  "w": 32,
+  "h": 32
+ },
+ "d21d23f374a391f1": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_6553524de2552b9e_14.dds",
+  "err": 0.00010131319868378341,
+  "second": 0.01000934187322855,
+  "name": "s0501_zn045_mp",
+  "w": 128,
+  "h": 128
+ },
+ "11878c3ae7734ade": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_713a8ec1b5ddf6b0_14.dds",
+  "err": 0.0033995788544416428,
+  "second": 0.018890781328082085,
+  "name": "s0501_zn044",
+  "w": 128,
+  "h": 128
+ },
+ "ec5efee7208cbfd2": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e01351f85d308aab_14.dds",
+  "err": 0.0007371269166469574,
+  "second": 0.0016057685716077685,
+  "name": "s0501_zn040_mp",
+  "w": 128,
+  "h": 128
+ },
+ "c0cc96faa38a5553": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_4b70bd195b37d718_14.dds",
+  "err": 6.803272117394954e-05,
+  "second": 0.00026463682297617197,
+  "name": "s0501_zn039_mp",
+  "w": 128,
+  "h": 128
+ },
+ "b41a076feb3c1426": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.002067819470539689,
+  "second": 0.006880256347358227,
+  "name": "s0502_nn032",
+  "w": 128,
+  "h": 128
+ },
+ "6a5577be6356bb4c": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.00500788539648056,
+  "second": 0.008162230253219604,
+  "name": "s0502_nn014",
+  "w": 128,
+  "h": 128
+ },
+ "5dd650eb5e2a8ad6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.003067975863814354,
+  "second": 0.007664690259844065,
+  "name": "s0502_nn006",
+  "w": 128,
+  "h": 128
+ },
+ "30dd195dfa807176": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0018703443929553032,
+  "second": 0.007782598491758108,
+  "name": "s0503_dn001",
+  "w": 128,
+  "h": 128
+ },
+ "2f4278b88f651324": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.003443657886236906,
+  "second": 0.009092342108488083,
+  "name": "s0503_dn009",
+  "w": 128,
+  "h": 128
+ },
+ "819973a4a6a521d5": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.010254904627799988,
+  "second": 0.014378725551068783,
+  "name": "stg0503tn016",
+  "w": 128,
+  "h": 128
+ },
+ "63ceb5165d214565": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0032057985663414,
+  "second": 0.007623074576258659,
+  "name": "stg0500tn035",
+  "w": 128,
+  "h": 128
+ },
+ "1104a849d46acaeb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.005514946766197681,
+  "second": 0.009788978844881058,
+  "name": "stg0500tn032",
+  "w": 128,
+  "h": 128
+ },
+ "ab51b2be2d636235": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.00825740210711956,
+  "second": 0.032807573676109314,
+  "name": "stg0401tn0142",
+  "w": 128,
+  "h": 128
+ },
+ "a6ee312a4d75611d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.010979928076267242,
+  "second": 0.0162196047604084,
+  "name": "stg0401tn0106",
+  "w": 128,
+  "h": 128
+ },
+ "f276b3758ab3aac6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_e1e67a9764b6e8ee_14.dds",
+  "err": 0.0005327579565346241,
+  "second": 0.00503446813672781,
+  "name": "s0511_nn010",
+  "w": 256,
+  "h": 256
+ },
+ "58cf9704fbf2e799": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.006555681582540274,
+  "second": 0.03895539045333862,
+  "name": "ef_hring",
+  "w": 128,
+  "h": 128
+ },
+ "129451d56d65bf0f": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.0020634792745113373,
+  "second": 0.041467078030109406,
+  "name": "bs0000spark03",
+  "w": 128,
+  "h": 128
+ },
+ "3f0badac6000c5eb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.009452961385250092,
+  "second": 0.03759835660457611,
+  "name": "s0600_zn063",
+  "w": 32,
+  "h": 32
+ },
+ "8a4570c4aa0dcb10": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_8bcf7963d31cb459_14.dds",
+  "err": 0.008044665679335594,
+  "second": 0.07743653655052185,
+  "name": "s0600_zn061",
+  "w": 64,
+  "h": 64
+ },
+ "23f2ff065c51f65e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.005743346177041531,
+  "second": 0.08569969236850739,
+  "name": "s0600_zn031",
+  "w": 64,
+  "h": 64
+ },
+ "2564e141cb72dd41": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_230a7c119ede6f63_14.dds",
+  "err": 4.4679334678221494e-05,
+  "second": 0.005901155062019825,
+  "name": "s0600_zn027_mp",
+  "w": 128,
+  "h": 128
+ },
+ "6b20b73fdf58da6b": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_230a7c119ede6f63_14.dds",
+  "err": 0.0043525174260139465,
+  "second": 0.0074915895238518715,
+  "name": "s0600_zn026_mp",
+  "w": 128,
+  "h": 128
+ },
+ "9246b6909e7b4a9b": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x32_4d56513ec99e4b8a_a47319c71085d47c_8.dds",
+  "err": 0.002047882881015539,
+  "second": 0.11590231955051422,
+  "name": "s0600_za010",
+  "w": 128,
+  "h": 32
+ },
+ "5ef40e0b1b08be4d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_8a45594c20a3e898_91c382bb1faec999_8.dds",
+  "err": 0.0005432515172287822,
+  "second": 0.08962815999984741,
+  "name": "s0600_za005",
+  "w": 128,
+  "h": 128
+ },
+ "ddfa397ed57e9994": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.009822259657084942,
+  "second": 0.03335791826248169,
+  "name": "bs0000spark02",
+  "w": 128,
+  "h": 128
+ },
+ "539eb473f07d0135": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.005665233824402094,
+  "second": 0.03355817496776581,
+  "name": "s0601_sn015",
+  "w": 128,
+  "h": 128
+ },
+ "d723c9402a62a4fa": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.001996828243136406,
+  "second": 0.0064040725119411945,
+  "name": "s0604_wn011",
+  "w": 128,
+  "h": 128
+ },
+ "51225d5f4f72c694": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.009723364375531673,
+  "second": 0.034326642751693726,
+  "name": "bs0000spark02",
+  "w": 128,
+  "h": 128
+ },
+ "e62b0db5381b1326": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_713a8ec1b5ddf6b0_14.dds",
+  "err": 0.00893777422606945,
+  "second": 0.029746554791927338,
+  "name": "s0602_zn044",
+  "w": 128,
+  "h": 128
+ },
+ "a1aef3ad7bf5ca8d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x128_cd051f1bcabba7a6_14.dds",
+  "err": 0.010944319888949394,
+  "second": 0.2939930856227875,
+  "name": "s0602_zn019_mp",
+  "w": 64,
+  "h": 128
+ },
+ "5119a9f9dc16ed7a": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0022471528500318527,
+  "second": 0.005059577524662018,
+  "name": "s0602_zn006_mp",
+  "w": 128,
+  "h": 128
+ },
+ "4f1df1d7fc585db8": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_230a7c119ede6f63_14.dds",
+  "err": 0.004367205314338207,
+  "second": 0.007551092188805342,
+  "name": "s0610_zn028_mp",
+  "w": 128,
+  "h": 128
+ },
+ "18ab8cb734193c65": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_713a8ec1b5ddf6b0_14.dds",
+  "err": 0.0021851123310625553,
+  "second": 0.013826113194227219,
+  "name": "s0614_zn044_mp",
+  "w": 128,
+  "h": 128
+ },
+ "8033338336473e88": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.00014010538870934397,
+  "second": 0.004154020920395851,
+  "name": "s0614_zn033_mp",
+  "w": 128,
+  "h": 128
+ },
+ "e1d34ea3a9f9b530": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 0.002634338103234768,
+  "second": 0.0044290050864219666,
+  "name": "s0614_zn015",
+  "w": 128,
+  "h": 128
+ },
+ "033164f6b4f75893": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0025801530573517084,
+  "second": 0.005106149706989527,
+  "name": "s0614_zn006",
+  "w": 128,
+  "h": 128
+ },
+ "9b0bfba83d63c7fc": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_de667cac9a1ffa31_9329478207daf3ca_8.dds",
+  "err": 0.0074371639639139175,
+  "second": 0.011468982324004173,
+  "name": "s0600_wn009",
+  "w": 128,
+  "h": 128
+ },
+ "61614b36ba4ce3b7": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x64_b61be582b1f26922_1cdee29f44dcca9c_8.dds",
+  "err": 0.002206362783908844,
+  "second": 0.15574651956558228,
+  "name": "s0501_sn038",
+  "w": 32,
+  "h": 64
+ },
+ "041b622e7a5a2818": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x64_c612baa8867ec057_d96d07b52c7841f5_8.dds",
+  "err": 0.003344717202708125,
+  "second": 0.1360650360584259,
+  "name": "s0501_sn003.4",
+  "w": 32,
+  "h": 64
+ },
+ "a5156359af1d348f": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_0fb235a86e562836_0d0bf7bec61570a1_8.dds",
+  "err": 0.0004042015643790364,
+  "second": 0.03552940860390663,
+  "name": "s0501_sn040",
+  "w": 128,
+  "h": 128
+ },
+ "4f1dc5eadb69b889": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_de667cac9a1ffa31_9329478207daf3ca_8.dds",
+  "err": 0.00014976212696637958,
+  "second": 0.005320474039763212,
+  "name": "s0501_sn041",
+  "w": 128,
+  "h": 128
+ },
+ "7c17e9edfa1e08eb": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e33d946d103d58f6_6b2bc0db7b641013_8.dds",
+  "err": 0.0002859027008526027,
+  "second": 0.007389196194708347,
+  "name": "s0501_sn043",
+  "w": 128,
+  "h": 128
+ },
+ "bea04b65deb741fc": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_6d5777b1aa64a8c1_13fb9e5282dd9172_8.dds",
+  "err": 0.0002843107213266194,
+  "second": 0.04279559105634689,
+  "name": "s0501_sn036",
+  "w": 128,
+  "h": 128
+ },
+ "8a6cb90130205ae3": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_2293fdffba3b266a_a3c81614b0ee717f_8.dds",
+  "err": 2.5606137569411658e-05,
+  "second": 0.05025539919734001,
+  "name": "s0501_sn053",
+  "w": 64,
+  "h": 64
+ },
+ "ff09a5a7c6d691ee": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_4fc2c0d50acee776_832e4f725e936d7c_8.dds",
+  "err": 0.0001752631360432133,
+  "second": 0.007643110118806362,
+  "name": "s0501_sn039",
+  "w": 128,
+  "h": 128
+ },
+ "34d9d993b0fb58b8": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_17cb9dad4365078a_c7a590a6198d855f_8.dds",
+  "err": 0.0006403219886124134,
+  "second": 0.04125456511974335,
+  "name": "s0501_sa030",
+  "w": 128,
+  "h": 128
+ },
+ "c2a7fa72526c0405": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_9b2595f7015827ee_67566f6f8b325ae9_8.dds",
+  "err": 0.0004022357170470059,
+  "second": 0.0419195331633091,
+  "name": "s0501_sa025",
+  "w": 128,
+  "h": 128
+ },
+ "ecdf4518dcd6d544": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x64_05d4d2c00c464244_fc36a98a98fc5d2a_8.dds",
+  "err": 0.00012257906200829893,
+  "second": 0.05692953243851662,
+  "name": "s0501_sn025",
+  "w": 128,
+  "h": 64
+ },
+ "0407624380f5ecac": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e0e2d438950ba180_a1d918fc2c493b9b_8.dds",
+  "err": 0.0001152201002696529,
+  "second": 0.007091834209859371,
+  "name": "s0501_wn002",
+  "w": 128,
+  "h": 128
+ },
+ "85ebf5e40b0d1534": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e604e5a2641f9d29_fc51560854b1736d_8.dds",
+  "err": 9.407440666109324e-05,
+  "second": 0.00539154140278697,
+  "name": "s0501_sn028",
+  "w": 128,
+  "h": 128
+ },
+ "47d0a51eaa60e712": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_8f50e12bb6ce4e7f_14.dds",
+  "err": 0.0002560914435889572,
+  "second": 0.01500228326767683,
+  "name": "s0800_zn055_mp",
+  "w": 128,
+  "h": 128
+ },
+ "e6d08cb77047a742": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f43d09b894444468_14.dds",
+  "err": 0.0002642013132572174,
+  "second": 0.024583816528320312,
+  "name": "s0800_zn049",
+  "w": 128,
+  "h": 128
+ },
+ "6986d15da4e77b04": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_5ee621b9e0b38801_14.dds",
+  "err": 0.0026564004365354776,
+  "second": 0.013499435037374496,
+  "name": "s0800_zn033_mp",
+  "w": 128,
+  "h": 128
+ },
+ "a1e7f41411d91ae2": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f28f48d8b77d4ac7_14.dds",
+  "err": 4.4709366193274036e-05,
+  "second": 0.002319826278835535,
+  "name": "s0800_zn032_mp",
+  "w": 128,
+  "h": 128
+ },
+ "e9c80b989e3eed25": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_16x64_0f7b4b144edd824d_fb874b0f24e72f40_8.dds",
+  "err": 0.0035393242724239826,
+  "second": 0.035667337477207184,
+  "name": "s0800_zn020.4",
+  "w": 16,
+  "h": 64
+ },
+ "58890a2dd786ce6a": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_16x64_fc16e7a9ee7a4b33_9577da3f4132b895_8.dds",
+  "err": 0.0009490791708230972,
+  "second": 0.009063282050192356,
+  "name": "s0800_zn020.3",
+  "w": 16,
+  "h": 64
+ },
+ "dcf5a835c24c85f6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_16x64_82b9c4d2b3f31734_fb874b0f24e72f40_8.dds",
+  "err": 0.0036649820394814014,
+  "second": 0.035713035613298416,
+  "name": "s0800_zn020.2",
+  "w": 16,
+  "h": 64
+ },
+ "c3a1f666e221c751": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_16x64_babea250d6ec69a1_9577da3f4132b895_8.dds",
+  "err": 0.0009349168976768851,
+  "second": 0.00907185673713684,
+  "name": "s0800_zn020.1",
+  "w": 16,
+  "h": 64
+ },
+ "b4617b3b9cd4c8ff": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x256_6e1397b1a9a5183a_14.dds",
+  "err": 0.0001181486586574465,
+  "second": 0.003536876058205962,
+  "name": "s0800_zn015_mp",
+  "w": 128,
+  "h": 256
+ },
+ "57174b36ed389c49": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x256_c00ea0e8738f84b6_14.dds",
+  "err": 0.00015335145872086287,
+  "second": 0.0024351216852664948,
+  "name": "s0800_zn014_mp",
+  "w": 128,
+  "h": 256
+ },
+ "7625cdbca842f9dd": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x256_8212dc76ae673be3_14.dds",
+  "err": 0.00013969987048767507,
+  "second": 0.002248339122161269,
+  "name": "s0800_zn013_mp",
+  "w": 128,
+  "h": 256
+ },
+ "4bd3f49123334e59": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x256_d0f488034e8886e2_14.dds",
+  "err": 0.0001513390161562711,
+  "second": 0.0041315993294119835,
+  "name": "s0800_zn012_mp",
+  "w": 128,
+  "h": 256
+ },
+ "807f1757cf5fef34": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x256_c3caac32f4b05472_14.dds",
+  "err": 0.0001619419053895399,
+  "second": 0.0053887334652245045,
+  "name": "s0800_zn011_mp",
+  "w": 128,
+  "h": 256
+ },
+ "c9c14289a5b779b9": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_d0a01594aee25add_14.dds",
+  "err": 6.684627442155033e-05,
+  "second": 0.0048334188759326935,
+  "name": "s0800_zn010_mp",
+  "w": 256,
+  "h": 256
+ },
+ "88a129f44ec56419": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_4b70bd195b37d718_14.dds",
+  "err": 3.389621269889176e-05,
+  "second": 0.00025473980349488556,
+  "name": "s0800_zn004_mp",
+  "w": 128,
+  "h": 128
+ },
+ "36e9a44922290824": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_8bcf7963d31cb459_14.dds",
+  "err": 0.0001201160775963217,
+  "second": 0.05603820085525513,
+  "name": "s0801_zn061",
+  "w": 64,
+  "h": 64
+ },
+ "97bc205ed5a5bc90": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_4a6b65999631c21d_14.dds",
+  "err": 0.000280045613180846,
+  "second": 0.011529384180903435,
+  "name": "s0801_zn055_mp",
+  "w": 128,
+  "h": 128
+ },
+ "df757471e42f11a6": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x64_ab36964632890398_14.dds",
+  "err": 0.00018476966943126172,
+  "second": 0.12626294791698456,
+  "name": "s0801_zn048",
+  "w": 128,
+  "h": 64
+ },
+ "ec697c747ccfe56a": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_6553524de2552b9e_14.dds",
+  "err": 0.00010553332685958594,
+  "second": 0.010438548400998116,
+  "name": "s0801_zn045_mp",
+  "w": 128,
+  "h": 128
+ },
+ "f7b8dd889b251b1f": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_713a8ec1b5ddf6b0_14.dds",
+  "err": 0.0002256193693028763,
+  "second": 0.016553040593862534,
+  "name": "s0801_zn044_mp",
+  "w": 128,
+  "h": 128
+ },
+ "2555f713573533e0": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x64_fff890431ffd06e0_14.dds",
+  "err": 0.0011289529502391815,
+  "second": 0.05749911814928055,
+  "name": "s0801_zn038",
+  "w": 128,
+  "h": 64
+ },
+ "4081a8b512ddfc15": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 7.549682050012052e-05,
+  "second": 0.004448799416422844,
+  "name": "s0801_zn033_mp",
+  "w": 128,
+  "h": 128
+ },
+ "b8c85c358363c76c": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.00012418603000696748,
+  "second": 0.07831761240959167,
+  "name": "s0801_zn031",
+  "w": 64,
+  "h": 64
+ },
+ "48c4cb5ce7fceb52": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_4e6eb9b223ff1d84_14.dds",
+  "err": 4.403354978421703e-05,
+  "second": 0.0011715298751369119,
+  "name": "s0801_zn029_mp",
+  "w": 128,
+  "h": 128
+ },
+ "d60c007208458edc": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_230a7c119ede6f63_14.dds",
+  "err": 3.9437960367649794e-05,
+  "second": 0.006025190930813551,
+  "name": "s0801_zn027_mp",
+  "w": 128,
+  "h": 128
+ },
+ "7ad732c994a02b1b": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_993a0f9d15492d83_14.dds",
+  "err": 0.009414108470082283,
+  "second": 0.037431567907333374,
+  "name": "s0801_zn022_mp",
+  "w": 128,
+  "h": 128
+ },
+ "1d7392c30402f945": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_2c8138b476b8217b_14.dds",
+  "err": 0.0001547181309433654,
+  "second": 0.0019037900492548943,
+  "name": "s0801_zn012_mp",
+  "w": 256,
+  "h": 256
+ },
+ "bf0b4c4010185b9d": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_cde2b83ba32e77fb_14.dds",
+  "err": 0.00016864005010575056,
+  "second": 0.0016423673368990421,
+  "name": "s0801_zn011_mp",
+  "w": 256,
+  "h": 256
+ },
+ "078b8ea7be5b05be": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_bc61650ccb1caa46_14.dds",
+  "err": 0.0022512224968522787,
+  "second": 0.047292690724134445,
+  "name": "s0801_zn005",
+  "w": 128,
+  "h": 128
+ },
+ "2214c4f86b164dbd": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_e1e67a9764b6e8ee_14.dds",
+  "err": 1.1759298104152549e-05,
+  "second": 0.004855886101722717,
+  "name": "s0801_zn002_mp",
+  "w": 256,
+  "h": 256
+ },
+ "574757a8959ca071": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_8a45594c20a3e898_91c382bb1faec999_8.dds",
+  "err": 0.00038835383020341396,
+  "second": 0.08812640607357025,
+  "name": "s0801_za005",
+  "w": 128,
+  "h": 128
+ },
+ "04b85ca46ed2f2b8": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_a57226684099bc22_fd71f1a561d02434_8.dds",
+  "err": 0.011108298785984516,
+  "second": 0.14850366115570068,
+  "name": "s0801_za003",
+  "w": 64,
+  "h": 64
+ },
+ "1183c8ca93b14dc0": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_256x256_881231e4db3e07b7_14.dds",
+  "err": 1.8262206140207127e-05,
+  "second": 0.05232148990035057,
+  "name": "s0802_zn041_mp",
+  "w": 256,
+  "h": 256
+ },
+ "cb188a64354aa0bc": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e01351f85d308aab_14.dds",
+  "err": 0.000122654193546623,
+  "second": 0.0006278535583987832,
+  "name": "s0802_zn040_mp",
+  "w": 128,
+  "h": 128
+ },
+ "cb949f5251eac8a0": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_61957d7ce9abe606_14.dds",
+  "err": 0.00022579959477297962,
+  "second": 0.008843999356031418,
+  "name": "s0802_zn036_mp",
+  "w": 128,
+  "h": 128
+ },
+ "9529a93d708e50c4": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_e51ddb311ddbbf1b_14.dds",
+  "err": 0.00012505707854870707,
+  "second": 0.008917108178138733,
+  "name": "s0802_zn035_mp",
+  "w": 128,
+  "h": 128
+ },
+ "d52f425692bb775b": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x128_cd051f1bcabba7a6_14.dds",
+  "err": 0.0010782061144709587,
+  "second": 0.23662425577640533,
+  "name": "s0802_zn019_mp",
+  "w": 64,
+  "h": 128
+ },
+ "a510e5089159ab87": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_32x32_0849387bfdf3c64e_14.dds",
+  "err": 0.009107360616326332,
+  "second": 0.03979849815368652,
+  "name": "E40_sn22",
+  "w": 32,
+  "h": 32
+ },
+ "689bb6c65ad66a16": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_8bcf7963d31cb459_14.dds",
+  "err": 0.00804314948618412,
+  "second": 0.07742990553379059,
+  "name": "s0904_zn061",
+  "w": 64,
+  "h": 64
+ },
+ "d8cd5da8b664208c": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x64_ab36964632890398_14.dds",
+  "err": 0.004126057028770447,
+  "second": 0.15530173480510712,
+  "name": "s0904_zn048",
+  "w": 128,
+  "h": 64
+ },
+ "cebc9a28ec6b2acf": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_64x64_80d6e8e3cd3afa83_14.dds",
+  "err": 0.00574091263115406,
+  "second": 0.0854848101735115,
+  "name": "s0904_zn031",
+  "w": 64,
+  "h": 64
+ },
+ "7c6fbd9ff1f37d0e": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.01147971861064434,
+  "second": 0.03936271741986275,
+  "name": "e600kn99",
+  "w": 128,
+  "h": 128
+ },
+ "a7eab68515e99911": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.001837304444052279,
+  "second": 0.004417096264660358,
+  "name": "e600kn10",
+  "w": 128,
+  "h": 128
+ },
+ "c6940ceb9442aa88": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_14999319f1dfa57d_769ce6ac7827e5cc_8.dds",
+  "err": 0.011000667698681355,
+  "second": 0.02603187784552574,
+  "name": "e600kn08",
+  "w": 128,
+  "h": 128
+ },
+ "0d8ff4e99da87baf": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.004384972155094147,
+  "second": 0.00774514302611351,
+  "name": "y_co512_02",
+  "w": 128,
+  "h": 128
+ },
+ "fb31dfe300663a95": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_128x256_928c2332561eeb1b_16cc69bf803d94d3_9.dds",
+  "err": 0.0022120524663478136,
+  "second": 0.16575846076011658,
+  "name": "000_checkpoint",
+  "w": 128,
+  "h": 256
+ },
+ "23986f8d3b255cd3": {
+  "pack": "/home/claude/pack/GUP/Item Icons/tex1_64x64_766d699a01a5fd52_5518502ed029af9e_8.dds",
+  "err": 6.895010301377624e-05,
+  "second": 0.06857664883136749,
+  "name": "ob_hni05",
+  "w": 64,
+  "h": 64
+ },
+ "07155624eb990587": {
+  "pack": "/home/claude/pack/GUP/Item Icons/tex1_64x64_5f354fcf3aa9d1af_f9693e8d4a5429d7_8.dds",
+  "err": 0.0028764777816832066,
+  "second": 0.06626637279987335,
+  "name": "ob_hni08",
+  "w": 64,
+  "h": 64
+ },
+ "4512307d347e8ee7": {
+  "pack": "/home/claude/pack/GUP/Item Icons/tex1_64x64_620d2430cb7b2de7_2ba90b1b43791504_8.dds",
+  "err": 0.0005173692479729652,
+  "second": 0.02876860462129116,
+  "name": "ob_hni07",
+  "w": 64,
+  "h": 64
+ },
+ "54a6c7305390963b": {
+  "pack": "/home/claude/pack/GUP/Item Icons/tex1_64x64_e1d5d6504d21fdda_09f35ae67052d8f1_8.dds",
+  "err": 0.004830065183341503,
+  "second": 0.05184350535273552,
+  "name": "ob_hni03",
+  "w": 64,
+  "h": 64
+ },
+ "3d2840819dcf3b54": {
+  "pack": "/home/claude/pack/GUP/Item Icons/tex1_64x64_4cc004f8c4b82e36_0f9859f4e3459cb7_8.dds",
+  "err": 0.009309925138950348,
+  "second": 0.014255348592996597,
+  "name": "ob_hni02",
+  "w": 64,
+  "h": 64
+ },
+ "86dee90e4cc9219c": {
+  "pack": "/home/claude/pack/GUP/Item Icons/tex1_64x64_681178247edc955b_e6ba18b056b6f009_8.dds",
+  "err": 0.009924417361617088,
+  "second": 0.014754846692085266,
+  "name": "ob_hni00",
+  "w": 64,
+  "h": 64
+ },
+ "8ae2be28a1a92ff6": {
+  "pack": "/home/claude/pack/GUP/HUD/tex1_32x32_23221387cafb74a0_79bf8e67bb8c83bb_8.dds",
+  "err": 0.00031222967663779855,
+  "second": 0.12074269354343414,
+  "name": "ob_hnrnf",
+  "w": 32,
+  "h": 32
+ },
+ "f97603cc118f9fc1": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0021615938749164343,
+  "second": 0.005419610533863306,
+  "name": "ob_hnbwg",
+  "w": 128,
+  "h": 128
+ },
+ "e868835fade54ece": {
+  "pack": "/home/claude/pack/GUP/Multiplayer/tex1_128x128_f040e474826d9311_14.dds",
+  "err": 0.0029402761720120907,
+  "second": 0.005467384122312069,
+  "name": "ob_hnbkb",
+  "w": 128,
+  "h": 128
+ }
+}
