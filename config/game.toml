@@ -285,8 +285,13 @@ call = "ShadowMovieSkippable"
 after = true
 
 [[hook]]
-at = 0x002291AA          # event start: mov dword [0x54DD40], 2 (frame wait: 2 = 30 FPS); restored at 00229353
+at = 0x00056FC0          # stage loop frame wait, entry: sub esp, 0x24 (cutscene frame rate, every frame)
 call = "ShadowEventFrameRate"
+after = true
+
+[[hook]]
+at = 0x0005713E          # stage loop frame wait, busy loop: cdq after target = [0x54DD40] * period (sleep most of it)
+call = "ShadowFrameWait"
 after = true
 
 [[hook]]

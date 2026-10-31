@@ -278,8 +278,20 @@ Each session ends by saving to this folder on the user's PC:
 - Headless with the user's save: copy `Game\hdd\E\UDATA\53450086` into `<run>/hdd/E/UDATA/`, start
   `/home/claude/hb/shadow /home/claude/rungame` in `<run>` in the background, drive it with `cmd` files
   (`START 4`), screenshots via `/home/claude/tools/snap.sh <run> <png>`; START x6, A, START reaches event1101.
-- Re-optimization note: the game's frame limiter busy-waits on rdtsc (one core at 100%); a sleep in 000116B0's loop
-  would save power. Not changed yet.
+- User test 19:35: crash fixed (stage to stage fine), event skip works. Events show 60 on the counter but still
+  look 30; turning the option off did not go back to 30. User asked to stop the 100% core.
+- **Option live**: the frame-rate hook moved to the stage loop entry (00056FC0, every frame): while an event plays
+  (`[0x54D481]`), `[0x54DD40]` = option ? 1 : 2. Turning it off now gives 30 at once.
+- **CPU**: hook in the busy loop (after 0005713E, `ShadowFrameWait`): the wait ends when the clock (rdtsc/733 us)
+  crosses `k*period - now%period` from now (k = (target-elapsed)/period; grid of period multiples); sleeps all but
+  the last 2.5 ms. Headless: main guest thread 100% -> ~15-20%, still 60 frames a second.
+- **Why events still look 30** (found, not fixed): with CAP=1 draw lists (run9), scene world matrices AND the camera
+  view change only every 2nd frame at 60. Event time `[0x54D498]` += dt*30 when `[0x54D481]` (0022B876), i.e. +0.5
+  a frame at 60, passed as float to the event updaters (camera 0022BDE0 -> 0022BBE0, objects 0022BF80, 0022C410,
+  0022CA10, ...). Something samples it at whole 30-FPS frames. Next: find that sampler (keyframe lookup / motion
+  player) and interpolate between keys, or run the event at a time scale and interpolate rendering. One
+  cvttss2si in event code at 0022BD02 (`[esi+8]`), not yet checked.
+
 
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).

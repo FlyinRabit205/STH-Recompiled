@@ -1,7 +1,9 @@
 // Shadow the Hedgehog (USA) default.xbe: game-side replacements.
 // A strong X86_FUNC(sub_XXXXXXXX) replaces the recompiled function at that address.
 
+#include <chrono>
 #include <cmath>
+#include <thread>
 
 #include "kernel/kernel.h"
 #include "xdk/hle.h"
@@ -51,11 +53,27 @@ bool g_cutscene_60 = true;
 }
 
 // In-engine cutscenes at 60 FPS (settings.toml: cutscene_60fps). The stage loop (00056FC0) waits [0x54DD40] frame
-// periods of 1/[0x54DD64] s per update; the event start (002291AA) sets 2, i.e. 30 FPS, and the event end puts the
-// saved value back. 1 keeps the stage's 60.
+// periods of 1/[0x54DD64] s per update; the event start (002291AA) sets 2, i.e. 30 FPS, sets [0x54D481] while the
+// event plays, and the event end puts the saved [0x54DD40] back. Checked every frame, so the option takes effect at
+// once: 1 while an event plays with the option on, the game's 2 with it off.
 X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
     (void)ctx;
-    if (shadow::g_cutscene_60) *reinterpret_cast<uint32_t*>(base + 0x54DD40) = 1;
+    if (base[0x54D481]) *reinterpret_cast<uint32_t*>(base + 0x54DD40) = shadow::g_cutscene_60 ? 1u : 2u;
+}
+
+// The frame wait busy-loops on the CPU clock (rdtsc / 733 = microseconds, 000116B0) until the elapsed time, counted
+// in whole periods on a grid of multiples of the period, reaches the target: one core at 100%. Here, inside that
+// loop, eax = target and ebx:esi = elapsed (both microseconds), [esp+0x10] = the period. The loop leaves when the
+// clock crosses the boundary (target - elapsed) / period - 1 periods after the next one; sleep until about 2.5 ms
+// before that and let the loop spin the rest, so the frame still ends on time.
+X86_HOST_API void ShadowFrameWait(X86Context& ctx, uint8_t* base) {
+    const uint64_t target = ctx.eax, elapsed = uint64_t(ctx.esi) << 32 | ctx.ebx;
+    const uint64_t period = *reinterpret_cast<const uint32_t*>(base + ctx.esp + 0x10);
+    if (!period || elapsed >= target || ctx.edx) return;
+    const uint64_t now = x86_rdtsc() / 733;
+    const uint64_t left = (target - elapsed) / period * period - now % period;  // to the boundary that ends the wait
+    constexpr uint64_t kSpin = 2500;  // microseconds kept spinning: Sleep(1) can take up to ~2 ms
+    if (left > kSpin + 1000) std::this_thread::sleep_for(std::chrono::milliseconds((left - kSpin) / 1000));
 }
 
 // Pre-rendered movies (StageMovie, E####.sfd): `mov al, [esi+0x18]` at 001717DF reads "unskippable" (the constructor
