@@ -23,7 +23,9 @@
 #include "app/app.h"
 #include "core/input.h"
 #include "core/log.h"
-#include "hook_exports.h"
+#ifndef __MINGW32__
+#include "hook_exports.h"  // MSVC-mangled /EXPORT lines; the mingw exe exports hooks itself (X86_HOST_API) and
+#endif                     // tools/winbuild/host_def.py maps the DLL's names onto them (ShadowNativePort)
 #include "image_symbols.h"
 #include "kernel/disc.h"
 

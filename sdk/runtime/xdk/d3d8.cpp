@@ -558,6 +558,7 @@ void ApplyRenderTarget(X86Context& ctx, uint32_t rt, uint32_t zs) {
 }
 }  // namespace
 
+
 HLE_STDCALL(D3DDevice_SetRenderTarget, 2) {
     std::lock_guard<std::recursive_mutex> lock(g_lock);
     uint32_t rt = a[0] ? a[0] : Dev(kDevRenderTarget);

@@ -1,5 +1,10 @@
 #include "app/app.h"
 #include "common/keyboard.h"
+#include "common/render_ext.h"
+
+namespace shadow {
+extern bool g_skip_cutscenes;  // src/game/hooks.cpp
+}
 
 // what the runtime asks of the game; strings must be set, hooks may stay null
 const app::GameInfo app::kGame = {
@@ -11,10 +16,10 @@ const app::GameInfo app::kGame = {
     .splash = L"splash",                  // optional splash.png or splash.bmp beside the exe
     .missing = L"Put the game in the assets folder: its disc image (.iso), or default.xbe with its folders beside it.",
     .images = {{"default.xbe", "Shadow"}},  // each recompiled xbe and its exe, for title launches
-    .options = {{"keyboard", &keyboard::g_enabled, nullptr}},                        // game settings kept in the settings file
+    .options = {{"keyboard", &keyboard::g_enabled, nullptr}, {"skip_cutscenes", &shadow::g_skip_cutscenes, nullptr}, {"hd_scene", &shadow::g_hd_scene, nullptr}},                        // game settings kept in the settings file
     .load = nullptr,                      // reads more from the settings file's toml::table
     .save = nullptr,                      // writes more into it
-    .init = nullptr,                      // after the settings load, before the window and boot
+    .init = shadow::InitRender,                      // after the settings load, before the window and boot
     .loaded = nullptr,                    // image in memory, before its entry point runs
     .window = keyboard::OnWindow,                    // the game window is up
     .message = nullptr,                   // window messages first; true takes one

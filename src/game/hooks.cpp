@@ -39,3 +39,26 @@ X86_FUNC(sub_003E4148) {
 }
 
 // XAudioCalculatePitch (.XTLID 0xB00A3, 003E34F2) is pure arithmetic and runs fine as recompiled code.
+
+// ---------------------------------------------------------------------------------------------------------------
+// Cutscenes skippable on the first playthrough (settings.toml: skip_cutscenes = true, the default).
+// The game only lets START skip a cutscene it has already shown. Both checks read a flag into AL and branch on it;
+// these [[hook]]s run after that load (config/game.toml) and replace the value.
+// ---------------------------------------------------------------------------------------------------------------
+namespace shadow {
+bool g_skip_cutscenes = true;
+}
+
+// Pre-rendered movies (StageMovie, E####.sfd): `mov al, [esi+0x18]` at 001717DF reads "unskippable" (the constructor
+// sets 1, cleared for scenes already seen); 0 lets the START test at 001717FF run.
+X86_HOST_API void ShadowMovieSkippable(X86Context& ctx, uint8_t* base) {
+    (void)base;
+    if (shadow::g_skip_cutscenes) ctx.eax &= ~0xFFu;
+}
+
+// In-engine cutscenes (event####_scene*.one): after START, `mov al, [0x54DE01]` at 0022879B reads the global
+// "skip allowed" byte; 1 sets the event's skip request (this+0x34).
+X86_HOST_API void ShadowEventSkippable(X86Context& ctx, uint8_t* base) {
+    (void)base;
+    if (shadow::g_skip_cutscenes) ctx.eax = (ctx.eax & ~0xFFu) | 1u;
+}

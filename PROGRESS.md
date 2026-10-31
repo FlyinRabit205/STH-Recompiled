@@ -128,30 +128,50 @@ Each session ends by saving to this folder on the user's PC:
     render targets / passes are probably still at 640x480 and stretched; check render-to-texture targets the game makes
     itself, and copies/blits back to the back buffer).
 
+### Session 4 (2026-10-31, 14:24 to about 15:00): cutscene skip, HD scene
+- **Cutscenes skippable on first playthrough** (setting `skip_cutscenes`, default true), via two `[[hook]]`s in
+  config/game.toml calling `ShadowMovieSkippable` / `ShadowEventSkippable` (src/game/hooks.cpp):
+  - Pre-rendered movies (StageMovie, vtable 0046478C): update method 00171770, state 1 reads "unskippable" byte
+    `[esi+0x18]` at 001717DF (constructor sets 1); START test is `pad[0x148] & 0x400` at 001717FF (pad singleton
+    at [0x5356F0], made by 000113B0). Hook zeroes AL. **Verified headless: E1001.sfd skipped in ~1 s, new game
+    reaches Westopolis (stg0100) in 26 s.**
+  - In-engine events: after START at 00228776, `mov al,[0x54DE01]` at 0022879B is the global "skip allowed";
+    hook forces AL=1 (sets event this+0x34). Same pattern, **not yet seen running** (no event at Westopolis start).
+  - Opening movie Op.sfd (AdvReal Movie phase, START test at 0029CEDD) was already skippable.
+  - Found via RTTI (`tools/host/rtti.py <class substring>` prints vtables) + byte search for
+    `mov r32,[reg+0x148]; test $0x4,highbyte`.
+- **Low resolution in stages: cause found and fixed.** The game renders the 3D scene into a **512x512** colour
+  target (+512x512 depth), then stretches it over the 640x480 back buffer (logged surfaces: rt 03A2B080 / 032F6080
+  512x512, zs 03B2C000 512x512, glow chain 256/128/64). At render scale 2.25 that is 1152 px across 1440 screen px.
+  `src/common/render_ext.cpp` = a `gpu::Extension` (set in `GameInfo::init`) whose `MakeTarget` multiplies the scale
+  of 512x512 targets by 640/512 (1440x1440 at 1080p, 2880x2880 at 4K). Setting `hd_scene` (default true). Logs
+  "shadow: HD scene ..." once. **Needs the user's eyes on Windows.**
+- Windows build: `sdk/runtime/app/game_code.cpp` skips `hook_exports.h` under mingw (MSVC /EXPORT names break the
+  mingw link); host_def.py maps the DLL's hook imports (now 8 C++ imports).
+- User feedback this session: don't spend time re-rendering what the user already described; work from their report.
+
+### Local SDK patches (add to the list above)
+- `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
+
 ## Plan for the next sessions (set by the user)
-**Session 4, first task: let the player SKIP CUTSCENES even on a first playthrough** (the game normally only allows
-skipping cutscenes already seen). Needed for fast testing. Find the "event/cutscene seen" check (event files are in
-`/event`, cutscene IDs like E1001 match the `.sfd` names; also look for the skip-input check in the event player)
-and force "seen" or bypass the check. Ideally a settings.toml option (`skip_cutscenes_always = true`, default on for now).
+Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
+Remaining, in order:
+1. **Confirm on Windows**: stages sharp now? cutscene skip works for movies AND in-engine events? Read `Game\logs`.
+2. **Fix garbled text and subtitles** (title screen text, loading screen, subtitles). Fonts: `/fonts/*/X_EN.txd/.met/.fnt`,
+   `Movie_EN` for subtitles. Check font texture formats and how glyphs are drawn (CAP draw lists in the harness).
+3. **Cutscene rendering issues** (in-engine events).
+4. **HD HUD / GUI / subtitles** (2D at native resolution, widescreen placement).
+5. Later: settings menu, widescreen, 60 FPS+.
 
-Then, in order:
-1. **Higher resolution in stages:** find why stages render low-res (game-created 640x480 render targets, viewport
-   or scissor not scaled, or a final copy pass). Goal: everything at the window's native resolution (1080p, 1440p, 4K).
-2. **Fix garbled text and subtitles** (font textures `/fonts/*.txd`, `.met`, `.fnt`; check formats with CAP draw lists,
-   likely another texture format or palette issue, or a texture-coordinate precision issue at high render scale).
-3. **Cutscene rendering issues.**
-4. **HD HUD / GUI / subtitles:** render 2D UI at native resolution (sharp), proper widescreen placement.
-5. Later goals stay: settings menu, widescreen, 60 FPS+.
-
-### Still open from session 3
-- Loading screen after Story Mode > NEW looked wrong headless (dark, dithered, garbled text). Probably the same
-  text/font problem as above.
-- Intermittent harness stop around the first REF frame via `run.sh` (direct and gdb runs fine).
+### Still open
+- Intermittent segfault in the Linux harness (about 1 in 4 runs, timing dependent, not under gdb; core_pattern is
+  `core`, run with `ulimit -c unlimited` to catch one). Never seen on Windows so far.
 - Unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
   InsertFence/BlockOnFence, GetTile/SetTile, PersistDisplay, FlushVertexCache, D3DResource_IsBusy,
   crt_atan/log/log10/tan. Unmapped D3D .XTLID exports seen running: GetSurfaceLevel2 `003DD7C0`,
-  LockRect `003DD810`, AddRef `003D5ED0`, Release `003D5F10`. Map the ones the game reaches; some may explain the
-  low resolution or text problems (e.g. SetRenderTargetFast, SwitchTexture).
+  LockRect `003DD810`, AddRef `003D5ED0`, Release `003D5F10`.
+- User's log showed `d3d: EndPush primitive 8 dropped, 64 bytes of vertices of 28` once at boot, and many
+  `vertex: converted on the CPU: v1 type 24` in the stage (performance only).
 
 ### Handy techniques (worked well)
 - **Which unnamed export runs:** dump `.XTLID` (id>>16: 8 = D3D, 0xB = DSOUND), then gdb `dprintf sub_<addr>,"HIT ..."` on each
