@@ -161,16 +161,41 @@ Each session ends by saving to this folder on the user's PC:
   blanked while the menu is open (GameInfo::pad). F1 only toggles it (Escape would leak START to the game).
   **Untested on Windows yet.**
 
+- **Garbled text FIXED** (user screenshots: "There is no Game Data..." drawn as "oNoNoNo", subtitles "e!e!e!").
+  Cause: text is drawn one glyph per draw (DrawIndexedVertices, 4 verts / 6 indices, FVF 0x142, font texture
+  00BE8C60), from a vertex buffer the game rewrites before every glyph without waiting. With the render thread on
+  (Windows), vertex memory is read when the draw runs, by then holding the last glyphs written. The Linux harness runs
+  without the render thread (XBE_RENDER_THREAD=0), which is why it drew text correctly.
+  Fix in `sdk/runtime/xdk/d3d8.cpp`: `DrawSnapshot` / `DrawIndexedSnapshot` copy small draws' vertices (<= 4 KB,
+  stream 0 only, indexed <= 256 indices, gathered in index order) at call time through DrawUp's vertex ring.
+  `SHADOW_NO_SNAPSHOT=1` turns it off for testing. **Verified** with a render-thread harness build
+  (`sdk/harness/build_rt.sh`, a copy of build.sh with XBE_RENDER_THREAD=1, `-G /home/claude/hb/gen` shares objects):
+  bug reproduced with the fix off, dialog text correct with it on.
+- **Options menu redesigned** (user: "bland", wants an actual game menu): full-screen dim + red glow, OPTIONS title
+  band, tabs DISPLAY / GRAPHICS / GAME / CONTROLS, rows with < value > selectors, description line, button hints,
+  Bahnschrift font from C:\Windows\Fonts (Segoe UI fallback) loaded in GameInfo::window before the atlas is built.
+  Navigation: arrows/WASD, Left/Right change, Q/E or Tab switch tabs, Enter/Space, mouse; controller: Back+Start opens,
+  d-pad/stick/A, LT/RT or White/Black switch tabs, Start closes (`MenuPad` reads the real pad before the game's
+  input is blanked). **Not seen on screen yet** (no GPU here).
+- **Blur**: user says graphics still blurry although the log shows render scale 3.0 and scene 1920x1920.
+  Not investigated yet: suspect the game's glow/blur chain (targets 256/128/64 composited over the scene) or the
+  final scene-to-back-buffer pass. Next session.
+- **Harness crash identified** (not the text fix): SIGSEGV in game code `sub_0034AB40` <- 003491B0 <- 00349280 <-
+  0032D430 <- 0032D500, on game worker thread started at 00328E80 (middleware region, likely CRI audio/movie).
+  Happens with pad scripts / REF captures under harness timing, with and without the render thread. Not seen on
+  Windows. Investigate if the user ever crashes.
+
 ### Local SDK patches (add to the list above)
 - `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
 - `sdk/runtime/app/settings.cpp`: RenderScale uses the width too when widescreen.
+- `sdk/runtime/xdk/d3d8.cpp`: DrawSnapshot / DrawIndexedSnapshot (call-time vertex copy for small draws).
+- `sdk/harness/build_rt.sh`: harness build with the render thread on.
 
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
 1. **Confirm on Windows**: stages sharp now? cutscene skip works for movies AND in-engine events? Read `Game\logs`.
-2. **Fix garbled text and subtitles** (title screen text, loading screen, subtitles). Fonts: `/fonts/*/X_EN.txd/.met/.fnt`,
-   `Movie_EN` for subtitles. Check font texture formats and how glyphs are drawn (CAP draw lists in the harness).
+2. **Blurry picture** (see above): find what softens the image after the scene renders at 1920.
 3. **Cutscene rendering issues** (in-engine events).
 4. **HD HUD / GUI / subtitles** (2D at native resolution, widescreen placement).
 5. Later: 60 FPS+ (frame rate options stop at 60 until game timing is handled), ultrawide.

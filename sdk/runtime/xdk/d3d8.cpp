@@ -1180,10 +1180,16 @@ HLE_STDCALL(D3DDevice_SetPixelShaderConstant, 3) {
 
 // drawing
 
+namespace {
+bool DrawSnapshot(uint32_t prim, uint32_t start, uint32_t count);  // ShadowNativePort, below DrawUp
+bool DrawIndexedSnapshot(uint32_t prim, uint32_t count, const uint16_t* indices);
+}  // namespace
+
 HLE_STDCALL(D3DDevice_DrawVertices, 3) {
     std::lock_guard<std::recursive_mutex> lock(g_lock);
     Walk(Dev(kDevPush));  // a visibility test begun since the last draw counts this one
     SyncDeferred();
+    if (DrawSnapshot(a[0], a[1], a[2])) return 0;
     if (g_backend) g_backend->Draw(g_state, a[0], a[1], a[2], nullptr);
     return 0;
 }
@@ -1193,6 +1199,7 @@ HLE_STDCALL(D3DDevice_DrawIndexedVertices, 3) {
     Walk(Dev(kDevPush));
     SyncDeferred();
     const uint8_t* indices = a[2] ? static_cast<const uint8_t*>(HostPtr(a[2])) : nullptr;
+    if (indices && DrawIndexedSnapshot(a[0], a[1], reinterpret_cast<const uint16_t*>(indices))) return 0;
     if (g_backend) g_backend->Draw(g_state, a[0], 0, a[1], indices);
     return 0;
 }
@@ -1243,6 +1250,57 @@ uint32_t VertexBytes() {
 }
 
 uint32_t g_push_begin = 0;
+
+// ShadowNativePort: with the renderer on its own thread, vertex buffer memory is read when the draw runs, after the
+// call returns, as the console's GPU does. Shadow the Hedgehog draws text one glyph at a time from a vertex buffer it
+// rewrites before every draw without waiting for the GPU (the console's GPU keeps up), so the render thread read
+// later glyphs' texture coordinates ("oNoNo" for "There is no..."). Small non-indexed draws from stream 0 are copied
+// at call time instead, through the vertex ring DrawVerticesUP uses. Large draws keep reading in place.
+constexpr uint32_t kSnapshotMax = 4096;  // bytes: glyphs, sprites and HUD pieces, never stage geometry
+bool DrawSnapshot(uint32_t prim, uint32_t start, uint32_t count) {
+    static const bool off = std::getenv("SHADOW_NO_SNAPSHOT") != nullptr;  // for before/after testing
+    if (off || !kRenderThread || !g_backend || !count) return false;
+    const auto& st = g_state.streams[0];
+    if (!st.vb) return false;
+    // every input of the bound format must come from stream 0
+    if (g_state.vs_handle & 1) {
+        if (!g_state.vs) return false;
+        for (const auto& in : g_state.vs->inputs)
+            if (in.type && in.type != 0x02 /* D3DVSDT_NONE */ && in.stream > 0) return false;
+    }
+    uint32_t stride = st.stride ? st.stride : VertexBytes();
+    uint64_t bytes = uint64_t(count) * stride;
+    if (!stride || bytes > kSnapshotMax) return false;
+    uint32_t data = mem::VirtualFromPhysical(R32(st.vb + 4)) + start * stride;
+    DrawUp(prim, count, HostPtr(data), stride);
+    return true;
+}
+
+// the same for small indexed draws (a text glyph is 4 vertices drawn by 6 indices): the vertices the indices pick
+// are gathered in index order now and drawn unindexed
+constexpr uint32_t kSnapshotIndicesMax = 256;
+bool DrawIndexedSnapshot(uint32_t prim, uint32_t count, const uint16_t* indices) {
+    static const bool off = std::getenv("SHADOW_NO_SNAPSHOT") != nullptr;
+    if (off || !kRenderThread || !g_backend || !count || count > kSnapshotIndicesMax) return false;
+    const auto& st = g_state.streams[0];
+    if (!st.vb) return false;
+    if (g_state.vs_handle & 1) {
+        if (!g_state.vs) return false;
+        for (const auto& in : g_state.vs->inputs)
+            if (in.type && in.type != 0x02 /* D3DVSDT_NONE */ && in.stream > 0) return false;
+    }
+    uint32_t stride = st.stride ? st.stride : VertexBytes();
+    if (!stride || uint64_t(count) * stride > kSnapshotMax) return false;
+    uint32_t top = 0;
+    for (uint32_t i = 0; i < count; i++) top = std::max<uint32_t>(top, indices[i]);
+    if (uint64_t(top + 1) * stride > kSnapshotMax) return false;
+    const uint8_t* src = static_cast<const uint8_t*>(HostPtr(mem::VirtualFromPhysical(R32(st.vb + 4))));
+    static thread_local std::vector<uint8_t> gathered;
+    gathered.resize(size_t(count) * stride);
+    for (uint32_t i = 0; i < count; i++) std::memcpy(&gathered[size_t(i) * stride], src + size_t(indices[i]) * stride, stride);
+    DrawUp(prim, count, gathered.data(), stride);
+    return true;
+}
 }  // namespace
 
 // Begin/End immediate mode. Titles inline Begin and the vertex data calls, so their commands are read from the scratch buffer.

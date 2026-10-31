@@ -26,6 +26,7 @@ const app::GameInfo app::kGame = {
     .message = shadow::MenuMessage,                   // window messages first; true takes one
     .ui = shadow::MenuUi,                        // ImGui drawing each frame
     .pad = [](int port, input::Pad& pad) {
+        shadow::MenuPad(port, pad);  // controller drives the menu (before keyboard keys are merged in)
         keyboard::ApplyToPad(port, pad);
         if (shadow::g_menu_open) {  // the menu has the input
             bool c = pad.connected;
