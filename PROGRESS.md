@@ -283,6 +283,9 @@ Remaining, in order:
   thread), not replaced by any pak (checked), texture and palette stable all run (one key). So: D3D12 backend only.
   Next: user runs `Game\Capture Frame.bat` (sets XBE_CAPTURE_DIR=captures), presses F3 in a stage; read
   `Game\captures\<time>\frame.txt` + images for that draw.
+  **Capture 16:20 (no subtitle on screen): the ring IS drawn on Windows** (draws 0210-0212, t0 834BCF80; back buffer
+  and final frame show it). The user's screenshot had a subtitle up, so it may vanish only during dialogue (maybe the
+  original game's behaviour). Asked the user.
 - Intermittent segfault in the Linux harness (about 1 in 4 runs, timing dependent, not under gdb; core_pattern is
   `core`, run with `ulimit -c unlimited` to catch one). Never seen on Windows so far.
 - Unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
