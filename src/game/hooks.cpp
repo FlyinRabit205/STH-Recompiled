@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstring>
 #include <thread>
 
 #include "kernel/kernel.h"
@@ -59,6 +60,19 @@ bool g_cutscene_60 = true;
 X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
     (void)ctx;
     if (base[0x54D481]) *reinterpret_cast<uint32_t*>(base + 0x54DD40) = shadow::g_cutscene_60 ? 1u : 2u;
+    // DBG-EVENT-TIMING: the first 240 updates of each event: event time [0x54D498], frames elapsed [0x54DD3C]
+    static int logged = 0;
+    static bool was = false;
+    bool now = base[0x54D481] != 0;
+    if (now && !was) logged = 0;
+    was = now;
+    if (now && logged < 240) {
+        logged++;
+        float t;
+        std::memcpy(&t, base + 0x54D498, 4);
+        LOGI("event timing: time %.3f elapsed %u wait %u", t, *reinterpret_cast<uint32_t*>(base + 0x54DD3C),
+             *reinterpret_cast<uint32_t*>(base + 0x54DD40));
+    }
 }
 
 // The event scene player (event+0x180; set time 0022BDE0 -> 0022BBE0) seeks its scene to the event time cut to a
