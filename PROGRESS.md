@@ -277,6 +277,12 @@ Remaining, in order:
 5. Later: 60 FPS+ (frame rate options stop at 60 until game timing is handled), ultrawide.
 
 ### Still open
+- **HUD ring icon missing on Windows** (user, 16:10). It is a 2D sprite: back buffer draw, tex 128x64 P8 with a
+  32-colour palette (palette Common C00B0001), runtime key 8a06c7d9402cb96b, at (57,364), pretransformed with rhw 1
+  (the other HUD sprites have rhw inf), alpha test + blend 302/303. Drawn fine by both harness builds (plain and render
+  thread), not replaced by any pak (checked), texture and palette stable all run (one key). So: D3D12 backend only.
+  Next: user runs `Game\Capture Frame.bat` (sets XBE_CAPTURE_DIR=captures), presses F3 in a stage; read
+  `Game\captures\<time>\frame.txt` + images for that draw.
 - Intermittent segfault in the Linux harness (about 1 in 4 runs, timing dependent, not under gdb; core_pattern is
   `core`, run with `ulimit -c unlimited` to catch one). Never seen on Windows so far.
 - Unmapped from xbe_symbols: SetVertexShaderConstant1/4, SetIndices, SwitchTexture, SetRenderTargetFast,
