@@ -285,6 +285,9 @@ Remaining, in order:
   `Game\Capture Frame.bat`).
 
 ### Playtest 16:36 (for session 8)
+User's order for session 8 (wait for the user to say start): fix the crash, fix the event skip, then unlock the
+event frame rate to 60 first (just the unlock); the user checks for double speed; only if so, add interpolated
+in-between frames.
 1. In-engine cutscenes do NOT skip (16:25 "do skip" was a misread). Hook at 0022879B never seen running; trace the
    event START path on Windows.
 2. In-engine cutscenes run at 30 FPS; user wants 60. Find the event frame-interval switch; check animation speed.
