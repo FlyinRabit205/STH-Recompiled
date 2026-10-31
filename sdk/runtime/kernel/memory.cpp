@@ -1,6 +1,7 @@
 #include "kernel/memory.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -251,9 +252,34 @@ static Reservation* FindReservation(uint32_t addr, uint32_t* start) {
     return &it->second;
 }
 
+// Released user regions wait here before their addresses can be handed out again. Shadow ends a stage by releasing
+// its heap while a RenderWare frame in it is still linked into the frame dirty list (002E1300, walked by 002EC720);
+// handing the same addresses straight to the next stage's heap lets new data overwrite that link (null reads at
+// 002EC739). The pages keep their old bytes meanwhile, so the stale frame reads as it did.
+struct Quarantined {
+    uint32_t start, size;
+    std::chrono::steady_clock::time_point when;
+};
+static std::vector<Quarantined> g_quarantine;
+constexpr auto kQuarantine = std::chrono::seconds(20);
+
+static void ReleaseQuarantined(bool all) {
+    auto now = std::chrono::steady_clock::now();
+    for (size_t i = 0; i < g_quarantine.size();) {
+        if (all || now - g_quarantine[i].when > kQuarantine) {
+            g_user.Release(g_quarantine[i].start, g_quarantine[i].size);
+            g_quarantine[i] = g_quarantine.back();
+            g_quarantine.pop_back();
+        } else {
+            i++;
+        }
+    }
+}
+
 uint32_t AllocateVirtual(uint32_t& base, uint32_t& size, uint32_t type, uint32_t protect) {
     std::lock_guard<std::recursive_mutex> lock(g_lock);
     EnsureRanges();
+    ReleaseQuarantined(base != 0);
     if (!size) return 0xC000000D;  // STATUS_INVALID_PARAMETER
     bool reserve = type & kMemReserve;
     bool commit = type & kMemCommit;
@@ -268,6 +294,10 @@ uint32_t AllocateVirtual(uint32_t& base, uint32_t& size, uint32_t type, uint32_t
             g_user.Remove(a, sz);
         } else {
             a = g_user.Alloc(sz, 0x10000, kUserLow, kUserHigh - 1, type & kMemTopDown);
+            if (!a && !g_quarantine.empty()) {
+                ReleaseQuarantined(true);
+                a = g_user.Alloc(sz, 0x10000, kUserLow, kUserHigh - 1, type & kMemTopDown);
+            }
             if (!a) return 0xC0000017;  // STATUS_NO_MEMORY
             g_user.Forget(a);
         }
@@ -299,7 +329,7 @@ uint32_t FreeVirtual(uint32_t& base, uint32_t& size, uint32_t type) {
         uint32_t sz = r->size;
         Decommit(start, sz);
         g_reserved.erase(start);
-        g_user.Release(start, sz);
+        g_quarantine.push_back({start, sz, std::chrono::steady_clock::now()});
         base = start;
         size = sz;
         return 0;

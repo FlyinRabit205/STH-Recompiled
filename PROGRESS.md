@@ -319,6 +319,18 @@ Each session ends by saving to this folder on the user's PC:
   movers are actor attachments (0022A240 -> 00049750 LTM writes). Black Doom hologram scene = event2101 (after
   Westopolis). Options menu has a music room; event replay not found yet (menu nav via harness `cmd` + snap.sh).
 
+- **DELIVERY BUG (20:20)**: re-committing the same staged path (/mnt/user-data/outputs/Shadow.exe) can silently
+  leave the OLD file on the PC. The 20:15 commit did not land; the PC ran an older exe+dll, so the camera fix / CPU
+  fix / live option may never have reached the user. **Rule now: stage each build in a fresh folder
+  (/mnt/user-data/outputs/b<HHMMSS>/) and verify md5 by staging the PC file back.** Verified build b202445.
+- **New crash** (shadow_016.log, after event2101 at the route screen RouteDisplay): null+0x108 read in 002EC720
+  (RwFrame dirty-list walk, list head 0x57DEBC) <- 002DCDE0 <- 00157788. Same use-after-free as the first crash:
+  the stage heap is released while a frame in it is still linked; our allocator handed the same addresses straight to
+  the next heap, whose data overwrote the link. Fix in memory.cpp: released user regions are quarantined 20 s before
+  their addresses are reused (pages keep their bytes); flushed early when the space runs out or a fixed base asks.
+- Debug log on: `event timing: time .. elapsed .. wait ..` (first 240 updates of each event), in hooks.cpp
+  (DBG-EVENT-TIMING). Remove when done.
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
