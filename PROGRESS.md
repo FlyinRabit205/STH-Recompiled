@@ -240,7 +240,11 @@ Each session ends by saving to this folder on the user's PC:
 - **HD menus/UI from the pack:** match_pack on Menu, Pause Menu, HUD, Text, Multiplayer, Stage Names, ... ->
   `notes/match_ui.json` (in xbtex). Diffed every match at full size: EN UI sheets are identical art to the GameCube
   ones (non-EN GameCube sheets differ, rejected; also many false Multiplayer matches on effects, rejected by keeping
-  only csdFiles/number/stafroll sources with no differing regions). **80 textures, 63 MB, `ui_00..06.pak`.**
+  only csdFiles/number/stafroll sources with no differing regions). **81 textures at up to 2048 px (`PAK_MAX_SIDE=2048`), 107 MB, `ui_00..12.pak`.**
+- User test (16:04): title logo, its text and backdrop still low res. Cause: TitleParts was rejected by the diff
+  check (only compression noise) and 512 sheets were capped at 1024. Fixed: TitleParts added, UI cap 2048, TitleBg
+  shipped as pack art plus the Xbox-only black strip (texel-aligned patch). Live keys checked in run2/o_keys.txt:
+  title uses TitleAnime a6a16eb7, BG d2d76307, TitleParts 686a1e45.
 - **Xbox buttons (made by Claude):** the multi-platform button sheets (`gamemenu`, `pause_main` EN) hold PS, GameCube
   and Xbox buttons side by side. `xbox_buttons.py` takes the pack's HD sheet, clears every button slot and paints a
   glossy Xbox button (Duke colours A green, B red, X blue, Y yellow; dark rim, top highlight, white letter with

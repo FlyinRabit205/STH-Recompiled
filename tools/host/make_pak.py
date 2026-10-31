@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 
 MAX_PAK = 10 << 20  # transfers to the PC refuse files much over 10 MB
-MAX_SIDE = 1024
+MAX_SIDE = int(os.environ.get("PAK_MAX_SIDE", "1024"))  # UI sheets use 2048
 # accept rule (see PROGRESS.md session 7): close, or a bit further but far ahead of the runner-up
 def accepted(m):
     err, second = m["err"], m["second"]
