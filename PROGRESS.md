@@ -263,6 +263,24 @@ Each session ends by saving to this folder on the user's PC:
 - `sdk/runtime/gpu/texturedumper.cpp`: .pak texture packs.
 - `sdk/harness/reference_renderer.cpp`: TEXKEY=1 logs each texture's replacement key (debug).
 
+### Session 8 (2026-10-31, 19:20 to about 19:45): crash after Westopolis, event skip, events at 60 FPS
+- **Crash** (guest write to 00C5D1BC): RenderWare frame code (RwFrame dirty-list link 002E1300 <- 002E1820 <-
+  00059A76) touches a frame in pages the game had freed. Fix in `sdk/runtime/kernel/memory.cpp`: Decommit keeps the
+  host pages mapped with their bytes (only the commit map forgets them); Commit zeroes pages that were not committed.
+  Not reproduced here (needs a cleared Westopolis); user to confirm.
+- **Event skip**: the event manager (TPjsEventActionManager, update 00228740) takes START only when byte
+  `[0x541F20]+8` is 0; 00226B00 sets it to 1 on the first viewing (save bitmask +0x1754). New hook after 00228794
+  (`ShadowEventFirstView`, clears CL). Verified headless: START in event1101 jumps to stg0100.
+- **Events at 60 FPS**: the stage loop 00056FC0 busy-waits `[0x54DD40]` periods of 1/[0x54DD64] s (rdtsc / 733 via
+  000116B0); event start 002291AA writes 2 (30 FPS), event end 00229353 restores. Hook after 002291AA
+  (`ShadowEventFrameRate`) writes 1 when `cutscene_60fps` (new option, GAME tab, default on). Verified headless:
+  event1101 at 60 frames/s (was 30). **User checks the cutscene speed**; if double speed, interpolate instead.
+- Headless with the user's save: copy `Game\hdd\E\UDATA\53450086` into `<run>/hdd/E/UDATA/`, start
+  `/home/claude/hb/shadow /home/claude/rungame` in `<run>` in the background, drive it with `cmd` files
+  (`START 4`), screenshots via `/home/claude/tools/snap.sh <run> <png>`; START x6, A, START reaches event1101.
+- Re-optimization note: the game's frame limiter busy-waits on rdtsc (one core at 100%); a sleep in 000116B0's loop
+  would save power. Not changed yet.
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:

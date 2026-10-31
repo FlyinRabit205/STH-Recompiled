@@ -10,6 +10,7 @@
 
 namespace shadow {
 extern bool g_skip_cutscenes;  // src/game/hooks.cpp
+extern bool g_cutscene_60;     // src/game/hooks.cpp
 bool g_show_fps = false;
 std::atomic<bool> g_menu_open{false};
 }  // namespace shadow
@@ -197,6 +198,12 @@ std::vector<Row> GameRows() {
                      Saved(false);
                  },
                  "START skips every cutscene, even ones you have not seen yet."});
+    r.push_back({"CUTSCENES AT 60 FPS", [] { return std::string(g_cutscene_60 ? "ON" : "OFF"); },
+                 [](int) {
+                     g_cutscene_60 = !g_cutscene_60;
+                     Saved(false);
+                 },
+                 "In-game cutscenes run at 60 FPS like the stages. The Xbox ran them at 30. Applies from the next cutscene."});
     r.push_back({"KEYBOARD CONTROLS", [] { return std::string(keyboard::g_enabled ? "ON" : "OFF"); },
                  [](int) {
                      keyboard::g_enabled = !keyboard::g_enabled;

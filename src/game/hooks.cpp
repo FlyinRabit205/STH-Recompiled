@@ -47,6 +47,15 @@ X86_FUNC(sub_003E4148) {
 // ---------------------------------------------------------------------------------------------------------------
 namespace shadow {
 bool g_skip_cutscenes = true;
+bool g_cutscene_60 = true;
+}
+
+// In-engine cutscenes at 60 FPS (settings.toml: cutscene_60fps). The stage loop (00056FC0) waits [0x54DD40] frame
+// periods of 1/[0x54DD64] s per update; the event start (002291AA) sets 2, i.e. 30 FPS, and the event end puts the
+// saved value back. 1 keeps the stage's 60.
+X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
+    (void)ctx;
+    if (shadow::g_cutscene_60) *reinterpret_cast<uint32_t*>(base + 0x54DD40) = 1;
 }
 
 // Pre-rendered movies (StageMovie, E####.sfd): `mov al, [esi+0x18]` at 001717DF reads "unskippable" (the constructor
@@ -54,6 +63,14 @@ bool g_skip_cutscenes = true;
 X86_HOST_API void ShadowMovieSkippable(X86Context& ctx, uint8_t* base) {
     (void)base;
     if (shadow::g_skip_cutscenes) ctx.eax &= ~0xFFu;
+}
+
+// In-engine cutscenes: the event manager (TPjsEventActionManager, vtable 0046E038, update 00228740) takes START only
+// when `[0x541F20]+8` is 0. 00226B00 sets that byte to 1 when the event's bit in the save (+0x1754 bitmask) was not
+// set yet, i.e. on the first viewing. 0 here lets the START test go on to the skip below.
+X86_HOST_API void ShadowEventFirstView(X86Context& ctx, uint8_t* base) {
+    (void)base;
+    if (shadow::g_skip_cutscenes) ctx.ecx &= ~0xFFu;
 }
 
 // In-engine cutscenes (event####_scene*.one): after START, `mov al, [0x54DE01]` at 0022879B reads the global

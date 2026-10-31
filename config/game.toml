@@ -285,6 +285,16 @@ call = "ShadowMovieSkippable"
 after = true
 
 [[hook]]
+at = 0x002291AA          # event start: mov dword [0x54DD40], 2 (frame wait: 2 = 30 FPS); restored at 00229353
+call = "ShadowEventFrameRate"
+after = true
+
+[[hook]]
+at = 0x00228794          # event player (TPjsEventActionManager update): mov cl, [eax+8] (first viewing of this event)
+call = "ShadowEventFirstView"
+after = true
+
+[[hook]]
 at = 0x0022879B          # event player: mov al, [0x54DE01] (skip allowed)
 call = "ShadowEventSkippable"
 after = true

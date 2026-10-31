@@ -90,7 +90,11 @@ bool Commit(uint32_t va, uint32_t size) {
         return false;
     }
 #endif
-    for (uint64_t p = first; p < end; p += kPage) g_committed[size_t(p >> 12)] = 1;
+    // pages freed earlier stay mapped (see Decommit): a fresh commit reads as zeros, as on the console
+    for (uint64_t p = first; p < end; p += kPage) {
+        if (!g_committed[size_t(p >> 12)]) std::memset(g_base + p, 0, kPage);
+        g_committed[size_t(p >> 12)] = 1;
+    }
     return true;
 }
 
@@ -99,12 +103,9 @@ void Decommit(uint32_t va, uint32_t size) {
     uint32_t first = va & ~(kPage - 1);
     uint64_t end = (uint64_t(va) + size + kPage - 1) & ~uint64_t(kPage - 1);
     std::lock_guard<std::recursive_mutex> lock(g_lock);
-#ifdef _WIN32
-    VirtualFree(g_base + first, size_t(end - first), MEM_DECOMMIT);
-#else
-    madvise(g_base + first, size_t(end - first), MADV_DONTNEED);
-    mprotect(g_base + first, size_t(end - first), PROT_NONE);
-#endif
+    // Freed pages stay mapped with their bytes. Shadow touches a RenderWare frame in memory it freed when a stage
+    // ends (RwFrame root dirty-list link, 002E1300 from 00059A76): evidently harmless on the console (its
+    // allocators leave those pages mapped or reuse them), an access violation here when they were decommitted. Only the accounting forgets them.
     for (uint64_t p = first; p < end; p += kPage) g_committed[size_t(p >> 12)] = 0;
 }
 

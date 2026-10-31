@@ -29,5 +29,5 @@ OPTIONS MENU:  F1  (controller: hold BACK, press START)
 --------------------------------------------------------
 Up/Down select, Left/Right change, Q/E switch tabs (controller: LT/RT), mouse works too.
 Display mode (fullscreen / borderless / window), resolution, V-Sync, frame rate,
-render resolution (50-200%), texture filtering, HD 3D world, skip any cutscene,
+render resolution (50-200%), texture filtering, HD 3D world, skip any cutscene, cutscenes at 60 FPS,
 keyboard controls, FPS counter. Changes apply and save immediately (settings.toml).
