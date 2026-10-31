@@ -331,6 +331,15 @@ Each session ends by saving to this folder on the user's PC:
 - Debug log on: `event timing: time .. elapsed .. wait ..` (first 240 updates of each event), in hooks.cpp
   (DBG-EVENT-TIMING). Remove when done.
 
+- **20:34 user test (verified build b202445): cutscenes at 60 look fine now.** Timing log on Windows: event time
+  +0.5 every 16.7 ms, elapsed 1, wait 1 (perfect). After event2101 ends the game sits on a **black screen** (no crash):
+  log ends with RouteDisplay_EN.txd / RouteDisplay.xncp opened at 84.27 s, nothing more until the user quit. Same
+  spot as the earlier crash (null+0x108 in the RwFrame dirty-list walk), so likely the same stale-frame family, now
+  hanging instead of faulting. Asked the user to press F3 (logs every guest thread's stack) on the black screen.
+- **User priority from now: performance and fixing bugs like these throughout the game.** Plan: find the
+  stale-frame root cause (who frees the stage heap with frames still linked: hook RwFrameDestroy/the heap release
+  at stage end, or make the game unlink), then sweep stage transitions (all stages, events, menus) headless.
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
