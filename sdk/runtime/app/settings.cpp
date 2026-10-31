@@ -153,8 +153,15 @@ Mode CachedOutput() {
 }
 
 float RenderScale(uint32_t guest_height) {
-    float h = CachedOutput().height * (Get().render_percent / 100.0f);
-    return guest_height ? std::max(h / guest_height, 0.1f) : 1.0f;
+    float pct = Get().render_percent / 100.0f;
+    float h = CachedOutput().height * pct;
+    if (!guest_height) return 1.0f;
+    float sc = h / guest_height;
+    // ShadowNativePort: a widescreen output shows the 4:3 console frame stretched to 16:9, so its width needs more
+    // pixels than its height: scale by whichever axis asks for more (1080p: 1920/640 = 3, not 1080/480 = 2.25),
+    // which renders every output pixel across and supersamples the height
+    if (Widescreen()) sc = std::max(sc, CachedOutput().width * pct / (guest_height * 4.0f / 3.0f));
+    return std::max(sc, 0.1f);
 }
 
 }  // namespace app

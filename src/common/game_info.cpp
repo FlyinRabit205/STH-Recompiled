@@ -1,6 +1,7 @@
 #include "app/app.h"
 #include "common/keyboard.h"
 #include "common/render_ext.h"
+#include "common/settings_menu.h"
 
 namespace shadow {
 extern bool g_skip_cutscenes;  // src/game/hooks.cpp
@@ -16,14 +17,21 @@ const app::GameInfo app::kGame = {
     .splash = L"splash",                  // optional splash.png or splash.bmp beside the exe
     .missing = L"Put the game in the assets folder: its disc image (.iso), or default.xbe with its folders beside it.",
     .images = {{"default.xbe", "Shadow"}},  // each recompiled xbe and its exe, for title launches
-    .options = {{"keyboard", &keyboard::g_enabled, nullptr}, {"skip_cutscenes", &shadow::g_skip_cutscenes, nullptr}, {"hd_scene", &shadow::g_hd_scene, nullptr}},                        // game settings kept in the settings file
+    .options = {{"keyboard", &keyboard::g_enabled, nullptr}, {"skip_cutscenes", &shadow::g_skip_cutscenes, nullptr}, {"hd_scene", &shadow::g_hd_scene, nullptr}, {"show_fps", &shadow::g_show_fps, nullptr}},                        // game settings kept in the settings file
     .load = nullptr,                      // reads more from the settings file's toml::table
     .save = nullptr,                      // writes more into it
     .init = shadow::InitRender,                      // after the settings load, before the window and boot
     .loaded = nullptr,                    // image in memory, before its entry point runs
-    .window = keyboard::OnWindow,                    // the game window is up
-    .message = nullptr,                   // window messages first; true takes one
-    .ui = nullptr,                        // ImGui drawing each frame
-    .pad = keyboard::ApplyToPad,                       // changes a polled pad
+    .window = [](void* hwnd) { keyboard::OnWindow(hwnd); shadow::MenuWindow(hwnd); },                    // the game window is up
+    .message = shadow::MenuMessage,                   // window messages first; true takes one
+    .ui = shadow::MenuUi,                        // ImGui drawing each frame
+    .pad = [](int port, input::Pad& pad) {
+        keyboard::ApplyToPad(port, pad);
+        if (shadow::g_menu_open) {  // the menu has the input
+            bool c = pad.connected;
+            pad = input::Pad{};
+            pad.connected = c;
+        }
+    },                       // changes a polled pad
     .rumble = nullptr,                    // changes a rumble before it is set
 };

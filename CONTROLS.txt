@@ -25,8 +25,8 @@ T                               Right stick click
 
 To turn the keyboard off, set   keyboard = false   in settings.toml beside Shadow.exe.
 
-SETTINGS (settings.toml beside Shadow.exe, true or false)
---------
-skip_cutscenes = true    START skips any cutscene, even on the first playthrough
-hd_scene = true          3D world rendered at full screen resolution
-keyboard = true          keyboard controls
+SETTINGS MENU:  press F1 in game
+--------------------------------
+Display mode (fullscreen / borderless / window), resolution, V-Sync, frame rate,
+render resolution (50-200%), texture filtering, HD 3D world, skip any cutscene,
+keyboard controls, FPS counter. Changes apply and save immediately (settings.toml).

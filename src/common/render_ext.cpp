@@ -28,6 +28,13 @@ constexpr float kSceneBoost = 640.0f / 512.0f;
 
 class ShadowExtension final : public gpu::Extension {
 public:
+    // the settings menu turned HD scene on or off: every target is made again
+    bool Settings() override {
+        bool changed = applied_ != g_hd_scene;
+        applied_ = g_hd_scene;
+        return changed;
+    }
+
     void MakeTarget(const gpu::Surface&, bool depth, uint32_t gw, uint32_t gh, float& scale, DXGI_FORMAT&) override {
         if (!g_hd_scene || gw != kSceneSize || gh != kSceneSize) return;
         scale *= kSceneBoost;
@@ -39,6 +46,7 @@ public:
     }
 
 private:
+    bool applied_ = g_hd_scene;
     bool logged_[2] = {};
 };
 

@@ -128,7 +128,7 @@ Each session ends by saving to this folder on the user's PC:
     render targets / passes are probably still at 640x480 and stretched; check render-to-texture targets the game makes
     itself, and copies/blits back to the back buffer).
 
-### Session 4 (2026-10-31, 14:24 to about 15:00): cutscene skip, HD scene
+### Session 4 (2026-10-31, 14:24 to about 15:00): cutscene skip, HD scene, widescreen scale, settings menu
 - **Cutscenes skippable on first playthrough** (setting `skip_cutscenes`, default true), via two `[[hook]]`s in
   config/game.toml calling `ShadowMovieSkippable` / `ShadowEventSkippable` (src/game/hooks.cpp):
   - Pre-rendered movies (StageMovie, vtable 0046478C): update method 00171770, state 1 reads "unskippable" byte
@@ -150,8 +150,20 @@ Each session ends by saving to this folder on the user's PC:
   mingw link); host_def.py maps the DLL's hook imports (now 8 C++ imports).
 - User feedback this session: don't spend time re-rendering what the user already described; work from their report.
 
+- **Widescreen sharpness** (user: "should be 1920x1080 at 1080p"): the game is told widescreen (EEPROM video flags) and
+  its 640x480 frame is shown 16:9, but the render scale came from the height only (2.25 = 1440 px across, stretched
+  to 1920). `sdk/runtime/app/settings.cpp` RenderScale now takes max(height scale, width / 640) when widescreen:
+  3.0 at 1080p (1920x1440 back buffer, supersampled to 1080 tall), scene target 512*3*1.25 = 1920.
+- **Settings menu (F1)**: `src/common/settings_menu.cpp` (ImGui via GameInfo::ui/message/window). Display mode,
+  resolution (monitor modes, or desktop), V-Sync, frame rate 30/60, render resolution 50-200%, texture filtering,
+  HD 3D world, skip cutscenes, keyboard, FPS counter. Saves at once; display changes via app::ApplyDisplay; renderer
+  re-reads the scale every present; render_ext Settings() remakes targets when HD scene toggles. Game input is
+  blanked while the menu is open (GameInfo::pad). F1 only toggles it (Escape would leak START to the game).
+  **Untested on Windows yet.**
+
 ### Local SDK patches (add to the list above)
 - `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
+- `sdk/runtime/app/settings.cpp`: RenderScale uses the width too when widescreen.
 
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
@@ -161,7 +173,7 @@ Remaining, in order:
    `Movie_EN` for subtitles. Check font texture formats and how glyphs are drawn (CAP draw lists in the harness).
 3. **Cutscene rendering issues** (in-engine events).
 4. **HD HUD / GUI / subtitles** (2D at native resolution, widescreen placement).
-5. Later: settings menu, widescreen, 60 FPS+.
+5. Later: 60 FPS+ (frame rate options stop at 60 until game timing is handled), ultrawide.
 
 ### Still open
 - Intermittent segfault in the Linux harness (about 1 in 4 runs, timing dependent, not under gdb; core_pattern is
