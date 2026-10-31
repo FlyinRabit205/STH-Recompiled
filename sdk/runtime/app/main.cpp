@@ -10,6 +10,7 @@
 #include <timeapi.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <chrono>
 #include <csignal>
 #include <cwchar>
@@ -226,6 +227,12 @@ void Pace() {
     uint32_t cap = Get().fps_cap;
     if (cap == kFpsCapRefresh) cap = RefreshRate();
     auto now = clock::now();
+    // V-Sync at a refresh within 1 Hz of the cap already paces every present; a second 60 Hz clock here would beat
+    // against the display's and now and then hold a frame for an extra refresh
+    if (Get().vsync && cap && std::abs(int(RefreshRate()) - int(cap)) <= 1) {
+        next = now;
+        return;
+    }
     if (!cap) {
         next = now;
         return;

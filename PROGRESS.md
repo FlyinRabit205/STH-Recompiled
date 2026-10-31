@@ -392,6 +392,21 @@ Each session ends by saving to this folder on the user's PC:
   again in 6 later runs. Keep an eye out.
 - Delivery d212431 (exe + 8 paks), md5 verified.
 
+- 21:36 user: "ran perfect, a few stutters". shadow_021.log hitches:
+  1. **Stage load froze the picture 2.2 s + 3.8 s + 0.5 s** (stg0100 -> event2101, was ~0.6 s before the guest CPU
+     lock). Cause: the main thread took the lock at the end of each frame wait and kept it when it left the stage loop
+     to load, so the loader tasks only ran in the gaps. Fix: the main thread holds it only inside the stage frame step
+     (hooks before 0001D805 `call 00057630` / after 0001D80A, plus the wait release/retake inside). Headless:
+     stg0100_cmn -> event2101 0.1 s; 9 pause cycles, no hang.
+  2. **~2 s of uneven frames in gameplay** (264 s: every other frame 30 ms, the next ~3 ms): two clocks. The game's own
+     60 Hz rdtsc grid drifted against the port's pacing/V-Sync. Fix (Windows only): with fps cap 60 and the game
+     waiting one period, ShadowFrameWait ends the wait at once as if one period passed (dt exactly 1/60), so the
+     game does one update per present; event frames at 30 (two periods) keep the game's wait. And app::Pace skips its
+     own clock when V-Sync is on at a refresh within 1 Hz of the cap.
+  3. Event start uploads (up to 54 textures, 46 ms at event2102: create 18 ms, pack 11 ms, upload 3 ms). Next:
+     placed-resource heap for textures and pack lookups off the render thread.
+- Delivered b214457 (md5 verified).
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:

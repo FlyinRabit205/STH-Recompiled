@@ -310,8 +310,17 @@ call = "ShadowTaskLeave"
 after = true
 
 [[hook]]
-at = 0x00057149          # stage loop: frame wait over (the main thread takes the guest CPU for the frame)
+at = 0x00057149          # stage loop: frame wait over (the main thread takes the guest CPU back)
 call = "ShadowMainEnter"
+after = true
+
+[[hook]]
+at = 0x0001D805          # before the stage frame step (call 00057630): the main thread takes the guest CPU
+call = "ShadowMainEnter"
+
+[[hook]]
+at = 0x0001D80A          # after it (test al, al): lets it go, so loading outside the stage step runs in parallel
+call = "ShadowMainLeave"
 after = true
 
 [[hook]]

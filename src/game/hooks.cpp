@@ -6,6 +6,7 @@
 #include <cstring>
 #include <thread>
 
+#include "app/app.h"
 #include "kernel/kernel.h"
 #include "kernel/memory.h"
 #include "xdk/hle.h"
@@ -75,6 +76,10 @@ X86_HOST_API void ShadowMainEnter(X86Context& ctx, uint8_t* base) {
     (void)ctx, (void)base;
     kernel::GuestCpuAcquire();
 }
+X86_HOST_API void ShadowMainLeave(X86Context& ctx, uint8_t* base) {
+    (void)ctx, (void)base;
+    kernel::GuestCpuRelease();
+}
 
 X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
     (void)ctx;
@@ -115,6 +120,17 @@ X86_HOST_API void ShadowFrameWait(X86Context& ctx, uint8_t* base) {
     const uint64_t target = ctx.eax, elapsed = uint64_t(ctx.esi) << 32 | ctx.ebx;
     const uint64_t period = *reinterpret_cast<const uint32_t*>(base + ctx.esp + 0x10);
     if (!period || elapsed >= target || ctx.edx) return;
+    // One clock: with the port presenting at 60 (fps cap 60, its own pacing and V-Sync), the game's own 60 Hz grid
+    // is a second clock that drifts against the display, so now and then one frame waits two periods and the next
+    // none (uneven 33/0 ms frames). One update per present instead: the wait ends here as if one period passed,
+    // so the game's frame time is exactly 1/60 s. Event frames at 30 (target two periods) keep the game's wait.
+#ifdef _WIN32  // the headless harness does not pace its presents; the game's own wait keeps it at 60 there
+    if (target == period && app::Get().fps_cap == 60) {
+        ctx.ebx = uint32_t(target);
+        ctx.esi = 0;
+        return;
+    }
+#endif
     const uint64_t now = x86_rdtsc() / 733;
     const uint64_t left = (target - elapsed) / period * period - now % period;  // to the boundary that ends the wait
     constexpr uint64_t kSpin = 2500;  // microseconds kept spinning: Sleep(1) can take up to ~2 ms
