@@ -24,3 +24,9 @@ Z                               Left stick click
 T                               Right stick click
 
 To turn the keyboard off, set   keyboard = false   in settings.toml beside Shadow.exe.
+
+SETTINGS (settings.toml beside Shadow.exe, true or false)
+--------
+skip_cutscenes = true    START skips any cutscene, even on the first playthrough
+hd_scene = true          3D world rendered at full screen resolution
+keyboard = true          keyboard controls
