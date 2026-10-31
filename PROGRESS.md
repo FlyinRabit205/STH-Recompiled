@@ -211,6 +211,28 @@ Each session ends by saving to this folder on the user's PC:
     first 300, from frame 120. **Ask the user for the log if any dip remains** to see if it is shaders, pipelines,
     texture uploads, or none of them (then game/CPU/disc side).
 
+### User test after session 6: no stutter in two runs. User asks: keep re-optimizing after every change.
+
+### Session 7 (2026-10-31, 15:33 to ...): HD environment textures from Cyb3rtron's GameCube pack
+- Pack: `shadow_the_hedgehog_hd.zip` (user put it in ShadowNativePort\), 3235 Dolphin DDS (DXT5, 6x, 1 mip), folders
+  GUP/Stages (23 stages), Backgrounds, Crates, Characters, Effects, HUD, Menu, Text, ... User's split: **environment
+  from the pack; fonts/text redone by Claude in HD; GameCube buttons replaced by Xbox buttons made by Claude.**
+- Xbox side, offline from the disc: `tools/host/one_extract.c` (Sega PRS "One Ver 0.60" archives: count at 0x1C,
+  0x38 byte entries from 0xB0: name[0x2C], unpacked size, offset from 0x0C), `xbtex.py` (RenderWare Xbox texture
+  natives, platform 5; NV2A formats; Shadow's palettized textures are 8 bpp with 32-colour (raster 0x4600) or
+  256-colour (0x2600) palettes; key = runtime Hash(level 0, Hash(u32 fmt,w,h)) then Hash(palette padded with zeros to
+  1024 bytes); decode incl. NV2A unswizzle), `rthash.c` (C Hash for ctypes), `index_textures.py` -> 4161 textures.
+  **Verified against the live game** (harness TEXKEY=1 log in reference_renderer.cpp): 97/109 palettized matched; the
+  unmatched 32-bit ones are per-frame render targets/movie frames.
+- `match_pack.py`: 16x16 RGBA thumbnails (colour x alpha), same original size, best vs runner-up.
+  Accept: err < 0.004 with runner-up >= 1.6x, or err < 0.01 with runner-up >= 4x (checked by eye on sample sheets).
+  Categories used: Stages, Backgrounds, Crates. Result notes/match_env.json.
+- `make_pak.py`: 4x the Xbox size (max 1024), full mip chain, BC1 when opaque else BC3, deduped, packed into
+  `.pak` files of 10 MB (bigger transfers to the PC fail). **1951 Xbox textures, 1794 images, 177 MB, 19 paks** in
+  `Game\textures\replacement\env_NN.pak`.
+- Runtime: `sdk/runtime/gpu/texturedumper.cpp` reads `.pak` (ListPak, pak_at, ReadDdsBytes); loose files override.
+  Loads stay on the existing background loader (no stutter).
+
 ### Local SDK patches (add to the list above)
 - `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
 - `sdk/runtime/app/settings.cpp`: RenderScale uses the width too when widescreen.
@@ -218,6 +240,8 @@ Each session ends by saving to this folder on the user's PC:
 - `sdk/harness/build_rt.sh`: harness build with the render thread on.
 - `sdk/runtime/gpu/d3d12.cpp`: BindTargetTexture `kShrinkMin` (wide glow taps only for real shrinks); disk shader +
   pipeline caches, AsyncCompiler, LogHitch.
+- `sdk/runtime/gpu/texturedumper.cpp`: .pak texture packs.
+- `sdk/harness/reference_renderer.cpp`: TEXKEY=1 logs each texture's replacement key (debug).
 
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <set>
 #include <memory>
 #include <vector>
 
@@ -210,6 +211,25 @@ std::shared_ptr<Image> FindImage(uint32_t header, uint32_t palette_header = 0) {
         colours.assign(n, 0);
         std::memcpy(colours.data(), kernel::HostPtr(pal_va), n * 4);
         colours.resize(256, 0);
+    }
+    // DBG-TEXKEY: the runtime's replacement key (texturedumper::Key) of each texture seen
+    if (std::getenv("TEXKEY") && !d.cube && d.depth <= 1 && !d.linear) {
+        static std::set<uint64_t> seen;
+        uint32_t shape[] = {d.format, d.width, d.height};
+        uint64_t k = Hash(kernel::HostPtr(d.data), LevelSize(d, 0), Hash(shape, sizeof(shape)));
+        if (d.format == 0x0B && palette_header) {
+            uint32_t pal[256] = {};
+            uint32_t n = 256u >> (kernel::R32(palette_header) >> 30);
+            std::memcpy(pal, kernel::HostPtr(mem::VirtualFromPhysical(kernel::R32(palette_header + 4))), n * 4);
+            k = Hash(pal, sizeof pal, k);
+        }
+        if (seen.insert(k).second) {
+            const uint8_t* q = static_cast<const uint8_t*>(kernel::HostPtr(d.data));
+            char hex[97] = {};
+            for (int i = 0; i < 48; i++) std::snprintf(hex + i * 2, 3, "%02x", q[i]);
+            LOGI("texkey %016llx fmt %02X %ux%u lv %u pal %08X head %s", (unsigned long long)k, d.format, d.width, d.height,
+                 d.levels, palette_header ? kernel::R32(palette_header) : 0, hex);
+        }
     }
     uint64_t key = (uint64_t(d.data) << 32 ^ uint64_t(d.format) << 24 ^ uint64_t(d.width) << 12 ^ d.height ^ (d.cube ? 1ull << 63 : 0)) ^ (uint64_t(pal_va) * 0x9E3779B97F4A7C15ull);
     if (auto it = g_images.find(key); it != g_images.end()) return it->second;

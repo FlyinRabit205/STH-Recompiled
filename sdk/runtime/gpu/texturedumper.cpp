@@ -65,6 +65,8 @@ struct Pack {
     fs::path pack_dir;
     fs::path dump_dir;
     std::unordered_map<uint64_t, fs::path> files;  // by the key in their names; written by Update alone
+    // ShadowNativePort: textures packed into .pak files (tools/host/make_pak.py): key -> offset and size in its file
+    std::unordered_map<uint64_t, std::pair<uint64_t, uint32_t>> pak_at;
     HANDLE watch = INVALID_HANDLE_VALUE;           // changes under pack_dir
     uint32_t watch_tries = 0;
     std::optional<Clock::time_point> changed;      // the last change seen, not listed yet
@@ -173,15 +175,38 @@ std::string Utf8(const fs::path& p) {
     return std::string(s.begin(), s.end());
 }
 
+// "SNPK", u32 version 1, u32 count, then count x {u64 key, u64 offset, u32 size}; DDS files at the offsets
+void ListPak(const fs::path& p) {
+    std::ifstream in(p, std::ios::binary);
+    uint32_t head[3] = {};
+    if (!in.read(reinterpret_cast<char*>(head), sizeof head) || head[0] != 0x4B504E53 || head[1] != 1) {
+        LOGE("texture pack: %s is not a texture pak", Utf8(p).c_str());
+        return;
+    }
+    for (uint32_t i = 0; i < head[2]; i++) {
+        uint64_t key = 0, off = 0;
+        uint32_t size = 0;
+        if (!in.read(reinterpret_cast<char*>(&key), 8) || !in.read(reinterpret_cast<char*>(&off), 8) ||
+            !in.read(reinterpret_cast<char*>(&size), 4))
+            break;
+        if (g.files.emplace(key, p).second) g.pak_at[key] = {off, size};
+    }
+}
+
 void ListPack(const fs::path& dir) {
     g.files.clear();
+    g.pak_at.clear();
     std::error_code ec;
     fs::recursive_directory_iterator it(dir, ec);
     for (; !ec && it != fs::recursive_directory_iterator(); it.increment(ec)) {
         const fs::path& p = it->path();
         bool image = _wcsicmp(p.extension().c_str(), L".dds") == 0 || _wcsicmp(p.extension().c_str(), L".png") == 0;
+        if (_wcsicmp(p.extension().c_str(), L".pak") == 0) {
+            ListPak(p);
+            continue;
+        }
         uint64_t key = image ? KeyInName(p.stem().wstring()) : 0;
-        if (key) g.files.emplace(key, p);
+        if (key) g.files[key] = p;  // a loose file wins over a pak's copy
     }
     LOGR("texture pack: %zu images in %s", g.files.size(), Utf8(dir).c_str());
 }
@@ -268,9 +293,15 @@ void MakeOpaque(Image& img) {
     }
 }
 
+bool ReadDdsBytes(const std::vector<uint8_t>& f, Image& img);
+
 bool ReadDds(const fs::path& path, Image& img) {
     std::ifstream in(path, std::ios::binary);
     std::vector<uint8_t> f{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+    return ReadDdsBytes(f, img);
+}
+
+bool ReadDdsBytes(const std::vector<uint8_t>& f, Image& img) {
     if (f.size() < kDdsHeaderBytes || Read32(f, 0) != kDdsMagic) return false;
     size_t at = 0;
     img.format = DdsFormat(f, at);
@@ -458,7 +489,21 @@ void AddMipmaps(Image& img) {
 void Load(uint64_t key, const fs::path& path, uint32_t revision) {
     Image img;
     bool dds = _wcsicmp(path.extension().c_str(), L".dds") == 0;
-    bool ok = dds ? ReadDds(path, img) : ReadPng(path, img);
+    bool ok = false;
+    if (_wcsicmp(path.extension().c_str(), L".pak") == 0) {
+        std::pair<uint64_t, uint32_t> at{};
+        {
+            std::lock_guard l(g.lock);
+            auto it = g.pak_at.find(key);
+            if (it != g.pak_at.end()) at = it->second;
+        }
+        std::ifstream in(path, std::ios::binary);
+        std::vector<uint8_t> f(at.second);
+        ok = at.second && in.seekg(std::streamoff(at.first)) && in.read(reinterpret_cast<char*>(f.data()), at.second) &&
+             ReadDdsBytes(f, img);
+    } else {
+        ok = dds ? ReadDds(path, img) : ReadPng(path, img);
+    }
     // a BC texture's top level is whole blocks
     if (ok && !Uncompressed(img.format) && ((img.width | img.height) & 3)) ok = false;
     if (ok) {
