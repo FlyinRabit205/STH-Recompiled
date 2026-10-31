@@ -20,6 +20,9 @@
 #include <cstring>
 #include <deque>
 #include <filesystem>
+#include <condition_variable>
+#include <fstream>
+#include <thread>
 #include <mutex>
 #include <optional>
 #include <unordered_map>
@@ -98,6 +101,126 @@ struct Perf {
     uint64_t lates = 0;
 };
 Perf g_perf;
+
+// ---------------------------------------------------------------------------------------------------------------
+// ShadowNativePort: persistent caches beside the exe (cache\), so a shader or pipeline is built once ever, not once per
+// run. Shaders compiled on the fly stalled the frame they first appeared in (dips to ~25 fps).
+//   cache\shaders.bin    compiled DXBC by source hash (portable)
+//   cache\pipelines.bin  ID3D12PipelineLibrary (driver specific; dropped when the driver changes)
+// ---------------------------------------------------------------------------------------------------------------
+constexpr uint32_t kShaderCacheMagic = 0x53504E53;  // "SNPS"
+constexpr uint32_t kShaderCacheVersion = 1;         // bump when D3DCompile flags change
+
+std::filesystem::path CacheDir() {
+    std::error_code ec;
+    std::filesystem::path d = app::ExeDir() / "cache";
+    std::filesystem::create_directories(d, ec);
+    return d;
+}
+
+struct ShaderDiskCache {
+    std::unordered_map<uint64_t, std::vector<uint8_t>> blobs;
+    std::ofstream out;
+    bool loaded = false;
+
+    void Load() {
+        loaded = true;
+        std::filesystem::path p = CacheDir() / "shaders.bin";
+        std::ifstream in(p, std::ios::binary);
+        uint32_t head[2] = {};
+        bool ok = in && in.read(reinterpret_cast<char*>(head), sizeof head) && head[0] == kShaderCacheMagic &&
+                  head[1] == kShaderCacheVersion;
+        while (ok) {
+            uint64_t h;
+            uint32_t n;
+            if (!in.read(reinterpret_cast<char*>(&h), 8) || !in.read(reinterpret_cast<char*>(&n), 4) || n > (16u << 20)) break;
+            std::vector<uint8_t> b(n);
+            if (!in.read(reinterpret_cast<char*>(b.data()), n)) break;
+            blobs[h] = std::move(b);
+        }
+        in.close();
+        // a damaged or old file is rewritten with what was read
+        out.open(p, std::ios::binary | std::ios::trunc);
+        uint32_t nh[2] = {kShaderCacheMagic, kShaderCacheVersion};
+        out.write(reinterpret_cast<const char*>(nh), sizeof nh);
+        for (auto& [h, b] : blobs) Append(h, b.data(), uint32_t(b.size()), false);
+        out.flush();
+        LOGI("d3d12: shader cache, %zu shaders", blobs.size());
+    }
+    void Append(uint64_t h, const void* data, uint32_t n, bool flush = true) {
+        if (!out) return;
+        out.write(reinterpret_cast<const char*>(&h), 8);
+        out.write(reinterpret_cast<const char*>(&n), 4);
+        out.write(static_cast<const char*>(data), n);
+        if (flush) out.flush();
+    }
+};
+ShaderDiskCache g_shader_disk;
+
+// ShadowNativePort: draw shaders compile on worker threads. A draw whose shader is not built yet is skipped (an effect
+// shows up a frame or two late on its first appearance ever) instead of the whole frame waiting for D3DCompile.
+class AsyncCompiler {
+public:
+    struct Done {
+        uint64_t hash;
+        Microsoft::WRL::ComPtr<ID3DBlob> code;
+        std::string error;
+    };
+    bool Pending(uint64_t h) {
+        std::lock_guard<std::mutex> l(m_);
+        return pending_.count(h) != 0;
+    }
+    void Submit(uint64_t h, std::string src, const char* entry, const char* profile) {
+        std::lock_guard<std::mutex> l(m_);
+        if (!pending_.insert(h).second) return;
+        if (workers_.empty()) {
+            unsigned n = std::max(2u, std::min(4u, std::thread::hardware_concurrency() / 3));
+            for (unsigned i = 0; i < n; i++) workers_.emplace_back([this] { Work(); }).detach();
+        }
+        jobs_.push_back({h, std::move(src), entry, profile});
+        cv_.notify_one();
+    }
+    std::vector<Done> Take() {
+        std::lock_guard<std::mutex> l(m_);
+        std::vector<Done> out;
+        out.swap(done_);
+        for (auto& d : out) pending_.erase(d.hash);
+        return out;
+    }
+
+private:
+    struct Job {
+        uint64_t hash;
+        std::string src;
+        const char* entry;
+        const char* profile;
+    };
+    void Work() {
+        for (;;) {
+            Job j;
+            {
+                std::unique_lock<std::mutex> l(m_);
+                cv_.wait(l, [this] { return !jobs_.empty(); });
+                j = std::move(jobs_.front());
+                jobs_.pop_front();
+            }
+            Microsoft::WRL::ComPtr<ID3DBlob> code, err;
+            HRESULT hr = D3DCompile(j.src.data(), j.src.size(), nullptr, nullptr, nullptr, j.entry, j.profile,
+                                    D3DCOMPILE_OPTIMIZATION_LEVEL1, 0, &code, &err);
+            Done d{j.hash, SUCCEEDED(hr) ? code : nullptr, {}};
+            if (FAILED(hr)) d.error = std::string(err ? static_cast<const char*>(err->GetBufferPointer()) : "?") + "\n" + j.src;
+            std::lock_guard<std::mutex> l(m_);
+            done_.push_back(std::move(d));
+        }
+    }
+    std::mutex m_;
+    std::condition_variable cv_;
+    std::deque<Job> jobs_;
+    std::vector<Done> done_;
+    std::unordered_set<uint64_t> pending_;
+    std::vector<std::thread> workers_;
+};
+AsyncCompiler g_async;
 struct PerfScope {
     double& acc;
     bool on = diag::Perf();
@@ -596,6 +719,9 @@ private:
     void DeliverReports();
     // shaders by source hash: Compile returns the bytecode and sets hash
     ID3DBlob* Compile(const std::string& src, const char* entry, const char* profile, uint64_t& hash);
+    // ShadowNativePort: Compile on a worker thread; null until it is built
+    ID3DBlob* CompileAsync(const std::string& src, const char* entry, const char* profile, uint64_t& hash);
+    void TakeCompiled();
     // Blit's pipeline
     ID3D12PipelineState* EnsureBlitPipeline(DXGI_FORMAT rtv, bool over = false);
     D3D12_GRAPHICS_PIPELINE_STATE_DESC FullScreenPipelineDesc(ID3DBlob* vs, ID3DBlob* ps, DXGI_FORMAT rtv) const;
@@ -726,6 +852,17 @@ private:
     std::unordered_map<uint64_t, ComPtr<ID3DBlob>> blobs_;
     std::unordered_map<uint64_t, uint64_t> shader_src_;  // vertex and pixel program keys to source hash
     std::unordered_map<uint64_t, ComPtr<ID3D12PipelineState>> psos_;
+    // ShadowNativePort: pipelines kept on disk (cache\pipelines.bin)
+    ComPtr<ID3D12PipelineLibrary> pso_lib_;
+    std::vector<char> pso_lib_data_;  // the serialized library it was made from must outlive it
+    bool pso_lib_dirty_ = false;
+    std::chrono::steady_clock::time_point pso_lib_saved_{};
+    void OpenPipelineLibrary();
+    void SavePipelineLibrary(bool now);
+    std::chrono::steady_clock::time_point hitch_t_{};
+    uint64_t hitch_counts_[4] = {};
+    uint32_t hitch_logged_ = 0;
+    void LogHitch();
     std::unordered_map<uint64_t, uint32_t> samplers_;
     uint32_t smp_used_ = 0;
     std::unordered_map<uint64_t, Target> targets_;
@@ -813,6 +950,7 @@ bool D3D12Backend::Init(uint32_t width, uint32_t height) {
     guest_h_ = height;
     HWND hwnd = static_cast<HWND>(app::Window());
     if (!CreateDevice()) return false;
+    OpenPipelineLibrary();
     if (!CreateSwapChain(hwnd)) return false;
     CreateHeaps();
     CreateBackBufferViews();
@@ -1421,6 +1559,15 @@ ID3DBlob* D3D12Backend::Compile(const std::string& src, const char* entry, const
     hash = Hash(src.data(), src.size(), entry_seed);
     auto it = blobs_.find(hash);
     if (it != blobs_.end()) return it->second.Get();
+    if (!g_shader_disk.loaded) g_shader_disk.Load();
+    if (auto d = g_shader_disk.blobs.find(hash); d != g_shader_disk.blobs.end()) {
+        ComPtr<ID3DBlob> b;
+        if (SUCCEEDED(D3DCreateBlob(d->second.size(), &b))) {
+            std::memcpy(b->GetBufferPointer(), d->second.data(), d->second.size());
+            blobs_[hash] = b;
+            return b.Get();
+        }
+    }
     ComPtr<ID3DBlob> code;
     ComPtr<ID3DBlob> err;
     PerfScope perf_compile{g_perf.compile};
@@ -1434,7 +1581,42 @@ ID3DBlob* D3D12Backend::Compile(const std::string& src, const char* entry, const
         return nullptr;
     }
     blobs_[hash] = code;
+    g_shader_disk.blobs[hash].assign(static_cast<const uint8_t*>(code->GetBufferPointer()),
+                                     static_cast<const uint8_t*>(code->GetBufferPointer()) + code->GetBufferSize());
+    g_shader_disk.Append(hash, code->GetBufferPointer(), uint32_t(code->GetBufferSize()));
     return code.Get();
+}
+
+// finished worker compiles into blobs_ and the disk cache
+void D3D12Backend::TakeCompiled() {
+    for (auto& d : g_async.Take()) {
+        if (!d.code) {
+            LOGE("d3d12: shader compile failed: %s", d.error.c_str());
+            blobs_[d.hash] = nullptr;
+            continue;
+        }
+        blobs_[d.hash] = d.code;
+        g_shader_disk.blobs[d.hash].assign(static_cast<const uint8_t*>(d.code->GetBufferPointer()),
+                                           static_cast<const uint8_t*>(d.code->GetBufferPointer()) + d.code->GetBufferSize());
+        g_shader_disk.Append(d.hash, d.code->GetBufferPointer(), uint32_t(d.code->GetBufferSize()));
+    }
+}
+
+ID3DBlob* D3D12Backend::CompileAsync(const std::string& src, const char* entry, const char* profile, uint64_t& hash) {
+    uint64_t profile_seed = Hash(profile, std::strlen(profile));
+    uint64_t entry_seed = Hash(entry, std::strlen(entry), profile_seed);
+    hash = Hash(src.data(), src.size(), entry_seed);
+    auto it = blobs_.find(hash);
+    if (it != blobs_.end() && it->second) return it->second.Get();
+    if (it != blobs_.end() && !g_async.Pending(hash)) return nullptr;  // failed before
+    if (!g_shader_disk.loaded) g_shader_disk.Load();
+    if (g_shader_disk.blobs.count(hash)) return Compile(src, entry, profile, hash);  // from disk, no compile
+    TakeCompiled();
+    it = blobs_.find(hash);
+    if (it != blobs_.end() && it->second) return it->second.Get();
+    g_perf.shaders++;
+    g_async.Submit(hash, src, entry, profile);
+    return nullptr;
 }
 
 // a full screen pass's pipeline: solid, no culling, one target, writing all channels; callers set the blend
@@ -1673,10 +1855,87 @@ ID3D12PipelineState* D3D12Backend::EnsurePipeline(const PsoKey& k, ID3DBlob* vs,
     FillPipelineDesc(k, vs, ps, d);
     if (k.topo == uint32_t(Topology::Points)) ExpandPoints(d, k.sprite);
     ComPtr<ID3D12PipelineState> pso;
+    wchar_t name[40] = {};
+    if (pso_lib_) {
+        // the name covers the key and the code it was made with
+        uint64_t n = Hash(vs ? vs->GetBufferPointer() : nullptr, vs ? vs->GetBufferSize() : 0, h);
+        n = Hash(ps ? ps->GetBufferPointer() : nullptr, ps ? ps->GetBufferSize() : 0, n);
+        if (d.GS.pShaderBytecode) n = Hash(d.GS.pShaderBytecode, d.GS.BytecodeLength, n);
+        std::swprintf(name, 40, L"p%016llx", static_cast<unsigned long long>(n));
+        if (SUCCEEDED(pso_lib_->LoadGraphicsPipeline(name, &d, IID_PPV_ARGS(&pso)))) {
+            psos_[h] = pso;
+            return pso.Get();
+        }
+    }
     g_perf.psos++;
     if (FAILED(dev_->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&pso)))) LOGE("d3d12: pipeline creation failed");
+    if (pso && pso_lib_ && SUCCEEDED(pso_lib_->StorePipeline(name, pso.Get()))) pso_lib_dirty_ = true;
     psos_[h] = pso;
     return pso.Get();
+}
+
+void D3D12Backend::OpenPipelineLibrary() {
+    ComPtr<ID3D12Device1> dev1;
+    if (FAILED(dev_.As(&dev1))) return;
+    std::filesystem::path p = CacheDir() / "pipelines.bin";
+    std::ifstream in(p, std::ios::binary | std::ios::ate);
+    if (in) {
+        pso_lib_data_.resize(size_t(in.tellg()));
+        in.seekg(0);
+        in.read(pso_lib_data_.data(), std::streamsize(pso_lib_data_.size()));
+    }
+    HRESULT hr = pso_lib_data_.empty() ? E_FAIL
+                                       : dev1->CreatePipelineLibrary(pso_lib_data_.data(), pso_lib_data_.size(),
+                                                                     IID_PPV_ARGS(&pso_lib_));
+    if (FAILED(hr)) {
+        // none yet, or made by another driver: start empty
+        pso_lib_data_.clear();
+        pso_lib_.Reset();
+        if (FAILED(dev1->CreatePipelineLibrary(nullptr, 0, IID_PPV_ARGS(&pso_lib_)))) pso_lib_.Reset();
+        LOGI("d3d12: pipeline cache started%s", in ? " again (the driver changed)" : "");
+    } else {
+        LOGI("d3d12: pipeline cache, %zu KB", pso_lib_data_.size() / 1024);
+    }
+    pso_lib_saved_ = std::chrono::steady_clock::now();
+}
+
+// written a few seconds after new pipelines, not every frame
+void D3D12Backend::SavePipelineLibrary(bool now) {
+    if (!pso_lib_ || !pso_lib_dirty_) return;
+    auto t = std::chrono::steady_clock::now();
+    if (!now && t - pso_lib_saved_ < std::chrono::seconds(5)) return;
+    pso_lib_saved_ = t;
+    pso_lib_dirty_ = false;
+    std::vector<char> data(pso_lib_->GetSerializedSize());
+    if (data.empty() || FAILED(pso_lib_->Serialize(data.data(), data.size()))) return;
+    std::filesystem::path p = CacheDir() / "pipelines.bin", tmp = CacheDir() / "pipelines.tmp";
+    {
+        std::ofstream out(tmp, std::ios::binary | std::ios::trunc);
+        out.write(data.data(), std::streamsize(data.size()));
+        if (!out) return;
+    }
+    std::error_code ec;
+    std::filesystem::rename(tmp, p, ec);
+}
+
+// a frame over 22 ms is logged with what it did (the first 300): shaders compiled, pipelines made, textures sent
+void D3D12Backend::LogHitch() {
+    auto now = std::chrono::steady_clock::now();
+    uint64_t c[4] = {g_perf.shaders, g_perf.psos, g_perf.texups, g_perf.texup_bytes};
+    bool reset = false;  // the XBE_PERF log clears the counters each second
+    for (int i = 0; i < 4; i++) reset |= c[i] < hitch_counts_[i];
+    if (!reset && hitch_t_.time_since_epoch().count() && presents_ > 120 && hitch_logged_ < 300) {
+        double ms = std::chrono::duration<double, std::milli>(now - hitch_t_).count();
+        if (ms > 22.0) {
+            hitch_logged_++;
+            LOGI("hitch: frame %llu took %.1f ms: %llu shaders compiled, %llu pipelines made, %llu textures uploaded (%.1f MB)",
+                 static_cast<unsigned long long>(presents_), ms, static_cast<unsigned long long>(c[0] - hitch_counts_[0]),
+                 static_cast<unsigned long long>(c[1] - hitch_counts_[1]), static_cast<unsigned long long>(c[2] - hitch_counts_[2]),
+                 double(c[3] - hitch_counts_[3]) / (1024.0 * 1024.0));
+        }
+    }
+    hitch_t_ = now;
+    std::copy(c, c + 4, hitch_counts_);
 }
 
 TexKind TextureKind(const TextureDesc& d) {
@@ -2093,12 +2352,17 @@ std::string VertexHlsl(const State& s, const Assembled& a, const DrawShaders& sh
 void D3D12Backend::EnsureVertexShader(const State& s, const Assembled& a, DrawShaders& sh) {
     auto vit = shader_src_.find(sh.vkey);
     if (vit != shader_src_.end()) {
-        sh.vs_code = blobs_[vit->second].Get();
         sh.vh = vit->second;
+        auto b = blobs_.find(sh.vh);
+        if (b == blobs_.end() && g_async.Pending(sh.vh)) {  // still compiling
+            TakeCompiled();
+            b = blobs_.find(sh.vh);
+        }
+        sh.vs_code = b != blobs_.end() ? b->second.Get() : nullptr;
         return;
     }
     std::string src = ReversedDepthHlsl(VertexHlsl(s, a, sh));
-    sh.vs_code = Compile(sh.quad ? QuadHlsl(std::move(src)) : src, "main", "vs_5_0", sh.vh);
+    sh.vs_code = CompileAsync(sh.quad ? QuadHlsl(std::move(src)) : src, "main", "vs_5_0", sh.vh);
     shader_src_[sh.vkey] = sh.vh;
 }
 
@@ -2123,11 +2387,16 @@ void D3D12Backend::EnsurePixelShader(const PixelKey& pk, DrawShaders& sh) {
     // pixel shaders share the map with vertex shaders, the salt keeps their keys apart
     auto pit = shader_src_.find(sh.pkey ^ kPixelKeySalt);
     if (pit != shader_src_.end()) {
-        sh.ps_code = blobs_[pit->second].Get();
         sh.ph = pit->second;
+        auto b = blobs_.find(sh.ph);
+        if (b == blobs_.end() && g_async.Pending(sh.ph)) {  // still compiling
+            TakeCompiled();
+            b = blobs_.find(sh.ph);
+        }
+        sh.ps_code = b != blobs_.end() ? b->second.Get() : nullptr;
         return;
     }
-    sh.ps_code = Compile(PixelHlsl(pk), "main", "ps_5_0", sh.ph);
+    sh.ps_code = CompileAsync(PixelHlsl(pk), "main", "ps_5_0", sh.ph);
     shader_src_[sh.pkey ^ kPixelKeySalt] = sh.ph;
 }
 
@@ -3379,6 +3648,8 @@ void D3D12Backend::Present(const Surface& front) {
     ReleaseOldTextures();
     ResetFrame();
     CountFps();
+    LogHitch();
+    SavePipelineLibrary(false);
     if (diag::Perf()) LogPerf();
     ApplySettings();
 }

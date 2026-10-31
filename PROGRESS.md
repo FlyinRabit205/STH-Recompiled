@@ -197,12 +197,27 @@ Each session ends by saving to this folder on the user's PC:
 - **Fix:** wide only when the source is >= 1.5x the destination in a dimension (`kShrinkMin`). Glow chain steps (2x, 4x)
   keep their look. **Needs the user's eyes.**
 
+### Session 6 (2026-10-31, 15:21 to about 15:50): stutter
+- User: sharp at 1080p now. Dips to ~25 fps for a moment on the opening ramp of Westopolis, otherwise 60.
+- Cause (by code reading): every GPU shader was compiled from HLSL with D3DCompile on the render thread the first
+  time it was needed, and pipelines made synchronously; both cached only in memory, so every launch recompiled.
+- Fixes in `sdk/runtime/gpu/d3d12.cpp`:
+  - `cache\shaders.bin` beside the exe: compiled DXBC by source hash (ShaderDiskCache), loaded on first use.
+  - `cache\pipelines.bin`: ID3D12PipelineLibrary (driver specific, rebuilt if the driver changes), saved 5 s after
+    new pipelines. Pipelines named by key + shader bytecode hashes.
+  - AsyncCompiler: draw shaders compile on 2-4 worker threads; a draw whose shader is not built yet is skipped
+    (new effect a frame or two late on its first ever appearance) instead of stalling the frame.
+  - Stutter log: frames over 22 ms are logged ("hitch: frame N took X ms: shaders, pipelines, texture uploads"),
+    first 300, from frame 120. **Ask the user for the log if any dip remains** to see if it is shaders, pipelines,
+    texture uploads, or none of them (then game/CPU/disc side).
+
 ### Local SDK patches (add to the list above)
 - `sdk/runtime/app/game_code.cpp`: `#ifndef __MINGW32__` around `#include "hook_exports.h"`.
 - `sdk/runtime/app/settings.cpp`: RenderScale uses the width too when widescreen.
 - `sdk/runtime/xdk/d3d8.cpp`: DrawSnapshot / DrawIndexedSnapshot (call-time vertex copy for small draws).
 - `sdk/harness/build_rt.sh`: harness build with the render thread on.
-- `sdk/runtime/gpu/d3d12.cpp`: BindTargetTexture `kShrinkMin` (wide glow taps only for real shrinks).
+- `sdk/runtime/gpu/d3d12.cpp`: BindTargetTexture `kShrinkMin` (wide glow taps only for real shrinks); disk shader +
+  pipeline caches, AsyncCompiler, LogHitch.
 
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
