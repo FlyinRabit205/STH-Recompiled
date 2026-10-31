@@ -61,6 +61,14 @@ X86_HOST_API void ShadowEventFrameRate(X86Context& ctx, uint8_t* base) {
     if (base[0x54D481]) *reinterpret_cast<uint32_t*>(base + 0x54DD40) = shadow::g_cutscene_60 ? 1u : 2u;
 }
 
+// The event scene player (event+0x180; set time 0022BDE0 -> 0022BBE0) seeks its scene to the event time cut to a
+// whole frame (cvttss2si [esi+8] at 0022BD02, back to float at 0022BD2C), so at 60 FPS, where the time moves half a
+// frame per update, cameras and actors only move every other update. With cutscenes at 60 the seek uses the time
+// as it is; at 30 the time is whole anyway.
+X86_HOST_API void ShadowEventSceneTime(X86Context& ctx, uint8_t* base) {
+    if (shadow::g_cutscene_60) ctx.xmm[0].f[0] = *reinterpret_cast<const float*>(base + ctx.esi + 8);
+}
+
 // The frame wait busy-loops on the CPU clock (rdtsc / 733 = microseconds, 000116B0) until the elapsed time, counted
 // in whole periods on a grid of multiples of the period, reaches the target: one core at 100%. Here, inside that
 // loop, eax = target and ebx:esi = elapsed (both microseconds), [esp+0x10] = the period. The loop leaves when the

@@ -293,6 +293,21 @@ Each session ends by saving to this folder on the user's PC:
   cvttss2si in event code at 0022BD02 (`[esi+8]`), not yet checked.
 
 
+### Session 9 (2026-10-31, 19:47 to about 20:00): event smoothness
+- Cause 1 (fixed): the event scene player (event+0x180, 0022BDE0 -> 0022BBE0) seeks to the event time cut to a
+  whole 30-FPS frame (cvttss2si [esi+8] at 0022BD02, cvtsi2ss at 0022BD2C). Hook after 0022BD2C
+  (`ShadowEventSceneTime`) puts the unrounded time in xmm0 when cutscene_60fps. Headless (CAP=1 draw lists): the
+  camera view now changes every frame (was every 2nd).
+- Measured with CAP=1: CPU-skinned characters (fixed-function, world identity, vertices change) already changed every
+  frame. Still every 2nd frame: one rigid object of 3 draws (182/186/1680 verts, vs B00E16C1, own world matrix),
+  plus an environment effect. Its matrix is written each update by RwFrame LTM sync 002E2C40 <- 000492C0 <- 00049750
+  <- 0022A240 (actor update) <- 0022CA10. Actor placement: 0022A180 finds a node by name (00376420) in
+  `[esi+0xA4]+0x20` and copies it (00049930). Next: find what drives that node at whole frames.
+- Event time `[0x54D498]` verified advancing 0.5 per 16.7 ms at 60.
+- Tools: /home/claude/tools/evrun.sh (run into event1101 from the user's save, env e.g. CAP=1, WAIT=s),
+  /tmp/find_alt.py (alternating draws + their matrix in guest memory), gdb `watch *(int*)0x1<guest addr>`.
+- Harness intermittent early crash seen again (run14 died at 8.7 s); rerun.
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:

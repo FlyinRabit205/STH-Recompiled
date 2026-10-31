@@ -290,6 +290,11 @@ call = "ShadowEventFrameRate"
 after = true
 
 [[hook]]
+at = 0x0022BD2C          # event scene player: cvtsi2ss xmm0, edx (the event time cut to a whole 30 FPS frame)
+call = "ShadowEventSceneTime"
+after = true
+
+[[hook]]
 at = 0x0005713E          # stage loop frame wait, busy loop: cdq after target = [0x54DD40] * period (sleep most of it)
 call = "ShadowFrameWait"
 after = true
