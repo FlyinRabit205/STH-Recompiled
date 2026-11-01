@@ -489,3 +489,43 @@ in-between frames.
   solid **60 FPS**, and **above 60 FPS** later (needs game-logic timing decoupled or interpolated; do after it is playable).
 - **Efficiency:** keep sessions lean; test only what changed. **The user asked Claude to do all building** (cross-build here, ship exe+dll).
 - Order: boot, then playable, then PC polish.
+
+## Session 11 (2026-11-01): texture false matches, Cosmic Fall smear, faint subtitles
+- Glyphic Canyon "lightning" streaks were a texture-pack false match: the Black Comet lightning sheet had been accepted for 4 keys, including the rain streaks s0201_sa002.
+  - New tools/host/verify_matches.py compares at full Xbox size (alpha-weighted MSE / mean variance).
+  - All 23 matches with rel > 0.88 were false (checked on contact sheets); the 0.25–0.88 band is real HD remasters.
+  - Dropped those 23, plus ef_s0300_011 (orange glow to white) → match_env_v2.json, paks_env2 (19 paks, 1927 textures).
+- Cosmic Fall bottom-right white/rainbow smear: the glow target (512x512) is filled each frame by a screen-sized pre-transformed copy quad. Its last rows never get overwritten, so the blur added back each frame piles up there.
+  - Fix in src/common/render_ext.cpp Bound(): before the first draw of a frame into a 512x512 colour target, if that draw is pre-transformed, has no blending and no depth buffer, clear the target.
+  - Not confirmed in game yet: the user should check Cosmic Fall.
+- Delivered: exe md5 d3e1e4fc, env paks (env_00 md5 be9edb2d).
+- Faint/ghosted subtitles (captures 124809-124814, ARK cutscene): the subtitle font (P8 256x256 at 8398D780) had been loaded where an old 256x256 render target lived, so it was bound as that target, using stale or wrongly uploaded pixels. In d3d12.cpp BindTexture, 8-bit (P8) textures are now never bound as targets. Delivered as exe md5 25fc8a5f.
+- Checked game-wide. All three fixes are in shared code, so they apply to every level and cutscene:
+  - The env paks are filtered for every stage.
+  - The glow clear applies to any 512x512 target.
+  - The P8 rule covers every texture.
+  - The UI paks were already restricted to csdFiles sources; verify_matches confirms no false UI matches in use. Non-EN sheets mapped to EN art are unused. The HUD matches are all fine (max rel 0.37).
+- Cost: one compare per texture bind; one hash lookup per draw into 512x512 targets only; 24 fewer pack textures to load.
+
+## Session 12 (2026-11-01): release, installer, texture pack drop-in
+- **Release carries no game code:**
+  - `RELEASE=1 tools/winbuild/build_win.sh exe` builds without XBE_PREBUILT_GAME_CODE and delay-loads Shadow.dll (`-Wl,--delayload=Shadow.dll -ldelayimp`), so the exe starts without the DLL.
+  - On the first start, game_code.cpp builds the DLL from the player's disc using the compiler folder:
+    - llvm-mingw 20251104 Windows `clang-21.exe` → clang.exe and `ld.lld.exe` → lld-link.exe, with libLLVM-21, libclang-cpp, libc++ and libunwind.
+    - xbe_recomp.exe cross-built with mingw, with Zydis and toml++ static.
+    - config, include/cpu, include/freestanding, xdk layouts.
+    - Shadow.lib = host.lib from host_def.py.
+  - Pipeline simulated on Linux with the same flags: translate, 129 compiles and link give a DLL of the same size as the shipped one.
+- **Texture pack drop-in:** src/common/pack_import.cpp, called from InitRender before anything loads.
+  - Takes a zip (or an extracted folder) in textures\pack. A zip is unpacked with Windows tar.exe into _unpacked; under Wine, install.sh unzips it instead.
+  - textures\pack_map.txt lists 2031 keys: env 1927, ui 81, hud 23. It is generated from match_env_v2, the ui paks and hud_match.
+  - Each image: decode DXT, box scale (4x Xbox size, 1024 env / 2048 UI), full mips, own BC1/BC3 encoder. Output is pack_import.pak with a stamp file.
+  - Tested on Linux: the PRISON ISLAND title card comes out the same as the source.
+  - Derived art is left out: Xbox button painting, pack-style fonts, TitleBg patch. The release ships Claude's Noto HD fonts (OFL).
+- **Setup.exe** (tools/installer/setup.cpp, Win32):
+  - Inputs: install folder (Program Files refused), disc (.iso or a default.xbe folder), optional pack zip.
+  - Copies files/ there, the disc into assets, and the pack into textures\pack.
+  - Makes desktop and Start menu shortcuts.
+- **Linux zip:** install.sh / play.sh / README-Linux.txt run through Proton or Wine 9+ (vkd3d). A native Linux build would need Vulkan and audio backends, which were not done.
+- **Release packaging:** tools/release/make_release.sh <ver> → ShadowNativePort-v1.0-Windows.zip and -Linux.zip, about 54 MB each. Neither contains game code or data.
+- Not tested on a real PC yet: the first-start compile on Windows, Setup.exe, and the Wine path.

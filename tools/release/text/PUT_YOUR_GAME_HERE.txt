@@ -1,0 +1,4 @@
+Put your own Shadow the Hedgehog (Xbox, USA) disc image here: a .iso file (Redump or XISO),
+or the extracted disc files (default.xbe and its folders).
+
+The first start builds the game code from it. This takes a few minutes, once.

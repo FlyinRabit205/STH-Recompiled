@@ -2239,6 +2239,14 @@ ID3D12Resource* D3D12Backend::BindTexture(const State& s, int stage, DrawTexture
     bool box = true;
     if (ext_) ext_->Sample(d.data, fi.depth, stage, alt, stages.k[stage], box);
     auto tit = targets_.find(SizedTargetKey(d.data, fi.depth, d.width, d.height) | alt);
+    // ShadowNativePort: nothing renders to 8 bit (P8) textures. A palette texture loaded where an old target of the
+    // same size lived (Shadow's subtitle font after a cutscene) is the texture, not that target: binding the target
+    // gave faint, ghosted subtitles.
+    if (tit != targets_.end() && !d.cube && d.depth == 1 && !fi.compressed && fi.bits < 16) {
+        LOG_FIRST(4, "d3d12: %ux%u %s texture %08X over an old target: sampled as the texture", d.width, d.height,
+                  fi.name, d.data);
+        tit = targets_.end();
+    }
     if (tit != targets_.end() && !d.cube && d.depth == 1 && !fi.compressed) {
         return BindTargetTexture(s, stage, d, tit->second, box, stages);
     }
