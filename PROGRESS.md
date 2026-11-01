@@ -529,3 +529,13 @@ in-between frames.
 - **Linux zip:** install.sh / play.sh / README-Linux.txt run through Proton or Wine 9+ (vkd3d). A native Linux build would need Vulkan and audio backends, which were not done.
 - **Release packaging:** tools/release/make_release.sh <ver> → ShadowNativePort-v1.0-Windows.zip and -Linux.zip, about 54 MB each. Neither contains game code or data.
 - Not tested on a real PC yet: the first-start compile on Windows, Setup.exe, and the Wine path.
+- After the user's test install (14:05):
+  - **Save messages:** the English save messages are reworded for PC. kernel PatchGameFile rewrites fonts\Save\Save_EN.fnt and fonts\Advertise\Advertise_EN.fnt as the game opens them (src/common/pc_text.cpp), writing to cache\patched.
+    - Rules match the original wording.
+    - Only characters the font already has are allowed.
+    - 25 entries changed per file, and the "no save" prompt now reads "Would you like to create save data?"; checked in the harness.
+    - Other languages are unchanged.
+  - **Xbox buttons:** the texture pack import now paints them too, from tools/release/pack_buttons.bin (tools/host/make_button_data.py).
+    - It stores only the pixels the painting changed: 6 sheets, 720 KB.
+    - TitleBg is left out, because its strip came from the Xbox texture.
+    - The import stamp has "v2 " in front, so existing installs import again.
