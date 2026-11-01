@@ -4,7 +4,9 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <map>
+#include <set>
 
 #include "kernel/disc.h"
 #include "kernel/kernel.h"
@@ -16,10 +18,18 @@ namespace kernel {
 
 namespace {
 
-std::mutex g_links_lock;
+std::recursive_mutex g_links_lock;  // recursive: a patched file reads its original through Resolve
 std::map<std::string, std::string> g_links;    // upper case "\??\D:" -> "\Device\CdRom0"
 std::map<std::string, fs::path> g_devices;     // upper case device -> host directory
 constexpr char kCdRom[] = "\\DEVICE\\CDROM0";
+
+// ShadowNativePort: game files the port changes as they are read (PatchGameFile). The changed copy is written to
+// g_patch_dir once a run, from the player's own game files, and opened instead of the original.
+std::mutex g_patch_lock;
+std::map<std::string, std::function<bool(std::vector<uint8_t>&)>> g_patches;  // upper case path on the disc
+std::set<std::string> g_patched;                                             // made this run
+fs::path g_patch_dir;
+thread_local bool t_unpatched = false;  // reading the original
 
 std::string Upper(std::string s) {
     for (char& c : s) c = char(std::toupper(uint8_t(c)));
@@ -191,7 +201,7 @@ std::string ReadCString(uint32_t va, size_t max) {
 }
 
 void MountDefaults(const std::string& game_dir, const std::string& data_dir) {
-    std::lock_guard<std::mutex> lock(g_links_lock);
+    std::lock_guard<std::recursive_mutex> lock(g_links_lock);
     fs::path d = data_dir;
     g_devices[kCdRom] = game_dir;
     g_devices["\\DEVICE\\HARDDISK0\\PARTITION1"] = d / "E";
@@ -209,19 +219,19 @@ void MountDefaults(const std::string& game_dir, const std::string& data_dir) {
 }
 
 bool CreateSymbolicLink(const std::string& link, const std::string& target) {
-    std::lock_guard<std::mutex> lock(g_links_lock);
+    std::lock_guard<std::recursive_mutex> lock(g_links_lock);
     g_links[Upper(Normalize(link))] = Normalize(target);
     LOGI("files: link %s -> %s", link.c_str(), target.c_str());
     return true;
 }
 
 bool DeleteSymbolicLink(const std::string& link) {
-    std::lock_guard<std::mutex> lock(g_links_lock);
+    std::lock_guard<std::recursive_mutex> lock(g_links_lock);
     return g_links.erase(Upper(Normalize(link))) != 0;
 }
 
 std::string QuerySymbolicLink(const std::string& link) {
-    std::lock_guard<std::mutex> lock(g_links_lock);
+    std::lock_guard<std::recursive_mutex> lock(g_links_lock);
     auto it = g_links.find(Upper(Normalize(link)));
     return it == g_links.end() ? std::string() : it->second;
 }
@@ -240,7 +250,7 @@ Target Resolve(const std::string& xbox_path, uint32_t root_handle) {
         if (auto f = FileFromHandle(root_handle)) p = Normalize(f->xbox + "\\" + p);
     }
     if (p.size() >= 2 && p[1] == ':') p = "\\??\\" + p;
-    std::lock_guard<std::mutex> lock(g_links_lock);
+    std::lock_guard<std::recursive_mutex> lock(g_links_lock);
     for (int depth = 0; depth < 8; depth++) {
         std::string up = Upper(p);
         bool changed = false;
@@ -271,6 +281,33 @@ Target Resolve(const std::string& xbox_path, uint32_t root_handle) {
     // no Xbox name holds ':', and fs::path would take "D:" as a host drive
     for (auto& part : parts)
         if (part.find(':') != std::string::npos) return {};
+    if (best->first == kCdRom && !t_unpatched && !g_patches.empty()) {
+        std::string rel;
+        for (auto& part : parts) rel += (rel.empty() ? "" : "\\") + Upper(part);
+        std::lock_guard<std::mutex> pl(g_patch_lock);
+        auto it = g_patches.find(rel);
+        if (it != g_patches.end()) {
+            fs::path out = g_patch_dir / fs::path(rel);
+            if (!g_patched.count(rel)) {
+                std::vector<uint8_t> data;
+                t_unpatched = true;
+                bool read = ReadGameFile(p, data);
+                t_unpatched = false;
+                std::error_code ec;
+                fs::create_directories(out.parent_path(), ec);
+                if (read && it->second(data)) {
+                    std::ofstream(out, std::ios::binary).write(reinterpret_cast<const char*>(data.data()), std::streamsize(data.size()));
+                    g_patched.insert(rel);
+                    LOGI("files: %s patched", rel.c_str());
+                } else {
+                    LOGW("files: %s not patched", rel.c_str());
+                    g_patches.erase(it);
+                    it = g_patches.end();
+                }
+            }
+            if (it != g_patches.end()) return {out.string()};
+        }
+    }
     if (best->first == kCdRom)
         if (const Disc* disc = MountedDisc()) return {{}, true, disc->Find(parts)};
     return {MatchCase(best->second, parts).string()};
@@ -318,6 +355,13 @@ bool ReadGameFile(const std::string& xbox_path, std::vector<uint8_t>& out) {
     out.assign(std::istreambuf_iterator<char>(f), {});
     return true;
 }
+
+void PatchGameFile(const std::string& path, std::function<bool(std::vector<uint8_t>&)> patch) {
+    std::lock_guard<std::mutex> l(g_patch_lock);
+    g_patches[Upper(Normalize(path))] = std::move(patch);
+}
+
+void SetPatchDir(const std::string& dir) { g_patch_dir = dir; }
 
 // exports
 

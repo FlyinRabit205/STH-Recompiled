@@ -41,10 +41,18 @@ namespace {
 
 namespace fs = std::filesystem;
 
+// pixels painted over a pack image after scaling it to w x h (the Xbox buttons on the menu and HUD sheets)
+struct Overlay {
+    uint32_t w = 0, h = 0;
+    std::vector<std::pair<uint32_t, uint32_t>> runs;  // first pixel, count
+    std::vector<uint8_t> px;                          // RGBA8 of every run, in order
+};
+
 struct Entry {
     uint64_t key = 0;
     uint32_t xw = 0, xh = 0, max_side = 1024;
     std::string path;  // inside the pack, '/' separated
+    const Overlay* overlay = nullptr;
 };
 
 struct Rgba {
@@ -331,6 +339,52 @@ std::vector<Entry> ReadMap(const fs::path& path) {
     return out;
 }
 
+// textures\pack_buttons.bin (tools/host/make_button_data.py): "SNBT", u32 1, u32 count; per sheet u64 key, u32 w,
+// u32 h, u16 path length, path, u32 runs, runs x {u32 first, u32 count}, then the run pixels as RGBA8
+std::vector<std::pair<Entry, Overlay>> ReadOverlays(const fs::path& path) {
+    std::vector<std::pair<Entry, Overlay>> out;
+    std::ifstream in(path, std::ios::binary);
+    std::vector<uint8_t> f{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+    if (f.size() < 12 || std::memcmp(f.data(), "SNBT", 4) != 0) return out;
+    size_t at = 12;
+    auto need = [&](size_t n) { return at + n <= f.size(); };
+    for (uint32_t i = 0, n = Rd32(f, 8); i < n; i++) {
+        if (!need(18)) return {};
+        Entry e;
+        Overlay o;
+        std::memcpy(&e.key, f.data() + at, 8);
+        o.w = Rd32(f, at + 8);
+        o.h = Rd32(f, at + 12);
+        uint16_t len = uint16_t(f[at + 16] | f[at + 17] << 8);
+        at += 18;
+        if (!need(len + 4)) return {};
+        e.path.assign(reinterpret_cast<const char*>(f.data() + at), len);
+        at += len;
+        uint32_t runs = Rd32(f, at);
+        at += 4;
+        if (!need(size_t(runs) * 8)) return {};
+        size_t pixels = 0;
+        for (uint32_t r = 0; r < runs; r++, at += 8) {
+            o.runs.push_back({Rd32(f, at), Rd32(f, at + 4)});
+            pixels += o.runs.back().second;
+        }
+        if (!need(pixels * 4)) return {};
+        o.px.assign(f.begin() + long(at), f.begin() + long(at + pixels * 4));
+        at += pixels * 4;
+        e.xw = o.w / 4, e.xh = o.h / 4, e.max_side = std::max(o.w, o.h);
+        out.push_back({std::move(e), std::move(o)});
+    }
+    return out;
+}
+
+void ApplyOverlay(Rgba& img, const Overlay& o) {
+    img = Resize(img, o.w, o.h);
+    size_t k = 0;
+    for (auto [first, count] : o.runs)
+        for (uint32_t i = 0; i < count && size_t(first + i) < size_t(o.w) * o.h; i++, k++)
+            std::memcpy(&img.px[(size_t(first) + i) * 4], &o.px[k * 4], 4);
+}
+
 // the folder the map's paths start from: the pack's GUP folder, wherever the zip put it
 fs::path FindBase(const fs::path& dir, const std::vector<Entry>& map) {
     std::error_code ec;
@@ -436,6 +490,9 @@ bool Extract(const fs::path& zip, const fs::path& to) {
     return code == 0;
 }
 
+// one encode per pack image, apart from a painted sheet
+std::string Id(const Entry& e) { return e.overlay ? e.path + "#" + std::to_string(e.key) : e.path; }
+
 std::string U8(const fs::path& p) {
     auto u = p.u8string();
     return std::string(u.begin(), u.end());
@@ -445,7 +502,7 @@ std::string Stamp(const fs::path& p) {
     std::error_code ec;
     auto t = fs::last_write_time(p, ec).time_since_epoch().count();
     uintmax_t size = fs::is_regular_file(p, ec) ? fs::file_size(p, ec) : 0;
-    return U8(p.filename()) + " " + std::to_string(size) + " " + std::to_string((long long)t);
+    return "v2 " + U8(p.filename()) + " " + std::to_string(size) + " " + std::to_string((long long)t);
 }
 
 }  // namespace
@@ -457,6 +514,14 @@ void ImportTexturePack() {
     fs::create_directories(drop, ec);
     std::vector<Entry> map = ReadMap(root / "pack_map.txt");
     if (map.empty()) return;
+    // sheets with painted Xbox buttons replace their plain map rows
+    static std::vector<std::pair<Entry, Overlay>> overlays;
+    overlays = ReadOverlays(root / "pack_buttons.bin");
+    for (auto& [e, o] : overlays) {
+        map.erase(std::remove_if(map.begin(), map.end(), [&](const Entry& m) { return m.key == e.key; }), map.end());
+        e.overlay = &o;
+    }
+    for (auto& [e, o] : overlays) map.push_back(e);
 
     // the zip (the biggest), else a folder the player extracted it to
     fs::path source;
@@ -510,7 +575,7 @@ void ImportTexturePack() {
         std::map<std::string, size_t> by_path;
         std::vector<const Entry*> unique;
         for (const Entry& e : map)
-            if (by_path.emplace(e.path, unique.size()).second) unique.push_back(&e);
+            if (by_path.emplace(Id(e), unique.size()).second) unique.push_back(&e);
         std::vector<std::vector<uint8_t>> blobs(unique.size());
         g_progress.total = uint32_t(unique.size());
         std::atomic<size_t> next{0};
@@ -520,7 +585,10 @@ void ImportTexturePack() {
             pool.emplace_back([&] {
                 for (size_t i; (i = next++) < unique.size();) {
                     Rgba img;
-                    if (ReadDds(base / fs::path(std::u8string(unique[i]->path.begin(), unique[i]->path.end())), img)) blobs[i] = MakeDds(img, *unique[i]);
+                    if (ReadDds(base / fs::path(std::u8string(unique[i]->path.begin(), unique[i]->path.end())), img)) {
+                        if (unique[i]->overlay) ApplyOverlay(img, *unique[i]->overlay);
+                        blobs[i] = MakeDds(img, *unique[i]);
+                    }
                     g_progress.done++;
                 }
             });
@@ -529,7 +597,7 @@ void ImportTexturePack() {
         // "SNPK", u32 1, u32 count, count x {u64 key, u64 offset, u32 size}, then the DDS files
         std::vector<std::pair<uint64_t, size_t>> rows;
         for (const Entry& e : map) {
-            size_t i = by_path[e.path];
+            size_t i = by_path[Id(e)];
             if (!blobs[i].empty()) rows.push_back({e.key, i});
         }
         std::vector<uint64_t> offset(blobs.size());

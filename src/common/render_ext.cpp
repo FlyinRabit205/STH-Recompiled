@@ -17,6 +17,7 @@
 
 #include "common/render_ext.h"
 #include "common/pack_import.h"
+#include "common/pc_text.h"
 
 namespace shadow {
 bool g_hd_scene = true;
@@ -80,6 +81,7 @@ private:
 }  // namespace
 
 void InitRender() {
+    InitPcText();
     ImportTexturePack();  // a texture pack dropped into textures\pack, before the game reads the paks
     gpu::SetExtension(std::make_unique<ShadowExtension>());
 }
@@ -87,6 +89,6 @@ void InitRender() {
 }  // namespace shadow
 #else
 namespace shadow {
-void InitRender() {}  // headless harness: no D3D12 backend
+void InitRender() { InitPcText(); }  // headless harness: no D3D12 backend
 }  // namespace shadow
 #endif

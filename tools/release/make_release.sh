@@ -24,7 +24,7 @@ lld-link /lib /machine:x64 /def:$REL/obj/host.def /out:$C/Shadow.lib > /dev/null
 cp $REL/bin/Shadow.exe "$REPO/CONTROLS.txt" "$REPO/tools/release/text/README.txt" $F/
 cp "$REPO/tools/release/text/PUT_YOUR_GAME_HERE.txt" $F/assets/
 cp "$REPO/tools/release/text/PUT_TEXTURE_PACK_HERE.txt" $F/textures/pack/
-cp "$REPO/tools/release/pack_map.txt" $F/textures/
+cp "$REPO/tools/release/pack_map.txt" "$REPO/tools/release/pack_buttons.bin" $F/textures/
 cp /home/claude/xbtex/paks_font/font_0*.pak $F/textures/replacement/
 cp "$REPO/sdk/THIRD_PARTY.txt" $F/THIRD_PARTY.txt
 printf '\nHD font sheets: drawn from Noto Sans Mono CJK JP, SIL Open Font License 1.1.\nCompiler folder: LLVM (llvm-mingw), Apache 2.0 with LLVM Exceptions, see compiler/LLVM-LICENSE.txt.\n' >> $F/THIRD_PARTY.txt
