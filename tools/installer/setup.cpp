@@ -84,6 +84,9 @@ bool CopyOne(const fs::path& from, const fs::path& to) {
     std::error_code ec;
     fs::create_directories(to.parent_path(), ec);
     bool ok = CopyFileExW(from.c_str(), to.c_str(), CopyProgress, nullptr, nullptr, 0);
+    // the download's "came from the internet" mark (Zone.Identifier stream) is copied along; the player chose to
+    // install, so the installed files drop it and Windows does not ask again on every start
+    if (ok) DeleteFileW((to.wstring() + L":Zone.Identifier").c_str());
     g_copy.base += fs::file_size(from, ec);
     return ok;
 }
