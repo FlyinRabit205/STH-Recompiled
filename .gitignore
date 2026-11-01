@@ -28,3 +28,7 @@ settings.toml
 .local
 
 __pycache__/
+
+# game art kept out of the public repo (personal builds only)
+tools/winbuild/res/shadow.ico
+notes/*.png

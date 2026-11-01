@@ -58,7 +58,7 @@ if has exe; then
     # import library for the exe's calls into the game DLL (GNU format, the exe is mingw)
     "${MINGW}bin/llvm-dlltool" -m i386:x86-64 -d "$GEN/imports.def" -l "$OUT/obj/libshadow_code.a"
     # the icon (resource 1, which the runtime's windows load): the game's own emblem from the title sheet
-    "${MINGW}bin/x86_64-w64-mingw32-windres" -I "$REPO/tools/winbuild/res" "$REPO/tools/winbuild/res/shadow.rc" -O coff \
+    "${MINGW}bin/x86_64-w64-mingw32-windres" -I "$REPO/tools/winbuild/res" "$REPO/tools/winbuild/res/$( [ "$RELEASE" = 1 ] || [ ! -f "$REPO/tools/winbuild/res/shadow.ico" ] && echo port.rc || echo shadow.rc )" -O coff \
         -o "$OUT/obj/exe/shadow_res.o"
     objs+=("$OUT/obj/exe/shadow_res.o")
     SDL_LIBS="$SDL/lib/libSDL3.a -lsetupapi -limm32 -lversion -lcfgmgr32 -lwinmm -lole32 -loleaut32 -luuid -lshell32 -ladvapi32 -lgdi32 -luser32"
