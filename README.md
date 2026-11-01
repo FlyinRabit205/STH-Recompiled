@@ -1,4 +1,4 @@
-# Shadow the Hedgehog - Native PC Port
+# STH Recompiled - Shadow the Hedgehog Native PC Port
 
 An unofficial native PC port of Shadow the Hedgehog (Xbox, USA), made by static recompilation: the game's x86 code is
 translated to C++ and runs directly on the PC, with no emulator. Built with the
