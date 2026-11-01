@@ -407,6 +407,15 @@ Each session ends by saving to this folder on the user's PC:
      placed-resource heap for textures and pack lookups off the render thread.
 - Delivered b214457 (md5 verified).
 
+- **2026-11-01 11:33 user: REGRESSION**: with V-Sync ON the game ran far above 60 and sped up; fine with V-Sync off.
+  Cause: the render thread decouples presents from V-Sync, so app::Pace skipping itself under V-Sync left nothing
+  holding the guest to 60 once ShadowFrameWait ended the game's own wait. **Both pacing changes reverted** (Pace
+  always paces; the game's wait is kept, only slept through). The load-freeze fix (lock scope) stays.
+- User also saw faint subtitles + quieter audio at places (event3101, stg0301) and pressed F3 (plain launch, so only
+  stacks, at 142-172 s; nothing conclusive). **F3 now always saves a frame capture** (default dir Game\captures)
+  as well as the stacks, so the next F3 on faint subtitles gives the subtitle draws' vertex colours and blend.
+- Delivered exe b113600 (md5 verified; dll unchanged from b214457).
+
 ## Plan for the next sessions (set by the user)
 Done: cutscene skip (session 4), stage resolution (session 4, to confirm).
 Remaining, in order:
