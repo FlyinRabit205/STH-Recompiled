@@ -710,7 +710,7 @@ private:
                      const DrawTextures& stages);
     void CaptureTextures(const State& s, const DrawTextures& stages);
     void EndDrawCapture(const State& s, const Assembled& a, uint32_t count, const DrawConstants& c);
-    void CaptureInputs(const State& s, const Assembled& a, const DrawConstants& c);
+    void CaptureInputs(const State& s, const Assembled& a, const DrawConstants& c, bool constants);
     void CaptureShaders(const State& s, const Assembled& a, const DrawShaders& sh, const PixelKey& pk);
     void CaptureShader(const char* kind, uint64_t key, const std::string& src);
     void SetTextureViewsAndSamplers(const State& s, const Assembled& a, DrawTextures& stages);
@@ -2790,7 +2790,7 @@ void D3D12Backend::CaptureTextures(const State& s, const DrawTextures& stages) {
 constexpr int kVsConstants = 192;
 constexpr int kVsConstantBias = 96;
 
-void D3D12Backend::CaptureInputs(const State& s, const Assembled& a, const DrawConstants& c) {
+void D3D12Backend::CaptureInputs(const State& s, const Assembled& a, const DrawConstants& c, bool constants) {
     fprintf(cap_, "\n     verts");
     uint32_t n = 0;
     for (int r = 0; r < 16; r++) n += (a.regs >> r) & 1;
@@ -2799,6 +2799,7 @@ void D3D12Backend::CaptureInputs(const State& s, const Assembled& a, const DrawC
         for (uint32_t k = 0; k < n * 4; k++) fprintf(cap_, " %g", a.vertices[v * n * 4 + k]);
         fprintf(cap_, " ]");
     }
+    if (!constants) return;
     for (int r = 0; r < kVsConstants; r++) {
         const auto& v = s.vsc[r];
         if (v[0] || v[1] || v[2] || v[3]) {
@@ -2820,12 +2821,22 @@ void D3D12Backend::CaptureDraw(const State& s, uint32_t prim, uint32_t count, co
             cap_i_++, s.rt.data, bound_ds_ ? s.zs.data : 0, prim, count, s.vs_handle, s.ps ? s.ps->handle : 0, k.blend,
             k.src, k.dst, k.zen, k.zfunc, k.zwrite, k.zbias, k.zslope, k.cull, k.wmask, c.pc[0][0], c.pc[0][1],
             c.pc[0][2], c.pc[0][3]);
+    // the fixed function inputs that decide a draw's alpha: lighting, material sources, material, texture factor and
+    // each stage's colour key and alpha operation
+    const auto& m = s.material;
+    fprintf(cap_, " | light %u cv %u msrc %u%u%u%u md %.3f %.3f %.3f %.3f me %.3f %.3f %.3f %.3f tf %08X", s.rs[kRsLighting],
+            s.rs[kRsColorVertex], s.rs[kRsDiffuseMaterialSource], s.rs[kRsSpecularMaterialSource],
+            s.rs[kRsAmbientMaterialSource], s.rs[kRsEmissiveMaterialSource], m[0], m[1], m[2], m[3], m[12], m[13], m[14],
+            m[15], s.rs[kRsTextureFactor]);
+    for (int i = 0; i < 2; i++)
+        fprintf(cap_, " | ts%d ck %u %08X aop %u %X %X", i, s.tss[size_t(i)][kTssColorKeyOp], s.tss[size_t(i)][kTssColorKeyColor],
+                s.tss[size_t(i)][kTssAlphaOp], s.tss[size_t(i)][kTssAlphaArg1], s.tss[size_t(i)][kTssAlphaArg2]);
     CaptureTextures(s, stages);
 }
 
 // small draws: their inputs and constants; then ends the draw's line
 void D3D12Backend::EndDrawCapture(const State& s, const Assembled& a, uint32_t count, const DrawConstants& c) {
-    if (count <= kQuadVertices) CaptureInputs(s, a, c);
+    CaptureInputs(s, a, c, count <= kQuadVertices);
     fputc('\n', cap_);
 }
 

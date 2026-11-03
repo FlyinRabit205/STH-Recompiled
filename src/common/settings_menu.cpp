@@ -187,6 +187,12 @@ std::vector<Row> GraphicsRows() {
                      Saved(false);
                  },
                  "Renders stages at your full resolution instead of the Xbox's smaller 3D image."});
+    r.push_back({"CUSTOM TEXTURES", [&s] { return std::string(s.custom_textures ? "ON" : "OFF"); },
+                 [&s](int) {
+                     s.custom_textures = !s.custom_textures;
+                     Saved(false);
+                 },
+                 "Uses the HD texture pack in textures\\replacement. OFF shows the game's original textures."});
     return r;
 }
 

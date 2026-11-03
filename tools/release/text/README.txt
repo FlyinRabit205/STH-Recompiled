@@ -2,7 +2,7 @@ SHADOW THE HEDGEHOG - NATIVE PC PORT
 ====================================
 
 A native PC version of Shadow the Hedgehog (Xbox, USA), made by static recompilation: the game's own code is
-translated to x86-64 C++ and runs directly, with no emulator.
+translated to x86-64 C++ and runs directly as a native PC program.
 
 This download holds NO game files and NO game code. You need your own copy of the game:
   - a disc image (.iso) of the USA Xbox disc, or its extracted files.

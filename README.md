@@ -1,7 +1,7 @@
 # STH Recompiled - Shadow the Hedgehog Native PC Port
 
 An unofficial native PC port of Shadow the Hedgehog (Xbox, USA), made by static recompilation: the game's x86 code is
-translated to C++ and runs directly on the PC, with no emulator. Built with the
+translated to C++ and runs directly on the PC as a native program. Built with the
 [Xbox XBE Recomp](https://github.com/TGP482/XboxXBE-Recomp) SDK.
 
 > [!NOTE]
@@ -22,7 +22,7 @@ so you can move or rename it.
 
 ### HD textures (optional)
 
-The port can use the fan-made "Shadow the Hedgehog HD" Dolphin texture pack, which is not included. Drop its zip into
+The port can use the fan-made "Shadow the Hedgehog HD" texture pack (made for the GameCube version), which is not included. Drop its zip into
 `textures\pack` (or pick it in Setup). The next start converts it once into `textures\replacement\pack_import.pak`.
 `textures\pack_map.txt` maps each Xbox texture to its pack image. The map is checked at full size against the
 originals, which removes false matches such as dark effect textures.

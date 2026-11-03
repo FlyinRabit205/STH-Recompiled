@@ -30,6 +30,8 @@ struct PixelKey {
     uint32_t ff[4][9] = {};
     TexInfo tex[4];
     uint32_t alphakill = 0;  // bit per stage
+    uint32_t colorkey_op = 0;    // D3DTCOLORKEYOP per stage, 2 bits each: 1 alpha to 0, 2 texel to 0, 3 discard
+    uint32_t colorkey[4] = {};   // the key colour per stage (D3DCOLOR)
     uint32_t flat = 0, two_sided = 0;
     uint32_t proj = 0;       // fixed function: bit per stage sampled at coordinates divided by w
     uint32_t quad = 0;       // a screen quad: QuadHlsl

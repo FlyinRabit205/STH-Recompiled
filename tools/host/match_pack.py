@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Match a Dolphin (GameCube) texture pack to the Xbox textures by image, for the runtime's textures/replacement.
+"""Match a GameCube-version texture pack to the Xbox textures by image, for the runtime's textures/replacement.
 
 usage: match_pack.py <work dir with index.json, tex/> <pack root> <out.json> <category>...
 Each pack image's original size is in its name (tex1_WxH_...). Every Xbox texture is compared with the pack images of

@@ -1,5 +1,5 @@
 Optional HD textures: drop the "Shadow the Hedgehog HD" texture pack zip (shadow_the_hedgehog_hd.zip,
-the Dolphin pack) into this folder, or its extracted folder.
+made for the GameCube version) into this folder, or its extracted folder.
 
 The next start converts it once (about a minute) into textures\replacement\pack_import.pak.
 After that the zip can be deleted. To remove the HD textures, delete pack_import.pak and pack_import.txt

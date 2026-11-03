@@ -1,6 +1,6 @@
 // HD texture pack import (Windows build only).
 //
-// The fan-made HD texture pack (Dolphin DDS files, shadow_the_hedgehog_hd.zip) cannot ship with the port. The player
+// The fan-made HD texture pack (GameCube-version DDS files, shadow_the_hedgehog_hd.zip) cannot ship with the port. The player
 // drops the zip, or its extracted folder, into textures\pack. On the next start it is turned into
 // textures\replacement\pack_import.pak:
 // - textures\pack_map.txt (made by tools/host/make_pack_map.py) names the pack image for each Xbox texture key.

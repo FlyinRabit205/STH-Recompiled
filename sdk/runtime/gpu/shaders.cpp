@@ -391,6 +391,19 @@ std::string TexUv(const TexInfo& t, int i, const std::string& uv) {
 }
 
 // texture shader stage i, per its mode
+// Xbox colour keying: a texel whose colour equals the stage's key loses its alpha, becomes 0, or is discarded. The
+// texel is filtered here, so the match allows a step of rounding.
+std::string ColorKey(const PixelKey& k, int i) {
+    uint32_t op = (k.colorkey_op >> (i * 2)) & 3;
+    if (!op) return "";
+    uint32_t c = k.colorkey[i];
+    std::string m = F("all(abs(t%d.rgb - float3(%.6f, %.6f, %.6f)) < 1.5 / 255)", i, ((c >> 16) & 255) / 255.0,
+                      ((c >> 8) & 255) / 255.0, (c & 255) / 255.0);
+    if (op == 1) return F("if (%s) t%d.a = 0;\n", m.c_str(), i);
+    if (op == 2) return F("if (%s) t%d = 0;\n", m.c_str(), i);
+    return F("if (%s) discard;\n", m.c_str());
+}
+
 std::string TexFetch(const PixelKey& k, int i) {
     uint32_t mode = (k.tex_modes >> (i * 5)) & 0x1F;
     const TexInfo& t = k.tex[i];
@@ -629,6 +642,11 @@ PixelKey MakePixelKey(const State& s, const TexInfo tex[4]) {
     for (int i = 0; i < 4; i++) {
         k.tex[i] = tex[i];
         if (s.tss[size_t(i)][kTssAlphaKill] == 4) k.alphakill |= 1u << i;  // D3DTALPHAKILL_ENABLE
+        uint32_t ck = s.tss[size_t(i)][kTssColorKeyOp] & 3;
+        if (ck && tex[i].kind) {
+            k.colorkey_op |= ck << (i * 2);
+            k.colorkey[i] = s.tss[size_t(i)][kTssColorKeyColor];
+        }
     }
     k.flat = s.simple[kMShadeMode >> 2] == 0x1D00;  // D3DSHADE_FLAT
     k.two_sided = s.rs[kRsTwoSidedLighting] != 0;
@@ -881,6 +899,7 @@ std::string PixelHlsl(const PixelKey& k) {
         for (int i = 0; i < 4; i++) {
             body += TexFetch(k, i);
             body += Hooks().Fetched(k.tex[i], i);
+            body += ColorKey(k, i);
         }
         for (int i = 0; i < 4; i++) {
             uint32_t m = (k.tex_modes >> (i * 5)) & 0x1F;
@@ -934,6 +953,7 @@ std::string PixelHlsl(const PixelKey& k) {
             else if (t.kind) body += F("float4 t%d = tex%d.Sample(smp%d, tc%d.xyz);\n", i, i, i, i);
             else body += F("float4 t%d = float4(1,1,1,1);\n", i);
             body += Hooks().Fetched(t, i);
+            if (t.kind) body += ColorKey(k, i);
             if ((k.alphakill >> i) & 1) body += F("if (t%d.a == 0) discard;\n", i);
             const char* dst = f[8] == 5 ? "tmp" : "cur";
             std::string rgb = FfOp(f[0], FfArg(f[1], i, false), FfArg(f[2], i, false), FfArg(f[3], i, false), i, false);

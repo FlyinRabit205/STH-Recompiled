@@ -1,7 +1,7 @@
 # Shadow the Hedgehog (Xbox, USA): Native PC Port - Progress Log
 
 Native PC port by **static recompilation**: the game's original x86 code is translated to C++ ahead of time and
-compiled into a normal Windows program. No emulator. The Xbox-only parts (kernel, Direct3D 8, DirectSound, controller)
+compiled into a normal Windows program. The Xbox-only parts (kernel, Direct3D 8, DirectSound, controller)
 are replaced by native Windows code (Direct3D 12 renderer, XAudio2 audio, SDL3 controllers).
 
 Built on the open-source **XboxXBERecomp** SDK (MIT, by TGP482): https://github.com/TGP482/XboxXBERecomp
@@ -214,7 +214,7 @@ Each session ends by saving to this folder on the user's PC:
 ### User test after session 6: no stutter in two runs. User asks: keep re-optimizing after every change.
 
 ### Session 7 (2026-10-31, 15:33 to about 16:10): HD environment textures from Cyb3rtron's GameCube pack
-- Pack: `shadow_the_hedgehog_hd.zip` (user put it in ShadowNativePort\), 3235 Dolphin DDS (DXT5, 6x, 1 mip), folders
+- Pack: `shadow_the_hedgehog_hd.zip` (user put it in ShadowNativePort\), 3235 GameCube-pack DDS (DXT5, 6x, 1 mip), folders
   GUP/Stages (23 stages), Backgrounds, Crates, Characters, Effects, HUD, Menu, Text, ... User's split: **environment
   from the pack; fonts/text redone by Claude in HD; GameCube buttons replaced by Xbox buttons made by Claude.**
 - Xbox side, offline from the disc: `tools/host/one_extract.c` (Sega PRS "One Ver 0.60" archives: count at 0x1C,
@@ -422,7 +422,7 @@ Remaining, in order:
 0. **Confirm session 7 on Windows**: HD stages, HD fonts (subtitles), HD menus, Xbox buttons in menus/pause.
    If a texture looks wrong, `Game\logs` + a screenshot; a bad key can be dropped by rebuilding its pak.
 1. **Confirm on Windows**: stages sharp now? cutscene skip works for movies AND in-engine events? Read `Game\logs`.
-2. Blur fix (session 5) to confirm; then texture pack (user downloads Cyb3rtron's "Shadow the Hedgehog HD" Dolphin pack
+2. Blur fix (session 5) to confirm; then texture pack (user downloads Cyb3rtron's "Shadow the Hedgehog HD" pack
    zip into ShadowNativePort; match GameCube images to dumped Xbox textures by image similarity, write to the
    runtime's textures\replacement\ folder) and HD fonts.
 3. **Cutscene rendering issues** (in-engine events).
@@ -483,7 +483,7 @@ in-between frames.
 - Needs Windows 10/11, a D3D12 GPU, VC++ 2015-2022 x64 redistributable. Logs go to `Game\logs\`.
 
 ## Goals the user asked for (keep in mind)
-- **Fully native** (no emulation): yes, by design.
+- **Fully native**: yes, by design.
 - **Best-quality PC port:** resolution options (1440p, 4K and beyond, native internal resolution, not upscaled),
   graphics settings menu (resolution, window mode, V-Sync, AA, texture filtering), proper widescreen (ultrawide as a stretch goal),
   solid **60 FPS**, and **above 60 FPS** later (needs game-logic timing decoupled or interpolated; do after it is playable).

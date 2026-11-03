@@ -30,6 +30,7 @@ void SetupGuestBlocks(Thread& t, uint32_t stack_size, uint32_t tls_size) {
     stack_size = std::max<uint32_t>(stack_size, 0x10000);
     tls_size = (tls_size + 3) & ~3u;
     t.stack_top = mem::AllocStack(stack_size + tls_size + 0x1000);
+    if (!t.stack_top) LOGE("thread %X: no guest stack left (%u bytes)", t.id, stack_size);
     t.stack_size = stack_size;
     t.kpcr = mem::AllocSystem(kKpcrSize, 64);
     t.ethread = mem::AllocSystem(kEthreadSize, 64);
@@ -72,6 +73,16 @@ void Unregister(Thread* t) {
     std::lock_guard<std::mutex> lock(g_threads_lock);
     g_threads.erase(std::remove_if(g_threads.begin(), g_threads.end(), [t](const ThreadRef& r) { return r.get() == t; }),
                     g_threads.end());
+}
+
+// a finished thread's stack (with its TLS) and processor block go back to the pools; the thread object stays for
+// handles that still refer to it. Without this, games that start short worker threads all the time (Shadow does,
+// thousands per hour) run the stack region dry and the next thread starts with no stack.
+void ReleaseGuestBlocks(Thread& t) {
+    if (t.stack_top) mem::FreeStack(t.stack_top);
+    if (t.kpcr) mem::FreeSystem(t.kpcr);
+    t.stack_top = 0;
+    t.kpcr = 0;
 }
 
 void MarkExited(Thread& t, uint32_t code) {
@@ -179,6 +190,7 @@ void StartThread(ThreadRef t) {
         LOGI("thread %X returned %08X", t->id, code);
         MarkExited(*t, code);
         Unregister(t.get());
+        ReleaseGuestBlocks(*t);
         t_current.reset();
     });
 }
@@ -205,6 +217,7 @@ void ExitThread(uint32_t code) {
         LOGI("thread %X exits with %08X", t->id, code);
         MarkExited(*t, code);
         Unregister(t);
+        ReleaseGuestBlocks(*t);
     }
     t_current.reset();
 #ifdef _WIN32
