@@ -1286,9 +1286,12 @@ uint32_t g_push_begin = 0;
 // ShadowNativePort: with the renderer on its own thread, vertex buffer memory is read when the draw runs, after the
 // call returns, as the console's GPU does. Shadow the Hedgehog draws text one glyph at a time from a vertex buffer it
 // rewrites before every draw without waiting for the GPU (the console's GPU keeps up), so the render thread read
-// later glyphs' texture coordinates ("oNoNo" for "There is no..."). Small non-indexed draws from stream 0 are copied
-// at call time instead, through the vertex ring DrawVerticesUP uses. Large draws keep reading in place.
-constexpr uint32_t kSnapshotMax = 4096;  // bytes: glyphs, sprites and HUD pieces, never stage geometry
+// later glyphs' texture coordinates ("oNoNo" for "There is no..."). Particle systems do the same with bigger batches:
+// the Goal Ring's sparkle and dust quads (8-12 KB a draw) were read after the game had refilled the buffer, so some
+// frames drew them as large flat squares (issue #1). Non-indexed draws from stream 0 up to 16 KB are copied at call
+// time instead, through the vertex ring DrawVerticesUP uses. Larger draws (stage geometry) keep reading in place.
+constexpr uint32_t kSnapshotMax = 16 * 1024;  // bytes: glyphs, sprites, HUD pieces and particle batches
+constexpr uint32_t kSnapshotIndexedMax = 4096;  // indexed draws: text glyphs and sprites
 bool DrawSnapshot(uint32_t prim, uint32_t start, uint32_t count) {
     static const bool off = std::getenv("SHADOW_NO_SNAPSHOT") != nullptr;  // for before/after testing
     if (off || !kRenderThread || !g_backend || !count) return false;
@@ -1322,10 +1325,10 @@ bool DrawIndexedSnapshot(uint32_t prim, uint32_t count, const uint16_t* indices)
             if (in.type && in.type != 0x02 /* D3DVSDT_NONE */ && in.stream > 0) return false;
     }
     uint32_t stride = st.stride ? st.stride : VertexBytes();
-    if (!stride || uint64_t(count) * stride > kSnapshotMax) return false;
+    if (!stride || uint64_t(count) * stride > kSnapshotIndexedMax) return false;
     uint32_t top = 0;
     for (uint32_t i = 0; i < count; i++) top = std::max<uint32_t>(top, indices[i]);
-    if (uint64_t(top + 1) * stride > kSnapshotMax) return false;
+    if (uint64_t(top + 1) * stride > kSnapshotIndexedMax) return false;
     const uint8_t* src = static_cast<const uint8_t*>(HostPtr(mem::VirtualFromPhysical(R32(st.vb + 4))));
     static thread_local std::vector<uint8_t> gathered;
     gathered.resize(size_t(count) * stride);

@@ -5,6 +5,10 @@
 
 #include "common/settings_menu.h"
 
+#ifndef SHADOW_PORT_VERSION
+#define SHADOW_PORT_VERSION "1.2"  // shown in the options menu
+#endif
+
 #include "common/keyboard.h"
 #include "common/render_ext.h"
 
@@ -324,7 +328,7 @@ void Draw() {
     dl->AddQuadFilled(ImVec2(0, band_y), ImVec2(left + 520 * u, band_y), ImVec2(left + 520 * u - band_h * 0.6f, band_y + band_h),
                       ImVec2(0, band_y + band_h), kRed);
     dl->AddText(title, t_title, ImVec2(left, band_y + (band_h - t_title) * 0.5f), kWhite, "OPTIONS");
-    const char* sub = "SHADOW THE HEDGEHOG   |   NATIVE PC PORT";
+    const char* sub = "SHADOW THE HEDGEHOG   |   NATIVE PC PORT   |   v" SHADOW_PORT_VERSION;
     dl->AddText(small, t_small, ImVec2(right - Measure(small, t_small, sub).x, band_y + (band_h - t_small) * 0.5f),
                 IM_COL32(255, 255, 255, 170), sub);
 
