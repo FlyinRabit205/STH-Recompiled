@@ -548,3 +548,6 @@ in-between frames.
   edit). Options menu CONTROLS tab lists the bindings in use (two columns). CONTROLS.txt: how to change keys + names.
   Defaults unchanged. Not tested on Windows yet (rebinding needs the Windows toml build).
 - Release v1.2 (tools/release/make_release.sh 1.2), notes in /home/claude/release/RELEASE_NOTES_v1.2.md.
+- Released v1.2 (user published it); #1 closed, #3 answered (left open). **Next for Shadow (after Heroes):** rebinding
+  keys from inside the F1 menu (promised on #3), plus more QOL; cheats like duartepedro03 asked (max rings, fill
+  Dark/Hero gauge) are a candidate.
