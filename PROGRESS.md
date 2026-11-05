@@ -539,3 +539,12 @@ in-between frames.
     - It stores only the pixels the painting changed: 6 sheets, 720 KB.
     - TitleBg is left out, because its strip came from the Xbox texture.
     - The import stamp has "v2 " in front, so existing installs import again.
+
+## Session 13 (2026-11-05): v1.2 release
+- #1 confirmed fixed by duartepedro03 with the v1.2 test build (Goal Ring squares). He asked about Dolphin-style cheats
+  (max rings, fill Dark/Hero gauge); owner replied "working on new features".
+- **#3 keyboard rebinding** ported from Sonic Heroes PC: `src/common/keyboard.{h,cpp}` with an action table and
+  settings.toml `[keyboard_bindings]` (game_info load/save hooks; settings saved at start so the table is there to
+  edit). Options menu CONTROLS tab lists the bindings in use (two columns). CONTROLS.txt: how to change keys + names.
+  Defaults unchanged. Not tested on Windows yet (rebinding needs the Windows toml build).
+- Release v1.2 (tools/release/make_release.sh 1.2), notes in /home/claude/release/RELEASE_NOTES_v1.2.md.

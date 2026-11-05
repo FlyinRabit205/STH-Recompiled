@@ -23,6 +23,19 @@ Tab                             Back
 Z                               Left stick click
 T                               Right stick click
 
+CHANGING KEYS
+-------------
+Open settings.toml beside Shadow.exe (it is written the first time the game starts), find
+[keyboard_bindings] and edit the list of keys for an action, then start the game again:
+    a = ["Space", "J"]          two keys for A (jump)
+    black = []                  no key for Black
+The options menu (F1, CONTROLS tab) shows the keys in use.
+Key names: A-Z, 0-9, F2, F4-F12, Space, Enter, Escape, Tab, Backspace, LShift, RShift, LCtrl, RCtrl,
+LAlt, RAlt, Up, Down, Left, Right, Insert, Delete, Home, End, PageUp, PageDown, Numpad0-Numpad9,
+NumpadPlus, NumpadMinus, NumpadStar, NumpadSlash, NumpadDot, Semicolon, Equals, Comma, Minus, Period,
+Slash, Backquote, LBracket, Backslash, RBracket, Quote, MouseLeft, MouseRight, MouseMiddle, Mouse4,
+Mouse5.  (F1 and F3 are kept for the options menu and captures.)
+
 To turn the keyboard off, set   keyboard = false   in settings.toml beside Shadow.exe.
 
 OPTIONS MENU:  F1  (controller: hold BACK, press START)

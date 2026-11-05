@@ -1,9 +1,17 @@
 #pragma once
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "core/input.h"
 
-// Keyboard controls merged into controller port 1 (src/common/keyboard.cpp has the layout)
 namespace keyboard {
-extern bool g_enabled;                         // settings.toml: keyboard = true/false
-void OnWindow(void* hwnd);                     // GameInfo::window
-void ApplyToPad(int port, input::Pad& pad);    // GameInfo::pad
-}  // namespace keyboard
+extern bool g_enabled;          // settings.toml: keyboard
+void OnWindow(void* hwnd);      // the game window, for the focus check
+void ApplyToPad(int port, input::Pad& pad);  // keyboard keys merged into controller port 1
+void Load(const void* table);   // settings.toml [keyboard_bindings]
+void Save(void* table);
+void WriteControlsFile();       // saves settings.toml at start, so the bindings are there to edit
+// each action's label and its keys as text ("Space, J"), for the options menu
+std::vector<std::pair<std::string, std::string>> Bindings();
+}

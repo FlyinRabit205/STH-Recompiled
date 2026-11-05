@@ -258,19 +258,6 @@ const char* kTabs[] = {"DISPLAY", "GRAPHICS", "GAME", "CONTROLS"};
 constexpr int kTabCount = 4;
 int g_tab = 0, g_row = 0;
 
-const char* kControls[][2] = {
-    {"MOVE", "W A S D   (hold LEFT ALT to walk)"},
-    {"CAMERA", "I J K L"},
-    {"JUMP / CONFIRM", "SPACE"},
-    {"ACTION / BACK", "LEFT SHIFT  /  BACKSPACE"},
-    {"X  /  Y", "F  /  R"},
-    {"BLACK  /  WHITE", "C  /  V"},
-    {"TRIGGERS", "Q  /  E"},
-    {"D-PAD", "ARROW KEYS"},
-    {"START / PAUSE", "ENTER  /  ESCAPE"},
-    {"BACK", "TAB"},
-    {"OPTIONS MENU", "F1   (controller: BACK + START)"},
-};
 
 void Draw() {
     ImGuiIO& io = ImGui::GetIO();
@@ -397,16 +384,23 @@ void Draw() {
                         rows[size_t(g_row)].desc, nullptr, right - left - 30 * u);
         }
     } else {
-        float rh2 = t_small + 22 * u;
-        int n = int(sizeof kControls / sizeof kControls[0]);
-        for (int i = 0; i < n; i++) {
-            dl->AddRectFilled(ImVec2(left - 16 * u, ry), ImVec2(right, ry + rh2), IM_COL32(255, 255, 255, (i & 1) ? 10 : 20));
-            float cy = ry + (rh2 - t_small) * 0.5f;
-            dl->AddText(small, t_small, ImVec2(left + 20 * u, cy), kGrey, kControls[i][0]);
-            dl->AddText(small, t_small, ImVec2(left + 440 * u, cy), kWhite, kControls[i][1]);
-            ry += rh2 + 4 * u;
+        // the keyboard bindings in use (settings.toml [keyboard_bindings]), two columns
+        auto binds = keyboard::Bindings();
+        binds.push_back({"Options menu", "F1   (controller: BACK + START)"});
+        float rh2 = t_small + 12 * u;
+        int half = int(binds.size() + 1) / 2;
+        float colw = (right - left + 16 * u) * 0.5f;
+        for (int i = 0; i < int(binds.size()); i++) {
+            float x = left - 16 * u + (i < half ? 0 : colw), y = ry + (i % half) * (rh2 + 2 * u);
+            dl->AddRectFilled(ImVec2(x, y), ImVec2(x + colw - 8 * u, y + rh2), IM_COL32(255, 255, 255, (i & 1) ? 10 : 20));
+            float cy = y + (rh2 - t_small) * 0.5f;
+            dl->AddText(small, t_small, ImVec2(x + 14 * u, cy), kGrey, binds[size_t(i)].first.c_str());
+            dl->AddText(small, t_small, ImVec2(x + colw * 0.55f, cy), kWhite, binds[size_t(i)].second.c_str());
         }
-        dl->AddText(small, t_small, ImVec2(left, ry + 20 * u), kDim,
+        ry += half * (rh2 + 2 * u);
+        dl->AddText(small, t_small, ImVec2(left, ry + 14 * u), kDim,
+                    "Change keys in settings.toml, [keyboard_bindings] (key names in CONTROLS.txt).");
+        dl->AddText(small, t_small, ImVec2(left, ry + 14 * u + t_small * 1.3f), kDim,
                     "Xbox, PlayStation and Switch controllers work automatically.");
     }
 
