@@ -489,14 +489,15 @@ namespace {
 // Widescreen 2D layout. The game draws its 2D one piece at a time (text one glyph per draw), so where a piece goes
 // depends on what it belongs to. Each frame the screen's 2D draws are grouped into blocks: consecutive draws with one
 // texture that continue a line of text (same line, small gap) or start the next line below it. At the end of the
-// frame every block gets a pivot (its draws are narrowed to their 4:3 shape around it), used the next frame by the
-// block's key (texture and first piece position):
-// - the stage HUD (its two top gauge bars were drawn last frame, see HudFrameEnd): left half to the left edge, right
-//   half to the right edge, across the middle the centre, text in a panel with its panel;
-// - menus and screens drawn over a cover (title cards, pause): pieces that touch form groups and every group keeps
-//   its place across the wider screen (its centre stays where it was in the stretched picture), so the layout matches
-//   the full width background; decorations running off the screen (the title cards' lines), and pieces joining two
-//   of them, are stretched with the background; text rows inside a dialog panel are centred in the panel.
+// frame every block gets a pivot (its draws are narrowed to their 4:3 shape around it), kept by the block's key
+// (texture and first piece position) for the following frames; a frame without 2D changes nothing:
+// - the stage HUD (its two top gauge bars drawn 3 frames in a row): left half to the left edge, right half to the
+//   right edge (past the console's safe area margin, so at the very edges), across the middle the centre, pieces in
+//   a panel with their panel; the game's text (subtitles) stays full size where it is;
+// - menus and screens drawn over a cover (title cards, pause): the centre, steady while parts animate, except small
+//   groups of touching pieces off to one side (an emblem, "loading"), which go to that edge; decorations running
+//   across and off the screen (the title cards' lines, drawn in segments) are stretched with the background; text
+//   rows inside a dialog panel are centred in the panel.
 struct Block {
     uint32_t tex;
     float lo, hi, top, bottom;             // the block's extent
@@ -504,13 +505,21 @@ struct Block {
     uint64_t key;
     bool menu;                             // drawn on a menu / overlay screen (not the stage HUD)
     int pieces;                            // draws in it (glyphs for text)
+    bool projected;                        // drawn through the transform pipeline (the game's text)
 };
 
 constexpr float kNoSqueeze = -1e9f;        // a pivot meaning "leave it stretched"
 
 struct HudLayout {
     std::vector<Block> blocks;                       // this frame's, in draw order
-    std::unordered_map<uint64_t, float> pivots;      // last frame's: block key -> pivot (screen x), or kNoSqueeze
+    struct Kept {
+        float pivot;
+        uint64_t seen;
+    };
+    std::unordered_map<uint64_t, Kept> pivots;       // block key -> pivot (screen x) or kNoSqueeze, kept between
+                                                     // frames so a frame without 2D changes nothing
+    uint64_t frame = 0;                              // frames with 2D drawn
+    int hud_run = 0;                                 // consecutive such frames with (> 0) or without (< 0) the HUD
     bool scene = false, scene_last = false;          // the stage HUD is up
     bool overlay = false;                            // a full height cover was drawn this frame: what follows is a
                                                      // screen of its own (title card, pause menu)
@@ -586,7 +595,8 @@ void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<flo
             if (off && long_ && several) deco[i] = true;
         }
     }
-    // groups of touching pieces
+    // groups of touching pieces: the centre, except a small group off to one side (an emblem, "loading") which goes
+    // to that edge; a fixed pivot per group keeps menus steady while their parts animate
     std::vector<size_t> parent(n);
     for (size_t i = 0; i < n; i++) parent[i] = i;
     auto find = [&](size_t i) {
@@ -598,12 +608,12 @@ void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<flo
         for (size_t j = i + 1; j < n; j++)
             if (all[j].menu && !deco[j] && Touch(all[i], all[j], 8)) parent[find(i)] = find(j);
     }
-    std::vector<float> lo(n, 1e30f), hi(n, -1e30f);
+    std::vector<float> lo(n, 1e30f), hi(n, -1e30f), top(n, 1e30f), bottom(n, -1e30f);
     for (size_t i = 0; i < n; i++) {
         if (!all[i].menu || deco[i]) continue;
         size_t r = find(i);
-        lo[r] = std::min(lo[r], all[i].lo);
-        hi[r] = std::max(hi[r], all[i].hi);
+        lo[r] = std::min(lo[r], all[i].lo), hi[r] = std::max(hi[r], all[i].hi);
+        top[r] = std::min(top[r], all[i].top), bottom[r] = std::max(bottom[r], all[i].bottom);
     }
     for (size_t i = 0; i < n; i++) {
         if (!all[i].menu) continue;
@@ -612,7 +622,11 @@ void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<flo
             continue;
         }
         size_t r = find(i);
-        pivot[i] = (lo[r] + hi[r]) * 0.5f;  // the group keeps its centre
+        pivot[i] = w * 0.5f;
+        if (hi[r] - lo[r] <= w * 0.35f && bottom[r] - top[r] <= 480 * 0.35f) {
+            if (hi[r] < w * 0.4f) pivot[i] = -64;          // past the safe area margin: at the very edge
+            else if (lo[r] > w * 0.6f) pivot[i] = w + 64;
+        }
     }
     // text rows in a dialog panel (a block at least 40% of the screen wide holding them): centred in the panel
     auto where = [&](size_t i, float x) { return pivot[i] + (x - pivot[i]) * f; };  // a 4:3 x after its block's squeeze
@@ -650,46 +664,58 @@ void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<flo
 void HudFrameEnd() {
     std::lock_guard<std::mutex> l(g_layout_lock);
     HudLayout& L = g_layout;
-    L.pivots.clear();
+    L.current = 0;
+    L.overlay = false;
+    if (L.blocks.empty()) return;  // a frame without 2D (a repeated present): nothing changes
+    L.frame++;
     const float w = 640.0f, f = std::min(g_hud_squeeze, 0.999f);
     std::vector<float> pivot(L.blocks.size(), w * 0.5f);
     MenuPivots(L.blocks, w, f, pivot);
     std::vector<int> got(L.blocks.size(), 1);
+    // stage HUD pivots: past the screen edges by the console's safe area margin, so the HUD sits at the very edges
+    const float kEdge[3] = {-64.0f, w * 0.5f, w + 64.0f};
     for (size_t i = 0; i < L.blocks.size(); i++) {
         const Block& b = L.blocks[i];
         if (!b.menu) {
-            int anchor = -1;
-            // the latest earlier block holding this one (a panel and its text)
-            for (size_t j = i; j-- > 0;) {
-                if (!L.blocks[j].menu && Holds(L.blocks[j], b)) {
-                    anchor = got[j];
-                    break;
+            if (b.projected) {
+                pivot[i] = kNoSqueeze;  // the game's text (subtitles): full size where it was
+            } else {
+                int anchor = -1;
+                // the latest earlier block holding this one (a panel and its contents)
+                for (size_t j = i; j-- > 0;) {
+                    if (!L.blocks[j].menu && !L.blocks[j].projected && Holds(L.blocks[j], b)) {
+                        anchor = got[j];
+                        break;
+                    }
                 }
+                if (anchor < 0) anchor = RootAnchor(b, w);
+                got[i] = anchor;
+                pivot[i] = kEdge[anchor];
             }
-            if (anchor < 0) anchor = RootAnchor(b, w);
-            got[i] = anchor;
-            pivot[i] = w * 0.5f * float(anchor);
         }
-        L.pivots[b.key] = pivot[i];
+        L.pivots[b.key] = {pivot[i], L.frame};
+    }
+    for (auto it = L.pivots.begin(); it != L.pivots.end();) {
+        if (L.frame - it->second.seen > 120) it = L.pivots.erase(it);
+        else ++it;
     }
     // the stage HUD's two top bars (the hero gauge top left, the dark gauge top right): a matching pair, one hugging
     // the left, one the right, the same height on screen and about the same size
-    bool left = false, right = false;
+    bool hud = false;
     for (const Block& a : L.blocks) {
         if (a.top > 480 * 0.15f || a.bottom - a.top > 480 * 0.15f || a.hi - a.lo < w * 0.15f) continue;
         if (!(a.lo < w * 0.15f && a.hi < w * 0.5f)) continue;
         for (const Block& b : L.blocks) {
             if (!(b.hi > w * 0.85f && b.lo > w * 0.5f)) continue;
             if (std::fabs(b.top - a.top) > 8 || std::fabs((b.hi - b.lo) - (a.hi - a.lo)) > (a.hi - a.lo) * 0.2f) continue;
-            left = right = true;
+            hud = true;
         }
     }
-    L.scene = left && right;
-    L.overlay = false;
+    // switch only after 3 frames in a row, so one odd frame does not flip the whole screen's layout
+    L.hud_run = hud ? std::max(L.hud_run, 0) + 1 : std::min(L.hud_run, 0) - 1;
+    if (L.hud_run >= 3) L.scene_last = true;
+    if (L.hud_run <= -3) L.scene_last = false;
     L.blocks.clear();
-    L.scene_last = L.scene;
-    L.scene = false;
-    L.current = 0;
 }
 
 float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen,
@@ -767,7 +793,8 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
         open->last_lo = lo, open->last_hi = hi, open->last_top = top, open->last_bottom = bottom;
         open->pieces++;
     } else {
-        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top), !L.scene_last || L.overlay, 0};
+        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top), !L.scene_last || L.overlay, 0,
+                proj != nullptr};
         L.blocks.push_back(b);
         open = &L.blocks.back();
         open->pieces = 1;
@@ -776,10 +803,11 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
     float pivot = float(w) * 0.5f;
     if (g_hud_anchor_edges) {
         auto it = L.pivots.find(open->key);
-        if (it != L.pivots.end()) pivot = it->second;
-        // a stage HUD block not seen last frame (new, or moving): from where its first piece is; on menus the
-        // centre until the whole screen has been seen once
-        else if (!open->menu) pivot = float(w) * 0.5f * float(RootAnchor(*open, float(w)));
+        if (it != L.pivots.end()) pivot = it->second.pivot;
+        // a block not seen before (new, or moving): the game's text in a stage stays full size; a stage HUD piece goes
+        // by where its first piece is; on menus the centre until the screen has been seen once
+        else if (!open->menu && open->projected) pivot = kNoSqueeze;
+        else if (!open->menu) pivot = RootAnchor(*open, float(w)) == 0 ? -64.0f : RootAnchor(*open, float(w)) == 2 ? float(w) + 64.0f : float(w) * 0.5f;
     }
     if (pivot == kNoSqueeze) return 0;
     return HudCode(std::min(g_hud_squeeze, 0.999f), pivot);

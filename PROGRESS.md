@@ -625,3 +625,11 @@ in-between frames.
   centred in the panel (dialog question, Yes/No). Offline model: tools/host/widescreen_sim.py <capture dir>
   (screen programs only; glyph positions are not in captures). Checked on title card, spinner, story menu, title.
   Installed (exe 6917120).
+- 14:08 user (round 6): menu and HUD elements jitter/flicker, slide right and back; subtitles too small; HUD
+  emblems not at the very edges. Captures: the dialog box and title logo shift between frames (group centre pivots
+  follow animating parts), text centring on/off between frames (pivots cleared on presents without 2D -> defaults).
+- **Round 7:** pivots are sticky per block key (kept 120 frames, a present with no 2D changes nothing); stage HUD /
+  menu mode switches after 3 frames in a row; menus back to a fixed centre pivot, small groups off to one side
+  (< 40% / > 60%) go to that edge; stage HUD and menu edges use pivots -64 / 704 (0.75x - 16, removes the console
+  safe-area margin: at the very edges); the game's projected text (subtitles) in stages is not narrowed (full size).
+  Title card lines stretched and dialog rows centred as before. Installed (exe 6916608).
