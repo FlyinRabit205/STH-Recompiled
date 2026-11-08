@@ -2357,7 +2357,8 @@ void MatMul(const float* x, const float* y, float* o);
 float DrawHudSqueeze(const State& s, const Assembled& a, bool prog, uint32_t w) {
     if (w != 640) return 0;
     float mx[4] = {1, 0, 0, 0}, my[4] = {0, 1, 0, 0};
-    bool mapped = false;
+    float wv[16], m[16], vpr[4];
+    bool mapped = false, projected = false;
     if (prog) {
         if (!ScreenProgram(s)) return 0;
         // oPos = v0 * c[96] + c[97] (hardware constants)
@@ -2365,20 +2366,18 @@ float DrawHudSqueeze(const State& s, const Assembled& a, bool prog, uint32_t w) 
         my[1] = s.vsc[96][1], my[0] = 0, my[3] = s.vsc[97][1];
         mapped = true;
     } else if (!a.pretransformed) {
-        float wv[16], m[16];
+        // 2D drawn through the transform pipeline: onto the screen with no depth test
+        if (s.rs[kRsZEnable]) return 0;
         MatMul(s.transforms[kTsWorld].data(), s.transforms[kTsView].data(), wv);
         MatMul(wv, s.transforms[kTsProjection].data(), m);
-        // orthographic only (w = 1 for every vertex): 2D drawn through the transform pipeline
-        if (std::fabs(m[3]) + std::fabs(m[7]) + std::fabs(m[11]) > 1e-6f || std::fabs(m[15] - 1) > 1e-4f) return 0;
-        float hw = s.viewport.w * 0.5f, hh = s.viewport.h * 0.5f;
-        mx[0] = m[0] * hw, mx[1] = m[4] * hw, mx[2] = m[8] * hw, mx[3] = (m[12] + 1) * hw + float(s.viewport.x);
-        my[0] = -m[1] * hh, my[1] = -m[5] * hh, my[2] = -m[9] * hh, my[3] = (1 - m[13]) * hh + float(s.viewport.y);
+        vpr[0] = float(s.viewport.x), vpr[1] = float(s.viewport.y), vpr[2] = float(s.viewport.w), vpr[3] = float(s.viewport.h);
+        projected = true;
         mapped = true;
     }
     TextureDesc td;
     bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
-    return HudSqueeze(a, w, s.textures[0] != 0, s.textures[0], scene_tex, mapped, mapped ? mx : nullptr,
-                      mapped ? my : nullptr);
+    return HudSqueeze(a, w, s.textures[0] != 0, s.textures[0], scene_tex, mapped, mapped && !projected ? mx : nullptr,
+                      mapped && !projected ? my : nullptr, projected ? m : nullptr, projected ? vpr : nullptr);
 }
 
 DrawShaders ClassifyShaders(const State& s, const Assembled& a, uint32_t count) {

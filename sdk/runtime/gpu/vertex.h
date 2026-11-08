@@ -71,8 +71,11 @@ extern bool g_hud_anchor_edges;
 // first texture (header address, 0 for none); scene_texture: that texture is the 512x512 3D scene target
 // screen: the draw's vertices are placed on the screen by a known affine map (a screen space program, or fixed
 // function vertices through an orthographic projection): screen x = dot((x, y, z, 1), mx), y likewise with my
+// proj (16 floats, row vector convention) with vp (x, y, w, h): fixed function vertices through any projection,
+// placed by the viewport; used instead of mx / my when given
 float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex = 0, bool scene_texture = false,
-                 bool screen = false, const float* mx = nullptr, const float* my = nullptr);
+                 bool screen = false, const float* mx = nullptr, const float* my = nullptr, const float* proj = nullptr,
+                 const float* vp = nullptr);
 // once per frame, at present: this frame's blocks give the next frame's anchors
 void HudFrameEnd();
 // the screen space x of a vertex after HudSqueeze's code

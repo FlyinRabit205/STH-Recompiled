@@ -553,12 +553,19 @@ void HudFrameEnd() {
 }
 
 float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen,
-                 const float* mx, const float* my) {
+                 const float* mx, const float* my, const float* proj, const float* vp) {
     if (g_hud_squeeze <= 0 || !(a.pretransformed || screen) || !(a.regs & 1) || w != 640) return 0;
     float lo = 1e30f, hi = -1e30f, top = 1e30f, bottom = -1e30f;
     auto add = [&](const float* p) {
         float x = p[0], y = p[1];
-        if (mx) {
+        if (proj) {
+            float cx = p[0] * proj[0] + p[1] * proj[4] + p[2] * proj[8] + proj[12];
+            float cy = p[0] * proj[1] + p[1] * proj[5] + p[2] * proj[9] + proj[13];
+            float cw = p[0] * proj[3] + p[1] * proj[7] + p[2] * proj[11] + proj[15];
+            if (!(std::fabs(cw) > 1e-6f)) return;
+            x = vp[0] + (cx / cw + 1) * 0.5f * vp[2];
+            y = vp[1] + (1 - cy / cw) * 0.5f * vp[3];
+        } else if (mx) {
             x = p[0] * mx[0] + p[1] * mx[1] + p[2] * mx[2] + mx[3];
             y = p[0] * my[0] + p[1] * my[1] + p[2] * my[2] + my[3];
         }

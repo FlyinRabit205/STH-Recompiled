@@ -593,3 +593,12 @@ in-between frames.
   hugging the left, one the right); untextured full-height draws left alone; a block with no history takes its own
   position's anchor; fixed function through an orthographic projection is mapped on the CPU (DrawHudSqueeze in
   d3d12.cpp) and squeezed in clip space in FixedVertexHlsl. Installed for the user (exe 6910464 bytes).
+- 13:23 captures (round 2): title, Dolby/SEGA, stage select centred and whole; gameplay HUD at the edges (gauges,
+  timer centred, rings bottom left apart from the subtitle). Dialog text (FVF 0x142 XYZ glyphs: unit quads placed by a
+  per-glyph World matrix) still not squeezed: the projection is not orthographic.
+- Round 3: fixed function draws onto the screen with no depth test are 2D: full W*V*P projective transform +
+  viewport on the CPU for the extent (HudSqueeze proj/vp), squeeze in clip space (already in FixedVertexHlsl).
+- User: "edges slower in fading out" sometimes. All full-screen fades seen in captures (B0000281 untextured
+  0..640 on the screen, XYZRHW 0..512x0..384 in the scene target) cover the widened frame. Suspect a camera-space
+  3D fade sized to the 4:3 frustum (would cover 64..448 of the 512 scene target after Hor+). Asked for an F3
+  capture at that moment. Installed round 3 (exe 6910976).
