@@ -2322,6 +2322,28 @@ uint32_t SimpleState(const State& s, uint32_t method) {
 
 constexpr uint32_t kQuadVertices = 6;  // a quad drawn as two triangles
 
+// A vertex program that only places screen space vertices: oPos.xyz = v0.xyz * c[96] + c[97], oPos.w = 1 / v0.w
+// (Shadow the Hedgehog draws all its 2D, HUD and menus, through two such programs). Decided once per program from
+// its translation; widescreen narrows these draws like screen space fixed function ones (HudSqueeze).
+bool ScreenProgram(const State& s) {
+    static std::mutex lock;
+    static std::unordered_map<uint64_t, bool> known;
+    if (!s.vs || s.vs->program.empty()) return false;
+    uint64_t h = Hash(s.vs->program.data(), s.vs->program.size() * 4);
+    std::lock_guard<std::mutex> l(lock);
+    auto it = known.find(h);
+    if (it != known.end()) return it->second;
+    bool yes = false;
+    if (s.vs->program.size() <= 4 * 4) {
+        std::string t = VertexProgramHlsl(s.vs->program, 0xFFFF);
+        yes = t.find("mac_mul(((i.v0).xyzz), ((c[96]).xyzz)) + ((R0).xyzz)") != std::string::npos &&
+              t.find("((c[97]).xyzw)") != std::string::npos && t.find("oPos.xyz = mr.xyz") != std::string::npos;
+    }
+    known[h] = yes;
+    LOGI("d3d12: vertex program %08X is %sscreen space 2D", s.vs->handle, yes ? "" : "not ");
+    return yes;
+}
+
 DrawShaders ClassifyShaders(const State& s, const Assembled& a, uint32_t count) {
     DrawShaders sh;
     // a shader made from a declaration alone (no program) is the fixed function pipeline on those inputs
@@ -2794,10 +2816,10 @@ constexpr int kVsConstantBias = 96;
 
 void D3D12Backend::CaptureInputs(const State& s, const Assembled& a, const DrawConstants& c, bool constants) {
     fprintf(cap_, "\n     verts");
-    if (a.pretransformed && a.vertices.empty() && a.vertex_count) {  // screen space from a buffer: the positions
+    if (a.vertices.empty() && a.vertex_count) {  // from a buffer: the first positions
         const VertexElement& e = a.elements[0];
         const VertexBuffer& b = a.buffers[e.buffer];
-        if (b.src && b.stride) {
+        if (b.src && b.stride && (e.format == DXGI_FORMAT_R32G32B32A32_FLOAT || e.format == DXGI_FORMAT_R32G32B32_FLOAT)) {
             uint32_t m = std::min<uint32_t>(b.bytes / b.stride, 4);
             for (uint32_t v = 0; v < m; v++) {
                 float xy[2];
@@ -3177,10 +3199,16 @@ void D3D12Backend::Draw(const State& s, uint32_t prim, uint32_t start, uint32_t 
     SurfaceSize(bound_rt_ ? s.rt : s.zs, size.w, size.h);
     DrawConstants c{};
     squeeze_ = 0.0f;
-    if (!sh.prog && g_hud_squeeze > 0 && a.pretransformed) {
-        TextureDesc td;
-        bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
-        squeeze_ = HudSqueeze(a, size.w, s.textures[0] != 0, s.textures[0], scene_tex);
+    if (g_hud_squeeze > 0) {
+        bool screen = sh.prog && ScreenProgram(s);
+        if ((!sh.prog && a.pretransformed) || screen) {
+            TextureDesc td;
+            bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
+            // a screen space program: x = v0.x * c0.x + c1.x (hardware constants 96, 97)
+            float sx = 1, ox = 0, sy = 1, oy = 0;
+            if (screen) sx = s.vsc[96][0], ox = s.vsc[97][0], sy = s.vsc[96][1], oy = s.vsc[97][1];
+            squeeze_ = HudSqueeze(a, size.w, s.textures[0] != 0, s.textures[0], scene_tex, screen, sx, ox, sy, oy);
+        }
     }
     UploadConstants(s, sh, k, stages, size, c);
     if (ext_) binds_ = {};

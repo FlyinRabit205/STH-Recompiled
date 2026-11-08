@@ -543,10 +543,13 @@ void HudFrameEnd() {
     L.current = 0;
 }
 
-float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture) {
-    if (g_hud_squeeze <= 0 || !a.pretransformed || !(a.regs & 1) || w != 640) return 0;
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen, float sx,
+                 float ox, float sy, float oy) {
+    if (g_hud_squeeze <= 0 || !(a.pretransformed || screen) || !(a.regs & 1) || w != 640) return 0;
     float lo = 1e30f, hi = -1e30f, top = 1e30f, bottom = -1e30f;
     auto add = [&](float x, float y) {
+        x = x * sx + ox;
+        y = y * sy + oy;
         lo = std::min(lo, x);
         hi = std::max(hi, x);
         top = std::min(top, y);

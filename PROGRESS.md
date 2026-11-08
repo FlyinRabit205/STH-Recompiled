@@ -577,3 +577,11 @@ in-between frames.
   frame by key (texture, first piece position). Only when the previous frame drew the 3D scene (full-width quad from a
   512x512 texture); menus stay centred. F3 capture lines now show `hud <code>` and screen-space positions.
   Installed straight into the user's Shadow folder for testing.
+- 12:31 captures were from the OLD exe: device_commit_files with a reused stagedPath wrote the earlier file (size
+  6898688 vs 6903808). **Always commit via SendUserFile fileUuid or a fresh staged path, then check the size.**
+- Found from those captures: all Shadow 2D (HUD, menus, text) is drawn through vertex programs B0000061/B0000071
+  (oPos.xyz = v0.xyz * c[96] + c[97], oPos.w = rcp(v0.w)), not XYZRHW, so the squeeze never touched it.
+  d3d12 `ScreenProgram()` recognises such programs from their translation (once per program, logged
+  "d3d12: vertex program ... is screen space 2D"); HudSqueeze takes x = v0.x * c96.x + c97.x; the squeeze now runs in
+  kVsEpilogue on p.x for both fixed and program paths. Captures: positions printed for every buffer draw, `hud` code.
+  Harness reference renderer does not apply it to programs (no game data here to test anyway).

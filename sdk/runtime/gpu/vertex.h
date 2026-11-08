@@ -69,7 +69,9 @@ extern float g_hud_squeeze;
 extern bool g_hud_anchor_edges;
 // this draw's code for the shaders, 0 for none: factor + 2 * anchor (0 left, 1 centre, 2 right). tex: the draw's
 // first texture (header address, 0 for none); scene_texture: that texture is the 512x512 3D scene target
-float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex = 0, bool scene_texture = false);
+// screen: the draw is screen space through a vertex program, x = v0.x * sx + ox (Shadow's 2D programs)
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex = 0, bool scene_texture = false,
+                 bool screen = false, float sx = 1, float ox = 0, float sy = 1, float oy = 0);
 // once per frame, at present: this frame's blocks give the next frame's anchors
 void HudFrameEnd();
 // the screen space x of a vertex after HudSqueeze's code
