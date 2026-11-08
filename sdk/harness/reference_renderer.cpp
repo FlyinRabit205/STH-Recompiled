@@ -1038,6 +1038,7 @@ struct Screen {
 }  // namespace
 
 void BeginFrame() {
+    gpu::HudFrameEnd();
     g_images.clear();
     g_draws = 0;
 }
@@ -1152,7 +1153,12 @@ void Draw(const State& s, uint32_t prim, uint32_t start, uint32_t count, const u
     auto input = [&](uint32_t v, int r) { return &as.vertices[(size_t(v) * regs + slot[r]) * 4]; };
     uint32_t gw = rt.ok ? rt.w : zs.w, gh = rt.ok ? rt.h : zs.h;
     std::vector<Shaded> verts(as.vertex_count);
-    const float squeeze = program ? 0.0f : gpu::HudSqueeze(as, gw, s.textures[0] != 0);  // widescreen 2D
+    float squeeze = 0;  // widescreen 2D
+    if (!program && gpu::g_hud_squeeze > 0 && as.pretransformed) {
+        TextureDesc td;
+        bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
+        squeeze = gpu::HudSqueeze(as, gw, s.textures[0] != 0, s.textures[0], scene_tex);
+    }
     for (uint32_t vi = 0; vi < as.vertex_count; vi++) {
         VertexProgram vp{s};
         for (int r = 0; r < 16; r++) {

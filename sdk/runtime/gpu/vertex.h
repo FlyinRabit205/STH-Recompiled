@@ -60,14 +60,18 @@ void FvfInputs(uint32_t fvf, VertexShader& out);
 bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, const uint8_t* indices, Assembled& out);
 
 // ShadowNativePort widescreen: a 4:3 picture shown on a 16:9 screen with its 3D view widened (Hor+) still has its 2D
-// (screen space, XYZRHW) draws stretched. g_hud_squeeze (0 = off) narrows each such draw by that factor toward the
-// screen's centre, so the HUD and menus keep their shape. With g_hud_anchor_edges the anchor is picked per draw from
-// where it sits instead (left edge, centre, right edge): not usable yet, text is drawn one glyph per draw. Only draws
-// onto the 640 wide screen; draws spanning its whole width (the 3D scene, fades, movies, backgrounds) stay full width.
+// (screen space, XYZRHW) draws stretched. g_hud_squeeze (0 = off) narrows each such draw back to its shape, toward
+// an anchor: the screen's left edge, centre or right edge. With g_hud_anchor_edges, while a 3D scene is shown, the
+// pieces of the HUD go to the nearest edge as whole blocks (text lines, text in its panel; see vertex.cpp), else
+// everything keeps the centre. Only draws onto the 640 wide screen; draws spanning its whole width (the 3D scene,
+// fades, movies, backgrounds) stay full width.
 extern float g_hud_squeeze;
 extern bool g_hud_anchor_edges;
-// this draw's code for the shaders, 0 for none: factor + 2 * anchor (0 left, 1 centre, 2 right)
-float HudSqueeze(const Assembled& a, uint32_t w, bool textured);
+// this draw's code for the shaders, 0 for none: factor + 2 * anchor (0 left, 1 centre, 2 right). tex: the draw's
+// first texture (header address, 0 for none); scene_texture: that texture is the 512x512 3D scene target
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex = 0, bool scene_texture = false);
+// once per frame, at present: this frame's blocks give the next frame's anchors
+void HudFrameEnd();
 // the screen space x of a vertex after HudSqueeze's code
 inline float HudSqueezeX(float x, float code, float w) {
     if (code <= 0) return x;

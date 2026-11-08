@@ -1,7 +1,11 @@
 #include "gpu/vertex.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
 #include <dxgiformat.h>
 
@@ -473,20 +477,88 @@ bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, con
 }
 
 float g_hud_squeeze = 0;
-bool g_hud_anchor_edges = false;
+bool g_hud_anchor_edges = true;
 
-float HudSqueeze(const Assembled& a, uint32_t w, bool textured) {
-    // the screen only (640 wide): Shadow's 3D scene, glow and blur targets (512 and smaller) are left alone
+namespace {
+
+// HUD layout for edge anchoring. The game draws its 2D one piece at a time (text one glyph per draw), so the anchor of
+// a piece depends on what it belongs to. Each frame the screen's 2D draws are grouped into blocks: consecutive draws
+// with one texture that continue a line of text (same line, small gap) or start the next line below it. At the end
+// of the frame every block gets an anchor: the anchor of an earlier block containing it (text in its panel), else
+// left when it lies in the left half, right in the right half, centre when it crosses the middle. The next frame
+// uses those anchors, found by each block's texture and first piece position. Only while a 3D scene is shown (a
+// stage, its HUD and results); menus stay centred.
+struct Block {
+    uint32_t tex;
+    float lo, hi, top, bottom;             // the block's extent
+    float last_lo, last_hi, last_top, last_bottom;  // its last piece
+    uint64_t key;
+};
+
+struct HudLayout {
+    std::vector<Block> blocks;                     // this frame's, in draw order
+    std::unordered_map<uint64_t, int> anchors;     // last frame's: block key -> anchor
+    bool scene = false, scene_last = false;        // a 3D scene was drawn onto the screen
+    uint64_t current = 0;                          // the open block's key
+};
+HudLayout g_layout;
+std::mutex g_layout_lock;
+
+uint64_t KeyOf(uint32_t tex, float lo, float top) {
+    return (uint64_t(tex) << 32) ^ (uint64_t(uint32_t(std::lround(lo / 4))) << 16) ^ uint64_t(uint32_t(std::lround(top / 4)));
+}
+
+int RootAnchor(const Block& b, float w) {
+    if (b.hi <= w * 0.5f + 1) return 0;
+    if (b.lo >= w * 0.5f - 1) return 2;
+    return 1;
+}
+
+}  // namespace
+
+void HudFrameEnd() {
+    std::lock_guard<std::mutex> l(g_layout_lock);
+    HudLayout& L = g_layout;
+    L.anchors.clear();
+    std::vector<int> got(L.blocks.size(), 1);
+    for (size_t i = 0; i < L.blocks.size(); i++) {
+        const Block& b = L.blocks[i];
+        int anchor = -1;
+        // the latest earlier block holding this one (a panel and its text), with a little slack
+        for (size_t j = i; j-- > 0;) {
+            const Block& c = L.blocks[j];
+            if (c.lo <= b.lo + 2 && c.hi >= b.hi - 2 && c.top <= b.top + 2 && c.bottom >= b.bottom - 2 &&
+                (c.hi - c.lo) * (c.bottom - c.top) > (b.hi - b.lo) * (b.bottom - b.top) * 1.2f) {
+                anchor = got[j];
+                break;
+            }
+        }
+        if (anchor < 0) anchor = RootAnchor(b, 640.0f);
+        got[i] = anchor;
+        L.anchors[b.key] = anchor;
+    }
+    L.blocks.clear();
+    L.scene_last = L.scene;
+    L.scene = false;
+    L.current = 0;
+}
+
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture) {
     if (g_hud_squeeze <= 0 || !a.pretransformed || !(a.regs & 1) || w != 640) return 0;
-    float lo = 1e30f, hi = -1e30f;
-    auto add = [&](float x) {
+    float lo = 1e30f, hi = -1e30f, top = 1e30f, bottom = -1e30f;
+    auto add = [&](float x, float y) {
         lo = std::min(lo, x);
         hi = std::max(hi, x);
+        top = std::min(top, y);
+        bottom = std::max(bottom, y);
     };
     if (!a.vertices.empty()) {
         uint32_t regs = 0;
         for (int r = 0; r < 16; r++) regs += (a.regs >> r) & 1;
-        for (uint32_t v = 0; v < a.vertex_count && v < 8192; v++) add(a.vertices[size_t(v) * regs * 4]);
+        for (uint32_t v = 0; v < a.vertex_count && v < 8192; v++) {
+            const float* p = &a.vertices[size_t(v) * regs * 4];
+            add(p[0], p[1]);
+        }
     } else {
         const VertexElement& e = a.elements[0];
         const VertexBuffer& b = a.buffers[e.buffer];
@@ -494,23 +566,49 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured) {
             return 0;
         uint32_t n = std::min<uint32_t>(b.bytes / b.stride, 8192);
         for (uint32_t v = 0; v < n; v++) {
-            float x;
-            std::memcpy(&x, b.src + size_t(v) * b.stride + e.offset, 4);
-            add(x);
+            float xy[2];
+            std::memcpy(xy, b.src + size_t(v) * b.stride + e.offset, 8);
+            add(xy[0], xy[1]);
         }
     }
     if (!(hi > lo)) return 0;
     // over the whole width: the 3D scene stretched onto the screen, fades, movies, backgrounds: left full screen
-    if (lo <= w * 0.02f && hi >= w * 0.98f) return 0;
+    std::lock_guard<std::mutex> l(g_layout_lock);
+    HudLayout& L = g_layout;
+    if (lo <= w * 0.02f && hi >= w * 0.98f) {
+        if (textured && scene_texture) L.scene = true;
+        L.current = 0;
+        return 0;
+    }
     (void)textured;
-    // Anchor: the centre for every draw for now. Shadow draws text one glyph per draw, so picking the left or right
-    // edge per draw would pull a centred line's first letters away from the rest; edge anchoring needs whole strings
-    // (consecutive glyphs on one line) grouped first. g_hud_anchor_edges turns the per-draw choice on for testing.
+    // the block this piece belongs to
+    Block* open = L.current && !L.blocks.empty() ? &L.blocks.back() : nullptr;
+    float pw = hi - lo, ph = bottom - top;
+    bool joins = false;
+    if (open && open->tex == tex) {
+        float lh = std::max(open->last_bottom - open->last_top, ph);
+        bool same_line = std::fabs(top - open->last_top) < lh * 0.6f && lo >= open->last_lo - 1 &&
+                         lo - open->last_hi < std::max(pw, open->last_hi - open->last_lo) * 2.5f + 4;
+        bool next_line = top > open->last_top + lh * 0.4f && top - open->last_bottom < lh * 1.5f + 2 &&
+                         lo < open->hi + 8 && hi > open->lo - 8;
+        joins = same_line || next_line;
+    }
+    if (joins) {
+        open->lo = std::min(open->lo, lo);
+        open->hi = std::max(open->hi, hi);
+        open->top = std::min(open->top, top);
+        open->bottom = std::max(open->bottom, bottom);
+        open->last_lo = lo, open->last_hi = hi, open->last_top = top, open->last_bottom = bottom;
+    } else {
+        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top)};
+        L.blocks.push_back(b);
+        open = &L.blocks.back();
+        L.current = b.key;
+    }
     int anchor = 1;
-    if (g_hud_anchor_edges) {
-        float c = (lo + hi) * 0.5f;
-        if (c < w * 0.4f) anchor = 0;
-        else if (c > w * 0.6f) anchor = 2;
+    if (g_hud_anchor_edges && L.scene_last) {
+        auto it = L.anchors.find(open->key);
+        if (it != L.anchors.end()) anchor = it->second;
     }
     return std::min(g_hud_squeeze, 0.999f) + 2.0f * float(anchor);
 }

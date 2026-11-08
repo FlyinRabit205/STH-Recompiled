@@ -569,3 +569,11 @@ in-between frames.
   /home/claude/release/Shadow-v1.3-test.zip (Shadow.exe, version 1.3) for the user / issue reporters.
 - Unknowns to check in the test: does the stage HUD draw onto the 640 screen (then it is narrowed) or into the 512
   scene target like event 2D (then it stays stretched); any 4:3 render-to-texture camera widened by mistake.
+- User captures (10:07-10:10, v1.3 test): 3D view correct, HUD/menus/text keep shape centred; full-screen backgrounds
+  and scene stay full width. HUD bunched in the middle (ring counter overlaps the subtitle text).
+- **Edge anchoring v1** (gpu/vertex.cpp HudLayout): screen 2D draws grouped per frame into blocks (same texture,
+  continuing a line or the next line); at present each block gets an anchor: an earlier block containing it (panel)
+  passes its own, else left half -> left edge, right half -> right edge, crossing the middle -> centre. Used the next
+  frame by key (texture, first piece position). Only when the previous frame drew the 3D scene (full-width quad from a
+  512x512 texture); menus stay centred. F3 capture lines now show `hud <code>` and screen-space positions.
+  Installed straight into the user's Shadow folder for testing.

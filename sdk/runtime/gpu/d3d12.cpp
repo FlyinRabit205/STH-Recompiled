@@ -2794,6 +2794,18 @@ constexpr int kVsConstantBias = 96;
 
 void D3D12Backend::CaptureInputs(const State& s, const Assembled& a, const DrawConstants& c, bool constants) {
     fprintf(cap_, "\n     verts");
+    if (a.pretransformed && a.vertices.empty() && a.vertex_count) {  // screen space from a buffer: the positions
+        const VertexElement& e = a.elements[0];
+        const VertexBuffer& b = a.buffers[e.buffer];
+        if (b.src && b.stride) {
+            uint32_t m = std::min<uint32_t>(b.bytes / b.stride, 4);
+            for (uint32_t v = 0; v < m; v++) {
+                float xy[2];
+                std::memcpy(xy, b.src + size_t(v) * b.stride + e.offset, 8);
+                fprintf(cap_, " [ %g %g ]", xy[0], xy[1]);
+            }
+        }
+    }
     uint32_t n = 0;
     for (int r = 0; r < 16; r++) n += (a.regs >> r) & 1;
     for (size_t v = 0; v < std::min<size_t>(4, n ? a.vertices.size() / (n * 4) : 0); v++) {
@@ -2823,6 +2835,7 @@ void D3D12Backend::CaptureDraw(const State& s, uint32_t prim, uint32_t count, co
             cap_i_++, s.rt.data, bound_ds_ ? s.zs.data : 0, prim, count, s.vs_handle, s.ps ? s.ps->handle : 0, k.blend,
             k.src, k.dst, k.zen, k.zfunc, k.zwrite, k.zbias, k.zslope, k.cull, k.wmask, c.pc[0][0], c.pc[0][1],
             c.pc[0][2], c.pc[0][3]);
+    if (squeeze_ > 0) fprintf(cap_, " | hud %.3f", squeeze_);  // widescreen: factor + 2 * anchor (0 left, 1 centre, 2 right)
     // the fixed function inputs that decide a draw's alpha: lighting, material sources, material, texture factor and
     // each stage's colour key and alpha operation
     const auto& m = s.material;
@@ -3163,7 +3176,12 @@ void D3D12Backend::Draw(const State& s, uint32_t prim, uint32_t start, uint32_t 
     GuestExtent size;
     SurfaceSize(bound_rt_ ? s.rt : s.zs, size.w, size.h);
     DrawConstants c{};
-    squeeze_ = sh.prog ? 0.0f : HudSqueeze(a, size.w, s.textures[0] != 0);
+    squeeze_ = 0.0f;
+    if (!sh.prog && g_hud_squeeze > 0 && a.pretransformed) {
+        TextureDesc td;
+        bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
+        squeeze_ = HudSqueeze(a, size.w, s.textures[0] != 0, s.textures[0], scene_tex);
+    }
     UploadConstants(s, sh, k, stages, size, c);
     if (ext_) binds_ = {};
 
@@ -3661,6 +3679,7 @@ void LogPerf() {
 
 void D3D12Backend::Present(const Surface& front) {
     PerfScope perf_present{g_perf.present};
+    HudFrameEnd();  // widescreen HUD blocks of this frame -> anchors for the next
     if (cap_) {
         FinishCapture(front);
     } else if (g_capture.exchange(false) && CaptureOn()) {
