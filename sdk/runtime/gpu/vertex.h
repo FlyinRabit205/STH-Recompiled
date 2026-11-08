@@ -75,7 +75,7 @@ int HudPiece(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool s
              const float* my = nullptr, const float* proj = nullptr, const float* vp = nullptr);
 // lays out the frame's blocks so far; HudResult then gives a block's code and x shift (console pixels)
 void HudLayoutFrame();
-bool HudResult(int block, float& code, float& shift);
+bool HudResult(int block, float& code, float& shift, float& ypivot, float& yscale);
 // at present: the next frame starts
 void HudFrameEnd();
 // the frame's blocks and their placement, for F3 captures

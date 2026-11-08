@@ -647,3 +647,11 @@ in-between frames.
   **Instrumented**: any guest frame > 250 ms logs "slow guest frame N: X ms; guest cpu: [thread T: takes, held ms,
   waited ms]..." and the hang watch adds the same totals. Next log tells whether a holder starves the loaders.
 - Delivered r8b (exe 6921216, dll 19635712).
+- **r8b result (shadow_039)**: load stall gone (no guest frame > 250 ms). Remaining in-play hitches (27-49 ms) all
+  have "N pipelines made": first use of a blend/effect combination (explosions).
+- **r9**: pipelines made on worker threads (PsoWorkers, 1-3 threads); a frame waits at most 4 ms in total, a draw
+  whose pipeline isn't ready is skipped (a new effect may miss its first frame or two); the pipeline library is
+  serialized and written on its own thread. Hitch lines add "N draws skipped while pipelines were made".
+- **r9 text**: in-play game text (projected glyphs) now keeps its true shape like the HUD (held by its panel or the
+  nearest edge) instead of being left stretched; subtitles keep their true shape at 1.15x (grown up from the last
+  line: hud.y pivot / hud.z scale in both vertex paths), centred. Delivered r9 (exe 6941184).

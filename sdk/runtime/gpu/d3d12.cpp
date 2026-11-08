@@ -13,6 +13,8 @@
 #include <wrl/client.h>
 
 #include <algorithm>
+#include <memory>
+#include <atomic>
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -875,6 +877,23 @@ private:
     std::chrono::steady_clock::time_point pso_lib_saved_{};
     void OpenPipelineLibrary();
     void SavePipelineLibrary(bool now);
+    // pipelines are made on worker threads: a draw whose pipeline isn't ready is skipped (the frame waits a few ms
+    // at most), so a new effect no longer stalls the frame 20 to 50 ms
+    struct PsoJob {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC d{};
+        D3D12_INPUT_ELEMENT_DESC el[16]{};
+        ComPtr<ID3DBlob> vs, ps;
+        wchar_t name[40] = {};
+        ComPtr<ID3D12PipelineState> out;
+        std::atomic<bool> done{false};
+    };
+    struct PsoWorkers;
+    std::shared_ptr<PsoWorkers> pso_workers_;
+    std::unordered_map<uint64_t, std::shared_ptr<PsoJob>> pso_jobs_;
+    double pso_wait_ms_ = 0;  // waited for workers this frame
+    uint64_t pso_skipped_ = 0;
+    std::shared_ptr<std::mutex> pso_lib_lock_ = std::make_shared<std::mutex>();
+    std::atomic<bool> pso_saving_{false};
     std::chrono::steady_clock::time_point hitch_t_{};
     uint64_t hitch_counts_[4] = {};
     uint32_t hitch_logged_ = 0;
@@ -1135,10 +1154,12 @@ void D3D12Backend::PatchHud() {
     if (hud_pending_.empty()) return;
     HudLayoutFrame();
     for (auto& [dc, block] : hud_pending_) {
-        float code = 0, shift = 0;
-        if (!HudResult(block, code, shift)) continue;
+        float code = 0, shift = 0, ypivot = 0, yscale = 0;
+        if (!HudResult(block, code, shift, ypivot, yscale)) continue;
         dc->zparams[3] = code;
         dc->hud[0] = shift;
+        dc->hud[1] = ypivot;
+        dc->hud[2] = yscale;
     }
     hud_pending_.clear();
 }
@@ -1874,34 +1895,114 @@ float D3D12Backend::RenderTargetShift(const State& s, const DrawShaders& sh) con
     return offset ? -0.5f * TargetScale() : 0.0f;
 }
 
+struct D3D12Backend::PsoWorkers {
+    std::mutex m;
+    std::condition_variable cv, done_cv;
+    std::deque<std::shared_ptr<PsoJob>> queue;
+    ComPtr<ID3D12Device> dev;
+    ComPtr<ID3D12PipelineLibrary> lib;
+    std::shared_ptr<std::mutex> lib_lock;
+    std::atomic<bool>* dirty = nullptr;
+};
+
 ID3D12PipelineState* D3D12Backend::EnsurePipeline(const PsoKey& k, ID3DBlob* vs, ID3DBlob* ps) {
     uint64_t h = Hash(&k, sizeof(k));
     auto it = psos_.find(h);
     if (it != psos_.end()) return it->second.Get();
-    D3D12_INPUT_ELEMENT_DESC el[16];
-    uint32_t n = FillInputLayout(k, el);
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC d{};
-    d.InputLayout = {el, n};
+    auto wait = [&](PsoJob& j) {
+        if (j.done) return true;
+        if (pso_wait_ms_ >= 4.0) return false;
+        auto t0 = std::chrono::steady_clock::now();
+        auto limit = t0 + std::chrono::microseconds(int64_t((4.0 - pso_wait_ms_) * 1000));
+        {
+            std::unique_lock<std::mutex> l(pso_workers_->m);
+            pso_workers_->done_cv.wait_until(l, limit, [&] { return j.done.load(); });
+        }
+        pso_wait_ms_ += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+        return j.done.load();
+    };
+    auto finish = [&](PsoJob& j) {
+        ComPtr<ID3D12PipelineState> pso = j.out;
+        if (!pso) LOGE("d3d12: pipeline creation failed");
+        psos_[h] = pso;
+        pso_jobs_.erase(h);
+        return pso.Get();
+    };
+    if (auto pj = pso_jobs_.find(h); pj != pso_jobs_.end()) {
+        std::shared_ptr<PsoJob> j = pj->second;
+        if (wait(*j)) return finish(*j);
+        pso_skipped_++;
+        return nullptr;
+    }
+    auto j = std::make_shared<PsoJob>();
+    uint32_t n = FillInputLayout(k, j->el);
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC& d = j->d;
+    d.InputLayout = {j->el, n};
     FillPipelineDesc(k, vs, ps, d);
     if (k.topo == uint32_t(Topology::Points)) ExpandPoints(d, k.sprite);
-    ComPtr<ID3D12PipelineState> pso;
-    wchar_t name[40] = {};
+    j->vs = vs;
+    j->ps = ps;
     if (pso_lib_) {
         // the name covers the key and the code it was made with
-        uint64_t n = Hash(vs ? vs->GetBufferPointer() : nullptr, vs ? vs->GetBufferSize() : 0, h);
-        n = Hash(ps ? ps->GetBufferPointer() : nullptr, ps ? ps->GetBufferSize() : 0, n);
-        if (d.GS.pShaderBytecode) n = Hash(d.GS.pShaderBytecode, d.GS.BytecodeLength, n);
-        std::swprintf(name, 40, L"p%016llx", static_cast<unsigned long long>(n));
-        if (SUCCEEDED(pso_lib_->LoadGraphicsPipeline(name, &d, IID_PPV_ARGS(&pso)))) {
+        uint64_t nm = Hash(vs ? vs->GetBufferPointer() : nullptr, vs ? vs->GetBufferSize() : 0, h);
+        nm = Hash(ps ? ps->GetBufferPointer() : nullptr, ps ? ps->GetBufferSize() : 0, nm);
+        if (d.GS.pShaderBytecode) nm = Hash(d.GS.pShaderBytecode, d.GS.BytecodeLength, nm);
+        std::swprintf(j->name, 40, L"p%016llx", static_cast<unsigned long long>(nm));
+        ComPtr<ID3D12PipelineState> pso;
+        HRESULT hr;
+        {
+            std::lock_guard<std::mutex> l(*pso_lib_lock_);
+            hr = pso_lib_->LoadGraphicsPipeline(j->name, &d, IID_PPV_ARGS(&pso));
+        }
+        if (SUCCEEDED(hr)) {
             psos_[h] = pso;
             return pso.Get();
         }
     }
     g_perf.psos++;
-    if (FAILED(dev_->CreateGraphicsPipelineState(&d, IID_PPV_ARGS(&pso)))) LOGE("d3d12: pipeline creation failed");
-    if (pso && pso_lib_ && SUCCEEDED(pso_lib_->StorePipeline(name, pso.Get()))) pso_lib_dirty_ = true;
-    psos_[h] = pso;
-    return pso.Get();
+    if (!pso_workers_) {
+        auto w = std::make_shared<PsoWorkers>();
+        w->dev = dev_;
+        w->lib = pso_lib_;
+        w->lib_lock = pso_lib_lock_;
+        static std::atomic<bool> dirty{false};
+        w->dirty = &dirty;
+        pso_workers_ = w;
+        unsigned count = std::clamp(std::thread::hardware_concurrency() / 4, 1u, 3u);
+        for (unsigned i = 0; i < count; i++)
+            std::thread([w] {
+                for (;;) {
+                    std::shared_ptr<PsoJob> job;
+                    {
+                        std::unique_lock<std::mutex> l(w->m);
+                        w->cv.wait(l, [&] { return !w->queue.empty(); });
+                        job = std::move(w->queue.front());
+                        w->queue.pop_front();
+                    }
+                    ComPtr<ID3D12PipelineState> pso;
+                    if (FAILED(w->dev->CreateGraphicsPipelineState(&job->d, IID_PPV_ARGS(&pso)))) pso.Reset();
+                    if (pso && w->lib && job->name[0]) {
+                        std::lock_guard<std::mutex> l(*w->lib_lock);
+                        if (SUCCEEDED(w->lib->StorePipeline(job->name, pso.Get()))) *w->dirty = true;
+                    }
+                    {
+                        std::lock_guard<std::mutex> l(w->m);
+                        job->out = pso;
+                        job->done = true;
+                    }
+                    w->done_cv.notify_all();
+                }
+            }).detach();
+    }
+    {
+        std::lock_guard<std::mutex> l(pso_workers_->m);
+        pso_workers_->queue.push_back(j);
+    }
+    pso_workers_->cv.notify_one();
+    pso_jobs_[h] = j;
+    if (wait(*j)) return finish(*j);
+    pso_skipped_++;
+    return nullptr;
 }
 
 void D3D12Backend::OpenPipelineLibrary() {
@@ -1931,21 +2032,35 @@ void D3D12Backend::OpenPipelineLibrary() {
 
 // written a few seconds after new pipelines, not every frame
 void D3D12Backend::SavePipelineLibrary(bool now) {
-    if (!pso_lib_ || !pso_lib_dirty_) return;
+    pso_wait_ms_ = 0;  // a new frame: a new wait budget
+    if (pso_workers_ && pso_workers_->dirty && pso_workers_->dirty->exchange(false)) pso_lib_dirty_ = true;
+    if (!pso_lib_ || !pso_lib_dirty_ || pso_saving_) return;
     auto t = std::chrono::steady_clock::now();
     if (!now && t - pso_lib_saved_ < std::chrono::seconds(5)) return;
     pso_lib_saved_ = t;
     pso_lib_dirty_ = false;
-    std::vector<char> data(pso_lib_->GetSerializedSize());
-    if (data.empty() || FAILED(pso_lib_->Serialize(data.data(), data.size()))) return;
-    std::filesystem::path p = CacheDir() / "pipelines.bin", tmp = CacheDir() / "pipelines.tmp";
-    {
-        std::ofstream out(tmp, std::ios::binary | std::ios::trunc);
-        out.write(data.data(), std::streamsize(data.size()));
-        if (!out) return;
-    }
-    std::error_code ec;
-    std::filesystem::rename(tmp, p, ec);
+    pso_saving_ = true;
+    // serialized and written on a thread of its own
+    std::thread([lib = pso_lib_, lock = pso_lib_lock_, dir = CacheDir(), flag = &pso_saving_] {
+        std::vector<char> data;
+        {
+            std::lock_guard<std::mutex> l(*lock);
+            data.resize(lib->GetSerializedSize());
+            if (data.empty() || FAILED(lib->Serialize(data.data(), data.size()))) data.clear();
+        }
+        if (!data.empty()) {
+            std::filesystem::path p = dir / "pipelines.bin", tmp = dir / "pipelines.tmp";
+            bool ok;
+            {
+                std::ofstream out(tmp, std::ios::binary | std::ios::trunc);
+                out.write(data.data(), std::streamsize(data.size()));
+                ok = bool(out);
+            }
+            std::error_code ec;
+            if (ok) std::filesystem::rename(tmp, p, ec);
+        }
+        *flag = false;
+    }).detach();
 }
 
 // a frame over 22 ms is logged with what it did (the first 300): shaders compiled, pipelines made, textures sent
@@ -1959,13 +2074,15 @@ void D3D12Backend::LogHitch() {
         if (ms > 22.0) {
             hitch_logged_++;
             LOGI("hitch: frame %llu took %.1f ms: %llu shaders compiled, %llu pipelines made, %llu textures uploaded (%.1f MB); "
-                 "texture create %.1f ms, upload %.1f ms, pack %.1f ms",
+                 "texture create %.1f ms, upload %.1f ms, pack %.1f ms; %llu draws skipped while pipelines were made",
                  static_cast<unsigned long long>(presents_), ms, static_cast<unsigned long long>(c[0] - hitch_counts_[0]),
                  static_cast<unsigned long long>(c[1] - hitch_counts_[1]), static_cast<unsigned long long>(c[2] - hitch_counts_[2]),
-                 double(c[3] - hitch_counts_[3]) / (1024.0 * 1024.0), g_hitch.create, g_hitch.upload, g_hitch.pack);
+                 double(c[3] - hitch_counts_[3]) / (1024.0 * 1024.0), g_hitch.create, g_hitch.upload, g_hitch.pack,
+                 static_cast<unsigned long long>(pso_skipped_));
         }
     }
     hitch_t_ = now;
+    pso_skipped_ = 0;
     std::copy(c, c + 4, hitch_counts_);
     g_hitch = HitchTimes{};
 }

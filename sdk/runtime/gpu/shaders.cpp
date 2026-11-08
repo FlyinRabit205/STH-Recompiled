@@ -225,6 +225,7 @@ const char* kVsEpilogue = R"(
     // in console pixels); 0 for everything else
     if (zparams.w > 0) { float an = floor(zparams.w * 0.5); float pv = an - 4096; p.x = pv + (p.x - pv) * (zparams.w - 2 * an); }
     p.x += hud.x;
+    if (hud.z > 0) p.y = hud.y + (p.y - hud.y) * hud.z;
     p.w = magclamp(p.w);
     precise float4 q;
     // full screen passes drawn half a pixel up-left for the console's integer pixel centers stop half a pixel short
@@ -873,6 +874,11 @@ std::string FixedVertexHlsl(uint16_t regs, bool pretransformed, uint64_t decode,
         if (zparams.w > 0) { float an = floor(zparams.w * 0.5), pv = an - 4096; sx = pv + (sx - pv) * (zparams.w - 2 * an); }
         sx += hud.x;
         cp.x = (sx / (0.5 * surf.x) - 1) * cp.w;
+    }
+    if (hud.z > 0) {  // subtitles grown upright about their last line
+        float sy = (1 - cp.y / cp.w) * 0.5 * surf.y;
+        sy = hud.y + (sy - hud.y) * hud.z;
+        cp.y = (1 - sy / (0.5 * surf.y)) * cp.w;
     }
     // like the pretransformed ones, target sized passes end half a console pixel short of the far edges
     float2 sp = (float2(cp.x, -cp.y) / cp.w + 1) * 0.5 * surf.xy;

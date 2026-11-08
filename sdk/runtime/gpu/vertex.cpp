@@ -515,6 +515,7 @@ constexpr float kNoSqueeze = -1e9f;        // a pivot meaning "leave it stretche
 
 struct Result {
     float code = 0, shift = 0;
+    float ypivot = 0, yscale = 0;  // yscale > 0: also grown upright about ypivot (console pixels)
 };
 
 struct HudLayout {
@@ -653,7 +654,7 @@ void Layout(HudLayout& L) {
                 if (hi[r] < w * 0.4f) pivot[i] = kEdge[0];
                 else if (lo[r] > w * 0.6f) pivot[i] = kEdge[2];
             }
-        } else if (!b.projected) {
+        } else {  // the stage HUD and the game's text during play: true shape, held by its panel or nearest edge
             int anchor = -1;
             for (size_t j = i; j-- > 0;) {  // the latest earlier block holding this one (a panel and its contents)
                 if (!menu(j) && !all[j].projected && Holds(all[j], b)) {
@@ -664,8 +665,6 @@ void Layout(HudLayout& L) {
             if (anchor < 0) anchor = RootAnchor(b, w);
             got[i] = anchor;
             pivot[i] = kEdge[anchor];
-        } else {
-            pivot[i] = kNoSqueeze;  // the game's text during play
         }
     }
     // text rows in a dialog panel (a block at least 40% of the screen wide holding them): centred in the panel
@@ -692,19 +691,24 @@ void Layout(HudLayout& L) {
         float target = where(panel, (c.lo + c.hi) * 0.5f), centre = (rlo + rhi) * 0.5f;
         pivot[i] = (target - centre * f) / (1 - f);  // p + (centre - p) * f = target
     }
-    // subtitles: full size, the whole set of lines centred on the screen
-    {
-        float slo = 1e30f, shi = -1e30f;
-        for (size_t i = 0; i < n; i++)
-            if (Subtitle(all, i)) slo = std::min(slo, all[i].lo), shi = std::max(shi, all[i].hi);
-        for (size_t i = 0; i < n; i++) {
-            if (!Subtitle(all, i)) continue;
-            pivot[i] = kNoSqueeze;
-            shift[i] = w * 0.5f - (slo + shi) * 0.5f;
+    // subtitles: their true shape a little larger (kSubtitleScale, grown up from the last line), the whole set of
+    // lines centred on the screen; the same size in events and in play
+    constexpr float kSubtitleScale = 1.15f;
+    std::vector<bool> sub(n, false);
+    float slo = 1e30f, shi = -1e30f, sbot = -1e30f;
+    for (size_t i = 0; i < n; i++)
+        if (Subtitle(all, i)) {
+            sub[i] = true;
+            slo = std::min(slo, all[i].lo), shi = std::max(shi, all[i].hi), sbot = std::max(sbot, all[i].bottom);
+        }
+    for (size_t i = 0; i < n; i++) {
+        if (sub[i]) {
+            float c = (slo + shi) * 0.5f;
+            L.results[i] = {HudCode(f * kSubtitleScale, c), w * 0.5f - c, sbot, kSubtitleScale};
+        } else {
+            L.results[i] = {pivot[i] == kNoSqueeze ? 0.0f : HudCode(f, pivot[i]), shift[i]};
         }
     }
-    for (size_t i = 0; i < n; i++)
-        L.results[i] = {pivot[i] == kNoSqueeze ? 0.0f : HudCode(f, pivot[i]), shift[i]};
 }
 
 }  // namespace
@@ -788,11 +792,11 @@ void HudLayoutFrame() {
     Layout(g_layout);
 }
 
-bool HudResult(int block, float& code, float& shift) {
+bool HudResult(int block, float& code, float& shift, float& ypivot, float& yscale) {
     std::lock_guard<std::mutex> l(g_layout_lock);
     if (block < 0 || size_t(block) >= g_layout.results.size()) return false;
-    code = g_layout.results[size_t(block)].code;
-    shift = g_layout.results[size_t(block)].shift;
+    const Result& r = g_layout.results[size_t(block)];
+    code = r.code, shift = r.shift, ypivot = r.ypivot, yscale = r.yscale;
     return true;
 }
 
@@ -804,9 +808,9 @@ void HudDump(std::FILE* f) {
         const Block& b = L.blocks[i];
         Result r = i < L.results.size() ? L.results[i] : Result{};
         float k = float(int(r.code * 0.5f));
-        std::fprintf(f, "  block %zu tex %08X x %.0f..%.0f y %.0f..%.0f pieces %d%s%s -> %s pivot %.0f shift %.0f\n", i,
+        std::fprintf(f, "  block %zu tex %08X x %.0f..%.0f y %.0f..%.0f pieces %d%s%s -> %s pivot %.0f shift %.0f%s\n", i,
                      b.tex, b.lo, b.hi, b.top, b.bottom, b.pieces, b.projected ? " text" : "", b.cover ? " cover" : "",
-                     r.code > 0 ? "squeezed" : "full", r.code > 0 ? k - 4096 : 0.0f, r.shift);
+                     r.code > 0 ? "squeezed" : "full", r.code > 0 ? k - 4096 : 0.0f, r.shift, r.yscale > 0 ? " subtitle" : "");
     }
 }
 
@@ -832,7 +836,8 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
     if (b < 0) return 0;
     HudLayoutFrame();
     float code = 0, shift = 0;
-    HudResult(b, code, shift);
+    float yp = 0, ys = 0;
+    HudResult(b, code, shift, yp, ys);
     return code;
 }
 
