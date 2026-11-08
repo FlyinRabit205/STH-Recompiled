@@ -602,3 +602,9 @@ in-between frames.
   0..640 on the screen, XYZRHW 0..512x0..384 in the scene target) cover the widened frame. Suspect a camera-space
   3D fade sized to the 4:3 frustum (would cover 64..448 of the 512 scene target after Hor+). Asked for an F3
   capture at that moment. Installed round 3 (exe 6910976).
+- 13:38 captures (round 3): dialog text now inside its box. Westopolis title card split (emblem left edge, text
+  centre): the card is drawn over a live stage (HUD drawn, then an untextured full-screen black cover, then the
+  card), so the stage HUD test held. Round 4: an untextured full-height draw (cover, fade strips) marks the rest of
+  the frame as an overlay screen -> centre anchor; HUD signature now needs a matching pair of top bars (same top
+  within 8 px, widths within 20%). The ten full-height strips after the HUD are the game's column wipe fade (outer
+  columns fade last by design); left untouched since round 2. Installed round 4 (exe 6912000).
