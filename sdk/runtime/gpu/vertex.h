@@ -67,8 +67,10 @@ bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, con
 // fades, movies, backgrounds) stay full width.
 extern float g_hud_squeeze;
 extern bool g_hud_anchor_edges;
-// this draw's code for the shaders, 0 for none: factor + 2 * anchor (0 left, 1 centre, 2 right). tex: the draw's
-// first texture (header address, 0 for none); scene_texture: that texture is the 512x512 3D scene target
+// this draw's code for the shaders, 0 for none: factor + 2 * (pivot + 4096), pivot the screen x the draw is
+// narrowed toward (whole pixels). tex: the draw's first texture (header address, 0 for none); scene_texture: that
+// texture is the 512x512 3D scene target
+float HudCode(float factor, float pivot);
 // screen: the draw's vertices are placed on the screen by a known affine map (a screen space program, or fixed
 // function vertices through an orthographic projection): screen x = dot((x, y, z, 1), mx), y likewise with my
 // proj (16 floats, row vector convention) with vp (x, y, w, h): fixed function vertices through any projection,
@@ -80,10 +82,11 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex = 0
 void HudFrameEnd();
 // the screen space x of a vertex after HudSqueeze's code
 inline float HudSqueezeX(float x, float code, float w) {
+    (void)w;
     if (code <= 0) return x;
-    float anchor = float(int(code * 0.5f));
-    float f = code - 2 * anchor;
-    float pivot = w * 0.5f * anchor;
+    float k = float(int(code * 0.5f));
+    float f = code - 2 * k;
+    float pivot = k - 4096;
     return pivot + (x - pivot) * f;
 }
 

@@ -479,30 +479,42 @@ bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, con
 float g_hud_squeeze = 0;
 bool g_hud_anchor_edges = true;
 
+float HudCode(float factor, float pivot) {
+    float p = std::clamp(std::round(pivot), -2000.0f, 2600.0f);
+    return factor + 2.0f * (p + 4096.0f);
+}
+
 namespace {
 
-// HUD layout for edge anchoring. The game draws its 2D one piece at a time (text one glyph per draw), so the anchor of
-// a piece depends on what it belongs to. Each frame the screen's 2D draws are grouped into blocks: consecutive draws
-// with one texture that continue a line of text (same line, small gap) or start the next line below it. At the end
-// of the frame every block gets an anchor: the anchor of an earlier block containing it (text in its panel), else
-// left when it lies in the left half, right in the right half, centre when it crosses the middle. The next frame
-// uses those anchors, found by each block's texture and first piece position (a block not seen then: from where it
-// is). Only while the stage HUD is up (its two top gauge bars were drawn last frame); menus stay centred.
+// Widescreen 2D layout. The game draws its 2D one piece at a time (text one glyph per draw), so where a piece goes
+// depends on what it belongs to. Each frame the screen's 2D draws are grouped into blocks: consecutive draws with one
+// texture that continue a line of text (same line, small gap) or start the next line below it. At the end of the
+// frame every block gets a pivot (its draws are narrowed to their 4:3 shape around it), used the next frame by the
+// block's key (texture and first piece position):
+// - the stage HUD (its two top gauge bars were drawn last frame, see HudFrameEnd): left half to the left edge, right
+//   half to the right edge, across the middle the centre, text in a panel with its panel;
+// - menus and screens drawn over a cover (title cards, pause): pieces that touch form groups and every group keeps
+//   its place across the wider screen (its centre stays where it was in the stretched picture), so the layout matches
+//   the full width background; decorations running off the screen (the title cards' lines), and pieces joining two
+//   of them, are stretched with the background; text rows inside a dialog panel are centred in the panel.
 struct Block {
     uint32_t tex;
     float lo, hi, top, bottom;             // the block's extent
     float last_lo, last_hi, last_top, last_bottom;  // its last piece
     uint64_t key;
     bool menu;                             // drawn on a menu / overlay screen (not the stage HUD)
+    int pieces;                            // draws in it (glyphs for text)
 };
 
+constexpr float kNoSqueeze = -1e9f;        // a pivot meaning "leave it stretched"
+
 struct HudLayout {
-    std::vector<Block> blocks;                     // this frame's, in draw order
-    std::unordered_map<uint64_t, int> anchors;     // last frame's: block key -> anchor
-    bool scene = false, scene_last = false;        // a 3D scene was drawn onto the screen
-    bool overlay = false;                          // a full height cover was drawn this frame: what follows is a
-                                                   // screen of its own (title card, pause menu): centred
-    uint64_t current = 0;                          // the open block's key
+    std::vector<Block> blocks;                       // this frame's, in draw order
+    std::unordered_map<uint64_t, float> pivots;      // last frame's: block key -> pivot (screen x), or kNoSqueeze
+    bool scene = false, scene_last = false;          // the stage HUD is up
+    bool overlay = false;                            // a full height cover was drawn this frame: what follows is a
+                                                     // screen of its own (title card, pause menu)
+    uint64_t current = 0;                            // the open block's key
 };
 HudLayout g_layout;
 std::mutex g_layout_lock;
@@ -517,46 +529,120 @@ int RootAnchor(const Block& b, float w) {
     return 1;
 }
 
-// On menus and overlay screens pieces that touch (within 8 pixels) form groups; a group within 10% of a screen edge
-// in the 4:3 layout, and no bigger than 35% of the screen each way, goes to that edge as one (an icon with its label, the
-// "loading" text); the rest keeps the centre (a dialog with its frame, a title logo made of overlapping parts).
-std::vector<int> MenuAnchors(const std::vector<Block>& all, float w) {
+bool Touch(const Block& a, const Block& b, float slack) {
+    return a.lo < b.hi + slack && b.lo < a.hi + slack && a.top < b.bottom + slack && b.top < a.bottom + slack;
+}
+
+bool Holds(const Block& c, const Block& b) {
+    return c.lo <= b.lo + 2 && c.hi >= b.hi - 2 && c.top <= b.top + 2 && c.bottom >= b.bottom - 2 &&
+           (c.hi - c.lo) * (c.bottom - c.top) > (b.hi - b.lo) * (b.bottom - b.top) * 1.2f;
+}
+
+// the share of the smaller of two pieces covered by the other
+float Overlap(const Block& a, const Block& b) {
+    float w = std::min(a.hi, b.hi) - std::max(a.lo, b.lo), h = std::min(a.bottom, b.bottom) - std::max(a.top, b.top);
+    if (w <= 0 || h <= 0) return 0;
+    float small = std::min((a.hi - a.lo) * (a.bottom - a.top), (b.hi - b.lo) * (b.bottom - b.top));
+    return small > 0 ? w * h / small : 0;
+}
+
+// a piece large both ways (a line segment, an art layer), not text or a prompt
+bool Big(const Block& b) { return b.hi - b.lo >= 40 && b.bottom - b.top >= 40; }
+
+// pivots for the menu / overlay blocks (indices where all[i].menu)
+void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<float>& pivot) {
     size_t n = all.size();
+    // decorations: a chain of large touching pieces of one texture that runs across most of the screen and off it
+    // (the title cards' lines, drawn in segments)
+    std::vector<bool> deco(n, false);
+    {
+        std::vector<size_t> chain(n);
+        for (size_t i = 0; i < n; i++) chain[i] = i;
+        auto root = [&](size_t i) {
+            while (chain[i] != i) i = chain[i] = chain[chain[i]];
+            return i;
+        };
+        for (size_t i = 0; i < n; i++) {
+            if (!all[i].menu || !Big(all[i])) continue;
+            for (size_t j = i + 1; j < n; j++)
+                if (all[j].menu && Big(all[j]) && all[j].tex == all[i].tex && Touch(all[i], all[j], 1) &&
+                    Overlap(all[i], all[j]) < 0.3f)  // segments meet at their ends, layers stack
+                    chain[root(i)] = root(j);
+        }
+        std::vector<float> clo(n, 1e30f), chi(n, -1e30f), ctop(n, 1e30f), cbot(n, -1e30f);
+        for (size_t i = 0; i < n; i++) {
+            if (!all[i].menu || !Big(all[i])) continue;
+            size_t r = root(i);
+            clo[r] = std::min(clo[r], all[i].lo), chi[r] = std::max(chi[r], all[i].hi);
+            ctop[r] = std::min(ctop[r], all[i].top), cbot[r] = std::max(cbot[r], all[i].bottom);
+        }
+        for (size_t i = 0; i < n; i++) {
+            if (!all[i].menu || !Big(all[i])) continue;
+            size_t r = root(i);
+            bool off = clo[r] < -2 || chi[r] > w + 2 || ctop[r] < -2 || cbot[r] > 482;
+            bool long_ = chi[r] - clo[r] >= w * 0.8f || cbot[r] - ctop[r] >= 480 * 0.8f;
+            bool several = false;
+            for (size_t j = 0; j < n && !several; j++) several = j != i && all[j].menu && Big(all[j]) && root(j) == r;
+            if (off && long_ && several) deco[i] = true;
+        }
+    }
+    // groups of touching pieces
     std::vector<size_t> parent(n);
     for (size_t i = 0; i < n; i++) parent[i] = i;
     auto find = [&](size_t i) {
         while (parent[i] != i) i = parent[i] = parent[parent[i]];
         return i;
     };
-    const float slack = 8;
     for (size_t i = 0; i < n; i++) {
-        if (!all[i].menu) continue;
-        for (size_t j = i + 1; j < n; j++) {
-            if (!all[j].menu) continue;
-            const Block &a = all[i], &b = all[j];
-            if (a.lo < b.hi + slack && b.lo < a.hi + slack && a.top < b.bottom + slack && b.top < a.bottom + slack)
-                parent[find(i)] = find(j);
-        }
+        if (!all[i].menu || deco[i]) continue;
+        for (size_t j = i + 1; j < n; j++)
+            if (all[j].menu && !deco[j] && Touch(all[i], all[j], 8)) parent[find(i)] = find(j);
     }
-    std::vector<float> lo(n, 1e30f), hi(n, -1e30f), top(n, 1e30f), bottom(n, -1e30f);
+    std::vector<float> lo(n, 1e30f), hi(n, -1e30f);
     for (size_t i = 0; i < n; i++) {
-        if (!all[i].menu) continue;
+        if (!all[i].menu || deco[i]) continue;
         size_t r = find(i);
         lo[r] = std::min(lo[r], all[i].lo);
         hi[r] = std::max(hi[r], all[i].hi);
-        top[r] = std::min(top[r], all[i].top);
-        bottom[r] = std::max(bottom[r], all[i].bottom);
     }
-    std::vector<int> out(n, 1);
     for (size_t i = 0; i < n; i++) {
         if (!all[i].menu) continue;
+        if (deco[i]) {
+            pivot[i] = kNoSqueeze;
+            continue;
+        }
         size_t r = find(i);
-        // small groups only (labels, prompts, icons): a decoration line or panel crossing the screen stays whole
-        if (hi[r] - lo[r] > w * 0.35f || bottom[r] - top[r] > 480 * 0.35f) continue;
-        if (lo[r] < w * 0.1f) out[i] = 0;
-        else if (hi[r] > w * 0.9f) out[i] = 2;
+        pivot[i] = (lo[r] + hi[r]) * 0.5f;  // the group keeps its centre
     }
-    return out;
+    // text rows in a dialog panel (a block at least 40% of the screen wide holding them): centred in the panel
+    auto where = [&](size_t i, float x) { return pivot[i] + (x - pivot[i]) * f; };  // a 4:3 x after its block's squeeze
+    for (size_t i = 0; i < n; i++) {
+        const Block& b = all[i];
+        if (!b.menu || deco[i] || b.pieces < 2 || b.bottom - b.top > 40) continue;
+        size_t panel = n;
+        for (size_t j = i; j-- > 0;) {
+            const Block& c = all[j];
+            if (c.menu && !deco[j] && c.hi - c.lo >= w * 0.4f && Holds(c, b)) {
+                panel = j;
+                break;
+            }
+        }
+        if (panel == n) continue;
+        // the row: text blocks in the same panel on the same line
+        float rlo = b.lo, rhi = b.hi;
+        for (size_t k = 0; k < n; k++) {
+            const Block& t = all[k];
+            if (k == i || !t.menu || deco[k] || t.pieces < 2 || std::fabs(t.top - b.top) > 6 || !Holds(all[panel], t))
+                continue;
+            rlo = std::min(rlo, t.lo);
+            rhi = std::max(rhi, t.hi);
+        }
+        const Block& c = all[panel];
+        float target = where(panel, (c.lo + c.hi) * 0.5f);  // the panel's centre on screen
+        float centre = (rlo + rhi) * 0.5f;
+        // pivot p with p + (centre - p) * f = target
+        pivot[i] = (target - centre * f) / (1 - f);
+    }
 }
 
 }  // namespace
@@ -564,34 +650,36 @@ std::vector<int> MenuAnchors(const std::vector<Block>& all, float w) {
 void HudFrameEnd() {
     std::lock_guard<std::mutex> l(g_layout_lock);
     HudLayout& L = g_layout;
-    L.anchors.clear();
+    L.pivots.clear();
+    const float w = 640.0f, f = std::min(g_hud_squeeze, 0.999f);
+    std::vector<float> pivot(L.blocks.size(), w * 0.5f);
+    MenuPivots(L.blocks, w, f, pivot);
     std::vector<int> got(L.blocks.size(), 1);
-    const std::vector<int> menu = MenuAnchors(L.blocks, 640.0f);
     for (size_t i = 0; i < L.blocks.size(); i++) {
         const Block& b = L.blocks[i];
-        int anchor = -1;
-        // the latest earlier block holding this one (a panel and its text), with a little slack
-        for (size_t j = i; j-- > 0 && !b.menu;) {
-            const Block& c = L.blocks[j];
-            if (c.lo <= b.lo + 2 && c.hi >= b.hi - 2 && c.top <= b.top + 2 && c.bottom >= b.bottom - 2 &&
-                (c.hi - c.lo) * (c.bottom - c.top) > (b.hi - b.lo) * (b.bottom - b.top) * 1.2f) {
-                anchor = got[j];
-                break;
+        if (!b.menu) {
+            int anchor = -1;
+            // the latest earlier block holding this one (a panel and its text)
+            for (size_t j = i; j-- > 0;) {
+                if (!L.blocks[j].menu && Holds(L.blocks[j], b)) {
+                    anchor = got[j];
+                    break;
+                }
             }
+            if (anchor < 0) anchor = RootAnchor(b, w);
+            got[i] = anchor;
+            pivot[i] = w * 0.5f * float(anchor);
         }
-        if (anchor < 0) anchor = b.menu ? menu[i] : RootAnchor(b, 640.0f);
-        got[i] = anchor;
-        L.anchors[b.key] = anchor;
+        L.pivots[b.key] = pivot[i];
     }
-    // the stage HUD's two top bars (the hero gauge top left, the dark gauge top right): a stage is being played, its
-    // HUD goes to the edges; menus, the title and dialogs keep the centre
-    // a pair: one hugging the left, one the right, the same height on screen and about the same size
+    // the stage HUD's two top bars (the hero gauge top left, the dark gauge top right): a matching pair, one hugging
+    // the left, one the right, the same height on screen and about the same size
     bool left = false, right = false;
     for (const Block& a : L.blocks) {
-        if (a.top > 480 * 0.15f || a.bottom - a.top > 480 * 0.15f || a.hi - a.lo < 640 * 0.15f) continue;
-        if (!(a.lo < 640 * 0.15f && a.hi < 640 * 0.5f)) continue;
+        if (a.top > 480 * 0.15f || a.bottom - a.top > 480 * 0.15f || a.hi - a.lo < w * 0.15f) continue;
+        if (!(a.lo < w * 0.15f && a.hi < w * 0.5f)) continue;
         for (const Block& b : L.blocks) {
-            if (!(b.hi > 640 * 0.85f && b.lo > 640 * 0.5f)) continue;
+            if (!(b.hi > w * 0.85f && b.lo > w * 0.5f)) continue;
             if (std::fabs(b.top - a.top) > 8 || std::fabs((b.hi - b.lo) - (a.hi - a.lo)) > (a.hi - a.lo) * 0.2f) continue;
             left = right = true;
         }
@@ -677,21 +765,24 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
         open->top = std::min(open->top, top);
         open->bottom = std::max(open->bottom, bottom);
         open->last_lo = lo, open->last_hi = hi, open->last_top = top, open->last_bottom = bottom;
+        open->pieces++;
     } else {
-        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top), !L.scene_last || L.overlay};
+        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top), !L.scene_last || L.overlay, 0};
         L.blocks.push_back(b);
         open = &L.blocks.back();
+        open->pieces = 1;
         L.current = b.key;
     }
-    int anchor = 1;
+    float pivot = float(w) * 0.5f;
     if (g_hud_anchor_edges) {
-        auto it = L.anchors.find(open->key);
-        if (it != L.anchors.end()) anchor = it->second;
+        auto it = L.pivots.find(open->key);
+        if (it != L.pivots.end()) pivot = it->second;
         // a stage HUD block not seen last frame (new, or moving): from where its first piece is; on menus the
         // centre until the whole screen has been seen once
-        else if (!open->menu) anchor = RootAnchor(*open, float(w));
+        else if (!open->menu) pivot = float(w) * 0.5f * float(RootAnchor(*open, float(w)));
     }
-    return std::min(g_hud_squeeze, 0.999f) + 2.0f * float(anchor);
+    if (pivot == kNoSqueeze) return 0;
+    return HudCode(std::min(g_hud_squeeze, 0.999f), pivot);
 }
 
 }  // namespace gpu

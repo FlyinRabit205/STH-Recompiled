@@ -614,3 +614,14 @@ in-between frames.
   each way goes to that edge, the rest stays centred (dialog with frame and prompts, title logo, card lines stay
   whole). Checked offline on the captures: "loading" goes right; title/dialog/grid stay whole. Stage HUD rules
   unchanged. Installed (exe 6913536).
+- 13:56 user: dialog text "too far left", Black Arms emblem (loading spinner, 4:3 bottom right 456..565) "too far
+  left", title cards must look natural in widescreen; "whatever it takes".
+- **Round 6, layout rewrite** (gpu/vertex.cpp): the code is now factor + 2 * (pivot + 4096) with any pivot in
+  console pixels (shaders: epilogue and FixedVertexHlsl decode pv = floor(code / 2) - 4096). Stage HUD unchanged
+  (pivots 0 / 320 / 640). Menus and overlay screens: groups of touching pieces (8 px) keep their centre where it
+  was in the stretched picture (layout matches the full-width background); decorations = a chain of large (>= 40 px
+  both ways) touching, barely overlapping pieces of one texture spanning >= 80% of the screen and running off it
+  (title card lines) -> stretched; text rows (blocks of >= 2 glyphs, <= 40 px tall) inside a panel >= 40% wide are
+  centred in the panel (dialog question, Yes/No). Offline model: tools/host/widescreen_sim.py <capture dir>
+  (screen programs only; glyph positions are not in captures). Checked on title card, spinner, story menu, title.
+  Installed (exe 6917120).
