@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <mutex>
 #include <unordered_map>
@@ -487,50 +488,44 @@ float HudCode(float factor, float pivot) {
 namespace {
 
 // Widescreen 2D layout. The game draws its 2D one piece at a time (text one glyph per draw), so where a piece goes
-// depends on what it belongs to. Each frame the screen's 2D draws are grouped into blocks: consecutive draws with one
-// texture that continue a line of text (same line, small gap) or start the next line below it. At the end of the
-// frame every block gets a pivot (its draws are narrowed to their 4:3 shape around it), kept by the block's key
-// (texture and first piece position) for the following frames; a frame without 2D changes nothing:
-// - the stage HUD (its two top gauge bars drawn 3 frames in a row): left half to the left edge, right half to the
-//   right edge (past the console's safe area margin, so at the very edges), across the middle the centre, pieces in
-//   a panel with their panel; the game's text (subtitles) stays full size where it is;
-// - menus and screens drawn over a cover (title cards, pause): the centre, steady while parts animate, except small
-//   groups of touching pieces off to one side (an emblem, "loading"), which go to that edge; decorations running
-//   across and off the screen (the title cards' lines, drawn in segments) are stretched with the background; text
-//   rows inside a dialog panel are centred in the panel.
+// depends on what it belongs to. The screen's 2D draws of a frame are grouped into blocks as they come: consecutive
+// draws with one texture that continue a line of text (same line, small gap) or start the next line below it. The
+// layout is worked out from the whole frame when it is submitted (HudLayoutFrame), and each draw's constants are
+// filled in then (the renderer keeps them until the frame goes to the GPU), so every piece is placed by the frame it
+// is in: nothing waits a frame, nothing jumps.
+// Each block gets a pivot (its draws are narrowed to their 4:3 shape around it, or kNoSqueeze) and a shift:
+// - the stage HUD (its two top gauge bars are drawn): left half to the left edge, right half to the right edge (past
+//   the console's safe area margin, so at the very edges), across the middle the centre, pieces in a panel with
+//   their panel;
+// - menus and screens drawn over a cover (title cards, pause): the centre, except small groups of touching pieces
+//   off to one side (an emblem, "loading"), which go to that edge; decorations running across and off the screen
+//   (the title cards' lines, drawn in segments) are stretched with the background; text rows inside a dialog panel
+//   are centred in the panel;
+// - subtitles (the game's text in the lower part of the screen, not in a panel): full size, centred on the screen.
 struct Block {
     uint32_t tex;
     float lo, hi, top, bottom;             // the block's extent
     float last_lo, last_hi, last_top, last_bottom;  // its last piece
-    uint64_t key;
-    bool menu;                             // drawn on a menu / overlay screen (not the stage HUD)
+    bool cover;                            // drawn after a full screen cover this frame (a screen of its own)
     int pieces;                            // draws in it (glyphs for text)
     bool projected;                        // drawn through the transform pipeline (the game's text)
 };
 
 constexpr float kNoSqueeze = -1e9f;        // a pivot meaning "leave it stretched"
 
+struct Result {
+    float code = 0, shift = 0;
+};
+
 struct HudLayout {
-    std::vector<Block> blocks;                       // this frame's, in draw order
-    struct Kept {
-        float pivot;
-        uint64_t seen;
-    };
-    std::unordered_map<uint64_t, Kept> pivots;       // block key -> pivot (screen x) or kNoSqueeze, kept between
-                                                     // frames so a frame without 2D changes nothing
-    uint64_t frame = 0;                              // frames with 2D drawn
-    int hud_run = 0;                                 // consecutive such frames with (> 0) or without (< 0) the HUD
-    bool scene = false, scene_last = false;          // the stage HUD is up
-    bool overlay = false;                            // a full height cover was drawn this frame: what follows is a
-                                                     // screen of its own (title card, pause menu)
-    uint64_t current = 0;                            // the open block's key
+    std::vector<Block> blocks;     // this frame's, in draw order
+    std::vector<Result> results;   // HudLayoutFrame's, per block
+    bool overlay = false;          // a full height cover was drawn this frame
+    bool open = false;             // the last block may take the next piece
+    int hud_frames = 0;            // recent frames with the stage HUD: > 0 for a few frames after one
 };
 HudLayout g_layout;
 std::mutex g_layout_lock;
-
-uint64_t KeyOf(uint32_t tex, float lo, float top) {
-    return (uint64_t(tex) << 32) ^ (uint64_t(uint32_t(std::lround(lo / 4))) << 16) ^ uint64_t(uint32_t(std::lround(top / 4)));
-}
 
 int RootAnchor(const Block& b, float w) {
     if (b.hi <= w * 0.5f + 1) return 0;
@@ -558,11 +553,41 @@ float Overlap(const Block& a, const Block& b) {
 // a piece large both ways (a line segment, an art layer), not text or a prompt
 bool Big(const Block& b) { return b.hi - b.lo >= 40 && b.bottom - b.top >= 40; }
 
-// pivots for the menu / overlay blocks (indices where all[i].menu)
-void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<float>& pivot) {
+// the stage HUD's two top bars (the hero gauge top left, the dark gauge top right): a matching pair, one hugging the
+// left, one the right, the same height on screen and about the same size
+bool HudBars(const std::vector<Block>& all, float w) {
+    for (const Block& a : all) {
+        if (a.cover || a.top > 480 * 0.15f || a.bottom - a.top > 480 * 0.15f || a.hi - a.lo < w * 0.15f) continue;
+        if (!(a.lo < w * 0.15f && a.hi < w * 0.5f)) continue;
+        for (const Block& b : all) {
+            if (b.cover || !(b.hi > w * 0.85f && b.lo > w * 0.5f)) continue;
+            if (std::fabs(b.top - a.top) > 8 || std::fabs((b.hi - b.lo) - (a.hi - a.lo)) > (a.hi - a.lo) * 0.2f) continue;
+            return true;
+        }
+    }
+    return false;
+}
+
+// subtitles: the game's text in the lower part of the screen, not inside a panel
+bool Subtitle(const std::vector<Block>& all, size_t i) {
+    const Block& b = all[i];
+    if (!b.projected || b.top < 480 * 0.6f || b.bottom - b.top > 480 * 0.3f) return false;
+    for (size_t j = 0; j < all.size(); j++)
+        if (j != i && !all[j].projected && Holds(all[j], b)) return false;
+    return true;
+}
+
+void Layout(HudLayout& L) {
+    const std::vector<Block>& all = L.blocks;
     size_t n = all.size();
-    // decorations: a chain of large touching pieces of one texture that runs across most of the screen and off it
-    // (the title cards' lines, drawn in segments)
+    const float w = 640.0f, f = std::min(g_hud_squeeze, 0.999f);
+    L.results.assign(n, Result{});
+    if (!n) return;
+    bool stage = L.hud_frames > 0 || HudBars(all, w);
+    auto menu = [&](size_t i) { return !stage || all[i].cover; };
+    std::vector<float> pivot(n, w * 0.5f), shift(n, 0.0f);
+    // decorations: a chain of large touching pieces of one texture, meeting at their ends, that runs across most of
+    // the screen and off it (the title cards' lines, drawn in segments)
     std::vector<bool> deco(n, false);
     {
         std::vector<size_t> chain(n);
@@ -572,31 +597,30 @@ void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<flo
             return i;
         };
         for (size_t i = 0; i < n; i++) {
-            if (!all[i].menu || !Big(all[i])) continue;
+            if (!menu(i) || !Big(all[i])) continue;
             for (size_t j = i + 1; j < n; j++)
-                if (all[j].menu && Big(all[j]) && all[j].tex == all[i].tex && Touch(all[i], all[j], 1) &&
-                    Overlap(all[i], all[j]) < 0.3f)  // segments meet at their ends, layers stack
+                if (menu(j) && Big(all[j]) && all[j].tex == all[i].tex && Touch(all[i], all[j], 1) &&
+                    Overlap(all[i], all[j]) < 0.3f)
                     chain[root(i)] = root(j);
         }
         std::vector<float> clo(n, 1e30f), chi(n, -1e30f), ctop(n, 1e30f), cbot(n, -1e30f);
+        std::vector<int> count(n, 0);
         for (size_t i = 0; i < n; i++) {
-            if (!all[i].menu || !Big(all[i])) continue;
+            if (!menu(i) || !Big(all[i])) continue;
             size_t r = root(i);
             clo[r] = std::min(clo[r], all[i].lo), chi[r] = std::max(chi[r], all[i].hi);
             ctop[r] = std::min(ctop[r], all[i].top), cbot[r] = std::max(cbot[r], all[i].bottom);
+            count[r]++;
         }
         for (size_t i = 0; i < n; i++) {
-            if (!all[i].menu || !Big(all[i])) continue;
+            if (!menu(i) || !Big(all[i])) continue;
             size_t r = root(i);
             bool off = clo[r] < -2 || chi[r] > w + 2 || ctop[r] < -2 || cbot[r] > 482;
             bool long_ = chi[r] - clo[r] >= w * 0.8f || cbot[r] - ctop[r] >= 480 * 0.8f;
-            bool several = false;
-            for (size_t j = 0; j < n && !several; j++) several = j != i && all[j].menu && Big(all[j]) && root(j) == r;
-            if (off && long_ && several) deco[i] = true;
+            if (off && long_ && count[r] >= 2) deco[i] = true;
         }
     }
-    // groups of touching pieces: the centre, except a small group off to one side (an emblem, "loading") which goes
-    // to that edge; a fixed pivot per group keeps menus steady while their parts animate
+    // menu groups of touching pieces: the centre, except a small group off to one side
     std::vector<size_t> parent(n);
     for (size_t i = 0; i < n; i++) parent[i] = i;
     auto find = [&](size_t i) {
@@ -604,123 +628,90 @@ void MenuPivots(const std::vector<Block>& all, float w, float f, std::vector<flo
         return i;
     };
     for (size_t i = 0; i < n; i++) {
-        if (!all[i].menu || deco[i]) continue;
+        if (!menu(i) || deco[i]) continue;
         for (size_t j = i + 1; j < n; j++)
-            if (all[j].menu && !deco[j] && Touch(all[i], all[j], 8)) parent[find(i)] = find(j);
+            if (menu(j) && !deco[j] && Touch(all[i], all[j], 8)) parent[find(i)] = find(j);
     }
     std::vector<float> lo(n, 1e30f), hi(n, -1e30f), top(n, 1e30f), bottom(n, -1e30f);
     for (size_t i = 0; i < n; i++) {
-        if (!all[i].menu || deco[i]) continue;
+        if (!menu(i) || deco[i]) continue;
         size_t r = find(i);
         lo[r] = std::min(lo[r], all[i].lo), hi[r] = std::max(hi[r], all[i].hi);
         top[r] = std::min(top[r], all[i].top), bottom[r] = std::max(bottom[r], all[i].bottom);
     }
+    const float kEdge[3] = {-64.0f, w * 0.5f, w + 64.0f};  // past the safe area margin: at the very edges
+    std::vector<int> got(n, 1);
     for (size_t i = 0; i < n; i++) {
-        if (!all[i].menu) continue;
-        if (deco[i]) {
-            pivot[i] = kNoSqueeze;
-            continue;
-        }
-        size_t r = find(i);
-        pivot[i] = w * 0.5f;
-        if (hi[r] - lo[r] <= w * 0.35f && bottom[r] - top[r] <= 480 * 0.35f) {
-            if (hi[r] < w * 0.4f) pivot[i] = -64;          // past the safe area margin: at the very edge
-            else if (lo[r] > w * 0.6f) pivot[i] = w + 64;
+        const Block& b = all[i];
+        if (menu(i)) {
+            if (deco[i]) {
+                pivot[i] = kNoSqueeze;
+                continue;
+            }
+            size_t r = find(i);
+            if (hi[r] - lo[r] <= w * 0.35f && bottom[r] - top[r] <= 480 * 0.35f) {
+                if (hi[r] < w * 0.4f) pivot[i] = kEdge[0];
+                else if (lo[r] > w * 0.6f) pivot[i] = kEdge[2];
+            }
+        } else if (!b.projected) {
+            int anchor = -1;
+            for (size_t j = i; j-- > 0;) {  // the latest earlier block holding this one (a panel and its contents)
+                if (!menu(j) && !all[j].projected && Holds(all[j], b)) {
+                    anchor = got[j];
+                    break;
+                }
+            }
+            if (anchor < 0) anchor = RootAnchor(b, w);
+            got[i] = anchor;
+            pivot[i] = kEdge[anchor];
+        } else {
+            pivot[i] = kNoSqueeze;  // the game's text during play
         }
     }
     // text rows in a dialog panel (a block at least 40% of the screen wide holding them): centred in the panel
-    auto where = [&](size_t i, float x) { return pivot[i] + (x - pivot[i]) * f; };  // a 4:3 x after its block's squeeze
+    auto where = [&](size_t i, float x) { return pivot[i] == kNoSqueeze ? x : pivot[i] + (x - pivot[i]) * f; };
     for (size_t i = 0; i < n; i++) {
         const Block& b = all[i];
-        if (!b.menu || deco[i] || b.pieces < 2 || b.bottom - b.top > 40) continue;
+        if (!menu(i) || deco[i] || b.pieces < 2 || b.bottom - b.top > 40) continue;
         size_t panel = n;
         for (size_t j = i; j-- > 0;) {
-            const Block& c = all[j];
-            if (c.menu && !deco[j] && c.hi - c.lo >= w * 0.4f && Holds(c, b)) {
+            if (menu(j) && !deco[j] && all[j].hi - all[j].lo >= w * 0.4f && Holds(all[j], b)) {
                 panel = j;
                 break;
             }
         }
         if (panel == n) continue;
-        // the row: text blocks in the same panel on the same line
         float rlo = b.lo, rhi = b.hi;
         for (size_t k = 0; k < n; k++) {
             const Block& t = all[k];
-            if (k == i || !t.menu || deco[k] || t.pieces < 2 || std::fabs(t.top - b.top) > 6 || !Holds(all[panel], t))
+            if (k == i || !menu(k) || deco[k] || t.pieces < 2 || std::fabs(t.top - b.top) > 6 || !Holds(all[panel], t))
                 continue;
-            rlo = std::min(rlo, t.lo);
-            rhi = std::max(rhi, t.hi);
+            rlo = std::min(rlo, t.lo), rhi = std::max(rhi, t.hi);
         }
         const Block& c = all[panel];
-        float target = where(panel, (c.lo + c.hi) * 0.5f);  // the panel's centre on screen
-        float centre = (rlo + rhi) * 0.5f;
-        // pivot p with p + (centre - p) * f = target
-        pivot[i] = (target - centre * f) / (1 - f);
+        float target = where(panel, (c.lo + c.hi) * 0.5f), centre = (rlo + rhi) * 0.5f;
+        pivot[i] = (target - centre * f) / (1 - f);  // p + (centre - p) * f = target
     }
+    // subtitles: full size, the whole set of lines centred on the screen
+    {
+        float slo = 1e30f, shi = -1e30f;
+        for (size_t i = 0; i < n; i++)
+            if (Subtitle(all, i)) slo = std::min(slo, all[i].lo), shi = std::max(shi, all[i].hi);
+        for (size_t i = 0; i < n; i++) {
+            if (!Subtitle(all, i)) continue;
+            pivot[i] = kNoSqueeze;
+            shift[i] = w * 0.5f - (slo + shi) * 0.5f;
+        }
+    }
+    for (size_t i = 0; i < n; i++)
+        L.results[i] = {pivot[i] == kNoSqueeze ? 0.0f : HudCode(f, pivot[i]), shift[i]};
 }
 
 }  // namespace
 
-void HudFrameEnd() {
-    std::lock_guard<std::mutex> l(g_layout_lock);
-    HudLayout& L = g_layout;
-    L.current = 0;
-    L.overlay = false;
-    if (L.blocks.empty()) return;  // a frame without 2D (a repeated present): nothing changes
-    L.frame++;
-    const float w = 640.0f, f = std::min(g_hud_squeeze, 0.999f);
-    std::vector<float> pivot(L.blocks.size(), w * 0.5f);
-    MenuPivots(L.blocks, w, f, pivot);
-    std::vector<int> got(L.blocks.size(), 1);
-    // stage HUD pivots: past the screen edges by the console's safe area margin, so the HUD sits at the very edges
-    const float kEdge[3] = {-64.0f, w * 0.5f, w + 64.0f};
-    for (size_t i = 0; i < L.blocks.size(); i++) {
-        const Block& b = L.blocks[i];
-        if (!b.menu) {
-            if (b.projected) {
-                pivot[i] = kNoSqueeze;  // the game's text (subtitles): full size where it was
-            } else {
-                int anchor = -1;
-                // the latest earlier block holding this one (a panel and its contents)
-                for (size_t j = i; j-- > 0;) {
-                    if (!L.blocks[j].menu && !L.blocks[j].projected && Holds(L.blocks[j], b)) {
-                        anchor = got[j];
-                        break;
-                    }
-                }
-                if (anchor < 0) anchor = RootAnchor(b, w);
-                got[i] = anchor;
-                pivot[i] = kEdge[anchor];
-            }
-        }
-        L.pivots[b.key] = {pivot[i], L.frame};
-    }
-    for (auto it = L.pivots.begin(); it != L.pivots.end();) {
-        if (L.frame - it->second.seen > 120) it = L.pivots.erase(it);
-        else ++it;
-    }
-    // the stage HUD's two top bars (the hero gauge top left, the dark gauge top right): a matching pair, one hugging
-    // the left, one the right, the same height on screen and about the same size
-    bool hud = false;
-    for (const Block& a : L.blocks) {
-        if (a.top > 480 * 0.15f || a.bottom - a.top > 480 * 0.15f || a.hi - a.lo < w * 0.15f) continue;
-        if (!(a.lo < w * 0.15f && a.hi < w * 0.5f)) continue;
-        for (const Block& b : L.blocks) {
-            if (!(b.hi > w * 0.85f && b.lo > w * 0.5f)) continue;
-            if (std::fabs(b.top - a.top) > 8 || std::fabs((b.hi - b.lo) - (a.hi - a.lo)) > (a.hi - a.lo) * 0.2f) continue;
-            hud = true;
-        }
-    }
-    // switch only after 3 frames in a row, so one odd frame does not flip the whole screen's layout
-    L.hud_run = hud ? std::max(L.hud_run, 0) + 1 : std::min(L.hud_run, 0) - 1;
-    if (L.hud_run >= 3) L.scene_last = true;
-    if (L.hud_run <= -3) L.scene_last = false;
-    L.blocks.clear();
-}
-
-float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen,
-                 const float* mx, const float* my, const float* proj, const float* vp) {
-    if (g_hud_squeeze <= 0 || !(a.pretransformed || screen) || !(a.regs & 1) || w != 640) return 0;
+int HudPiece(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool screen, const float* mx, const float* my,
+             const float* proj, const float* vp) {
+    if (g_hud_squeeze <= 0 || !(a.pretransformed || screen) || !(a.regs & 1) || w != 640) return -1;
     float lo = 1e30f, hi = -1e30f, top = 1e30f, bottom = -1e30f;
     auto add = [&](const float* p) {
         float x = p[0], y = p[1];
@@ -735,10 +726,8 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
             x = p[0] * mx[0] + p[1] * mx[1] + p[2] * mx[2] + mx[3];
             y = p[0] * my[0] + p[1] * my[1] + p[2] * my[2] + my[3];
         }
-        lo = std::min(lo, x);
-        hi = std::max(hi, x);
-        top = std::min(top, y);
-        bottom = std::max(bottom, y);
+        lo = std::min(lo, x), hi = std::max(hi, x);
+        top = std::min(top, y), bottom = std::max(bottom, y);
     };
     if (!a.vertices.empty()) {
         uint32_t regs = 0;
@@ -748,7 +737,7 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
         const VertexElement& e = a.elements[0];
         const VertexBuffer& b = a.buffers[e.buffer];
         if (!b.src || !b.stride || (e.format != DXGI_FORMAT_R32G32B32A32_FLOAT && e.format != DXGI_FORMAT_R32G32B32_FLOAT))
-            return 0;
+            return -1;
         uint32_t n = std::min<uint32_t>(b.bytes / b.stride, 8192);
         for (uint32_t v = 0; v < n; v++) {
             float xyz[3];
@@ -756,28 +745,25 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
             add(xyz);
         }
     }
-    if (!(hi > lo)) return 0;
-    // over the whole width: the 3D scene stretched onto the screen, fades, movies, backgrounds: left full screen
+    if (!(hi > lo)) return -1;
     std::lock_guard<std::mutex> l(g_layout_lock);
     HudLayout& L = g_layout;
+    // over the whole width: the 3D scene stretched onto the screen, fades, movies, backgrounds: left full screen
     if (lo <= w * 0.02f && hi >= w * 0.98f) {
-        L.current = 0;
+        L.open = false;
         if (!textured && top <= 480 * 0.02f && bottom >= 480 * 0.98f) L.overlay = true;  // a full screen cover
-        return 0;
+        return -1;
     }
-    (void)scene_texture;
     // a fade drawn as full height strips (the pause darkening is ten 64 pixel columns): left as it is
     if (!textured && top <= 480 * 0.02f && bottom >= 480 * 0.98f) {
-        L.current = 0;
+        L.open = false;
         L.overlay = true;
-        return 0;
+        return -1;
     }
-    (void)textured;
-    // the block this piece belongs to
-    Block* open = L.current && !L.blocks.empty() ? &L.blocks.back() : nullptr;
+    Block* open = L.open && !L.blocks.empty() ? &L.blocks.back() : nullptr;
     float pw = hi - lo, ph = bottom - top;
     bool joins = false;
-    if (open && open->tex == tex) {
+    if (open && open->tex == tex && open->projected == (proj != nullptr)) {
         float lh = std::max(open->last_bottom - open->last_top, ph);
         bool same_line = std::fabs(top - open->last_top) < lh * 0.6f && lo >= open->last_lo - 1 &&
                          lo - open->last_hi < std::max(pw, open->last_hi - open->last_lo) * 2.5f + 4;
@@ -786,31 +772,68 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
         joins = same_line || next_line;
     }
     if (joins) {
-        open->lo = std::min(open->lo, lo);
-        open->hi = std::max(open->hi, hi);
-        open->top = std::min(open->top, top);
-        open->bottom = std::max(open->bottom, bottom);
+        open->lo = std::min(open->lo, lo), open->hi = std::max(open->hi, hi);
+        open->top = std::min(open->top, top), open->bottom = std::max(open->bottom, bottom);
         open->last_lo = lo, open->last_hi = hi, open->last_top = top, open->last_bottom = bottom;
         open->pieces++;
     } else {
-        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top), !L.scene_last || L.overlay, 0,
-                proj != nullptr};
-        L.blocks.push_back(b);
-        open = &L.blocks.back();
-        open->pieces = 1;
-        L.current = b.key;
+        L.blocks.push_back(Block{tex, lo, hi, top, bottom, lo, hi, top, bottom, L.overlay, 1, proj != nullptr});
+        L.open = true;
     }
-    float pivot = float(w) * 0.5f;
-    if (g_hud_anchor_edges) {
-        auto it = L.pivots.find(open->key);
-        if (it != L.pivots.end()) pivot = it->second.pivot;
-        // a block not seen before (new, or moving): the game's text in a stage stays full size; a stage HUD piece goes
-        // by where its first piece is; on menus the centre until the screen has been seen once
-        else if (!open->menu && open->projected) pivot = kNoSqueeze;
-        else if (!open->menu) pivot = RootAnchor(*open, float(w)) == 0 ? -64.0f : RootAnchor(*open, float(w)) == 2 ? float(w) + 64.0f : float(w) * 0.5f;
+    return int(L.blocks.size()) - 1;
+}
+
+void HudLayoutFrame() {
+    std::lock_guard<std::mutex> l(g_layout_lock);
+    Layout(g_layout);
+}
+
+bool HudResult(int block, float& code, float& shift) {
+    std::lock_guard<std::mutex> l(g_layout_lock);
+    if (block < 0 || size_t(block) >= g_layout.results.size()) return false;
+    code = g_layout.results[size_t(block)].code;
+    shift = g_layout.results[size_t(block)].shift;
+    return true;
+}
+
+void HudDump(std::FILE* f) {
+    std::lock_guard<std::mutex> l(g_layout_lock);
+    const HudLayout& L = g_layout;
+    std::fprintf(f, "\nwidescreen 2D: %zu blocks, stage HUD %d\n", L.blocks.size(), L.hud_frames > 0 || HudBars(L.blocks, 640.0f));
+    for (size_t i = 0; i < L.blocks.size(); i++) {
+        const Block& b = L.blocks[i];
+        Result r = i < L.results.size() ? L.results[i] : Result{};
+        float k = float(int(r.code * 0.5f));
+        std::fprintf(f, "  block %zu tex %08X x %.0f..%.0f y %.0f..%.0f pieces %d%s%s -> %s pivot %.0f shift %.0f\n", i,
+                     b.tex, b.lo, b.hi, b.top, b.bottom, b.pieces, b.projected ? " text" : "", b.cover ? " cover" : "",
+                     r.code > 0 ? "squeezed" : "full", r.code > 0 ? k - 4096 : 0.0f, r.shift);
     }
-    if (pivot == kNoSqueeze) return 0;
-    return HudCode(std::min(g_hud_squeeze, 0.999f), pivot);
+}
+
+void HudFrameEnd() {
+    std::lock_guard<std::mutex> l(g_layout_lock);
+    HudLayout& L = g_layout;
+    if (!L.blocks.empty()) {
+        // the stage HUD seen in one of the last few frames with 2D: a frame or two without it changes nothing
+        if (HudBars(L.blocks, 640.0f)) L.hud_frames = 3;
+        else if (L.hud_frames > 0) L.hud_frames--;
+    }
+    L.blocks.clear();
+    L.results.clear();
+    L.overlay = false;
+    L.open = false;
+}
+
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen,
+                 const float* mx, const float* my, const float* proj, const float* vp) {
+    (void)scene_texture;
+    // the reference renderer draws as it goes: the frame so far decides
+    int b = HudPiece(a, w, textured, tex, screen, mx, my, proj, vp);
+    if (b < 0) return 0;
+    HudLayoutFrame();
+    float code = 0, shift = 0;
+    HudResult(b, code, shift);
+    return code;
 }
 
 }  // namespace gpu

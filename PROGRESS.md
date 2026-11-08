@@ -633,3 +633,17 @@ in-between frames.
   (< 40% / > 60%) go to that edge; stage HUD and menu edges use pivots -64 / 704 (0.75x - 16, removes the console
   safe-area margin: at the very edges); the game's projected text (subtitles) in stages is not narrowed (full size).
   Title card lines stretched and dialog rows centred as before. Installed (exe 6916608).
+
+### Session 15 (2026-11-08): same-frame HUD layout, centred subtitles, load-stall data
+- **Jitter**: the 2D layout ran on the previous frame's blocks (one frame late). Now each HUD draw's constants are
+  uploaded uniquely and remembered (hud_pending_); PatchHud() lays out the whole frame and patches those constants in
+  the upload ring before Submit / Present, so every draw uses its own frame's layout.
+- **Subtitles**: never squeezed (the same size in events and stages) and shifted as a group so their centre is the
+  screen centre (new hud.x shift constant in the vertex epilogue).
+- **Load stall** (shadow_038: frame 1558 9.9 s at the Westopolis title card; 029 5.6 s, 036 7.3 s, so it predates
+  widescreen): the hang-watch stacks show the main thread's last HLE call (XInputGetState 004248A6, a DSound call),
+  not a blocking call; loader threads 34/38 sat at their step. Suspect guest CPU hand-offs: the ticket lock slept on
+  a condition variable for every hand-off. Now it spins ~20k pauses before sleeping and only notifies sleepers.
+  **Instrumented**: any guest frame > 250 ms logs "slow guest frame N: X ms; guest cpu: [thread T: takes, held ms,
+  waited ms]..." and the hang watch adds the same totals. Next log tells whether a holder starves the loaders.
+- Delivered r8b (exe 6921216, dll 19635712).

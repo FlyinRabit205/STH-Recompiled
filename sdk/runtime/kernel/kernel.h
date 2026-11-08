@@ -180,6 +180,8 @@ struct GuestCpuIdle {  // inside a blocking call: lets the guest CPU go if this 
     ~GuestCpuIdle();
     bool released;
 };
+// who held and waited for it since the last report: " [thread N: takes, held ms, waited ms]..."
+std::string GuestCpuReport(bool reset);
 X86Context& CurrentContext();
 ThreadRef CreateThread(uint32_t stack_size, uint32_t tls_size, uint32_t system_routine, uint32_t start_routine,
                        uint32_t start_context, bool suspended);

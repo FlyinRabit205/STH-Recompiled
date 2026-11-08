@@ -620,7 +620,8 @@ static void StartHangWatch() {
             }
             if (++still >= 4 && !dumped) {
                 dumped = true;
-                LOGE("hang watch: no frame for %u s after frame %u; guest threads:", still, now);
+                LOGE("hang watch: no frame for %u s after frame %u; guest cpu so far:%s; guest threads:", still, now,
+                     kernel::GuestCpuReport(false).c_str());
                 for (auto& t : kernel::Threads())
                     if (t->ctx) {
                         LOGE("thread %X", t->id);
@@ -646,6 +647,14 @@ HLE_STDCALL(D3DDevice_Swap, 1) {
     }
     std::lock_guard<std::recursive_mutex> lock(g_lock);
     g_presents++;
+    {  // a slow guest frame (a load) says who had the guest CPU meanwhile
+        static auto last = std::chrono::steady_clock::now();
+        auto now = std::chrono::steady_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(now - last).count();
+        last = now;
+        std::string use = kernel::GuestCpuReport(true);
+        if (ms > 250 && g_presents > 2) LOGI("slow guest frame %u: %.0f ms; guest cpu:%s", unsigned(g_presents.load()), ms, use.c_str());
+    }
     // the kept display is shown until the title presents its own
     kernel::SetSavedDataAddress(0);
     // the ramp an inlined SetGammaRamp left for the vertical blank that shows this swap

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdio>
 #include <array>
 #include <cstdint>
 #include <vector>
@@ -60,26 +61,29 @@ void FvfInputs(uint32_t fvf, VertexShader& out);
 bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, const uint8_t* indices, Assembled& out);
 
 // ShadowNativePort widescreen: a 4:3 picture shown on a 16:9 screen with its 3D view widened (Hor+) still has its 2D
-// (screen space, XYZRHW) draws stretched. g_hud_squeeze (0 = off) narrows each such draw back to its shape, toward
-// an anchor: the screen's left edge, centre or right edge. With g_hud_anchor_edges, while a 3D scene is shown, the
-// pieces of the HUD go to the nearest edge as whole blocks (text lines, text in its panel; see vertex.cpp), else
-// everything keeps the centre. Only draws onto the 640 wide screen; draws spanning its whole width (the 3D scene,
-// fades, movies, backgrounds) stay full width.
+// (screen space) draws stretched. g_hud_squeeze (0 = off) narrows them back to their shape around a pivot chosen per
+// piece from the whole frame (see vertex.cpp): the stage HUD at the screen edges, menus centred, subtitles full size
+// and centred. Only draws onto the 640 wide screen; draws spanning its whole width stay full width.
 extern float g_hud_squeeze;
 extern bool g_hud_anchor_edges;
-// this draw's code for the shaders, 0 for none: factor + 2 * (pivot + 4096), pivot the screen x the draw is
-// narrowed toward (whole pixels). tex: the draw's first texture (header address, 0 for none); scene_texture: that
-// texture is the 512x512 3D scene target
+// a draw's code for the shaders, 0 for none: factor + 2 * (pivot + 4096), pivot the screen x it is narrowed toward
 float HudCode(float factor, float pivot);
-// screen: the draw's vertices are placed on the screen by a known affine map (a screen space program, or fixed
-// function vertices through an orthographic projection): screen x = dot((x, y, z, 1), mx), y likewise with my
-// proj (16 floats, row vector convention) with vp (x, y, w, h): fixed function vertices through any projection,
-// placed by the viewport; used instead of mx / my when given
+// A 2D draw onto the screen joins this frame's layout: its block (>= 0), or -1 when it is not laid out. screen: the
+// vertices are placed by a known map, mx / my (affine: screen x = dot((x, y, z, 1), mx)) or proj + vp (16 floats,
+// row vector, with the viewport x, y, w, h).
+int HudPiece(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool screen, const float* mx = nullptr,
+             const float* my = nullptr, const float* proj = nullptr, const float* vp = nullptr);
+// lays out the frame's blocks so far; HudResult then gives a block's code and x shift (console pixels)
+void HudLayoutFrame();
+bool HudResult(int block, float& code, float& shift);
+// at present: the next frame starts
+void HudFrameEnd();
+// the frame's blocks and their placement, for F3 captures
+void HudDump(std::FILE* f);
+// the reference renderer's per-draw form: the code now, from the frame so far
 float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex = 0, bool scene_texture = false,
                  bool screen = false, const float* mx = nullptr, const float* my = nullptr, const float* proj = nullptr,
                  const float* vp = nullptr);
-// once per frame, at present: this frame's blocks give the next frame's anchors
-void HudFrameEnd();
 // the screen space x of a vertex after HudSqueeze's code
 inline float HudSqueezeX(float x, float code, float w) {
     (void)w;

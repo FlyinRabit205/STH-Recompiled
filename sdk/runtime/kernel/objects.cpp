@@ -1,8 +1,16 @@
+#include <thread>
+#include <string>
+#include <atomic>
 #include <algorithm>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
 #include <map>
 #include <queue>
 
+#if defined(_M_X64) || defined(__x86_64__) || defined(_M_IX86) || defined(__i386__)
+#include <immintrin.h>
+#endif
 #include "kernel/kernel.h"
 
 namespace kernel {
@@ -270,24 +278,119 @@ static uint32_t WaitFor(const std::vector<ObjectRef>& objs, bool wait_all, int64
 }
 
 namespace {
-std::mutex g_guest_cpu;
+// First come, first served: with a plain mutex the main thread, which lets go and takes it back every frame step,
+// could win it again and again while a loader task waited, so a stage load sometimes froze the picture for 2 to 10
+// seconds (tickets: each taker waits for its turn).
+// Taking it spins a short while before sleeping: a loader task step is often a few microseconds, and a sleeping
+// hand-off on Windows costs far more, so a load of thousands of steps froze the title card for seconds.
+class FairLock {
+public:
+    void lock() {
+        uint64_t me = next_.fetch_add(1);
+        for (int i = 0; i < 20000; i++) {
+            if (serving_.load() == me) return;
+            Pause();
+        }
+        std::unique_lock<std::mutex> l(m_);
+        sleepers_.fetch_add(1);
+        cv_.wait(l, [&] { return serving_.load() == me; });
+        sleepers_.fetch_sub(1);
+    }
+    void unlock() {
+        serving_.fetch_add(1);
+        if (sleepers_.load() > 0) {
+            { std::lock_guard<std::mutex> l(m_); }
+            cv_.notify_all();
+        }
+    }
+
+private:
+    static void Pause() {
+#if defined(_M_X64) || defined(__x86_64__) || defined(_M_IX86) || defined(__i386__)
+        _mm_pause();
+#else
+        std::this_thread::yield();
+#endif
+    }
+    std::mutex m_;
+    std::condition_variable cv_;
+    std::atomic<uint64_t> next_{0}, serving_{0};
+    std::atomic<int> sleepers_{0};
+};
+FairLock g_guest_cpu;
 thread_local int t_guest_cpu = 0;  // this thread's hold count
+
+// who held and who waited for the guest CPU since the last report (a slow frame logs it)
+struct CpuUse {
+    uint32_t id = 0;
+    std::atomic<uint64_t> takes{0}, hold_ns{0}, wait_ns{0};
+};
+std::mutex g_use_lock;
+std::vector<CpuUse*> g_uses;
+thread_local CpuUse* t_use = nullptr;
+thread_local uint64_t t_since = 0;
+
+uint64_t NowNs() {
+    using namespace std::chrono;
+    return uint64_t(duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count());
+}
+
+CpuUse& Use() {
+    if (!t_use) {
+        t_use = new CpuUse;
+        Thread* t = Current();
+        t_use->id = t ? t->id : 0;
+        std::lock_guard<std::mutex> l(g_use_lock);
+        g_uses.push_back(t_use);
+    }
+    return *t_use;
+}
+
+void Take() {
+    CpuUse& u = Use();
+    uint64_t t0 = NowNs();
+    g_guest_cpu.lock();
+    t_since = NowNs();
+    u.wait_ns += t_since - t0;
+    u.takes++;
+}
+
+void Give() {
+    Use().hold_ns += NowNs() - t_since;
+    g_guest_cpu.unlock();
+}
 }  // namespace
 
 void GuestCpuAcquire() {
-    if (t_guest_cpu++ == 0) g_guest_cpu.lock();
+    if (t_guest_cpu++ == 0) Take();
 }
 
 void GuestCpuRelease() {
-    if (t_guest_cpu > 0 && --t_guest_cpu == 0) g_guest_cpu.unlock();
+    if (t_guest_cpu > 0 && --t_guest_cpu == 0) Give();
 }
 
 GuestCpuIdle::GuestCpuIdle() : released(t_guest_cpu > 0) {
-    if (released) g_guest_cpu.unlock();
+    if (released) Give();
 }
 
 GuestCpuIdle::~GuestCpuIdle() {
-    if (released) g_guest_cpu.lock();
+    if (released) Take();
+}
+
+std::string GuestCpuReport(bool reset) {
+    std::lock_guard<std::mutex> l(g_use_lock);
+    std::string out;
+    char buf[96];
+    for (CpuUse* u : g_uses) {
+        uint64_t n = reset ? u->takes.exchange(0) : u->takes.load();
+        uint64_t h = reset ? u->hold_ns.exchange(0) : u->hold_ns.load();
+        uint64_t w = reset ? u->wait_ns.exchange(0) : u->wait_ns.load();
+        if (!n) continue;
+        snprintf(buf, sizeof buf, " [thread %X: %llu takes, held %.1f ms, waited %.1f ms]", u->id,
+                 (unsigned long long)n, h / 1e6, w / 1e6);
+        out += buf;
+    }
+    return out;
 }
 
 uint32_t Wait(const std::vector<ObjectRef>& objs, bool wait_all, int64_t timeout, bool alertable) {

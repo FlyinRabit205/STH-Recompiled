@@ -55,6 +55,7 @@ const char* kCommonTail = R"(    float4 spread[4];
     float4 lt[56];
     float4 rtshift;
     float4 zparams;
+    float4 hud;
 };
 )";
 
@@ -223,6 +224,7 @@ const char* kVsEpilogue = R"(
     // widescreen HudSqueeze: screen space 2D narrowed toward a pivot (zparams.w = factor + 2 * (pivot + 4096), pivot
     // in console pixels); 0 for everything else
     if (zparams.w > 0) { float an = floor(zparams.w * 0.5); float pv = an - 4096; p.x = pv + (p.x - pv) * (zparams.w - 2 * an); }
+    p.x += hud.x;
     p.w = magclamp(p.w);
     precise float4 q;
     // full screen passes drawn half a pixel up-left for the console's integer pixel centers stop half a pixel short
@@ -866,10 +868,10 @@ std::string FixedVertexHlsl(uint16_t regs, bool pretransformed, uint64_t decode,
     s += R"(
     VOut o;
     // widescreen HudSqueeze on 2D drawn through an orthographic projection: the screen x narrowed toward its anchor
-    if (zparams.w > 0) {
-        float an = floor(zparams.w * 0.5), pv = an - 4096;
+    if (zparams.w > 0 || hud.x != 0) {
         float sx = (cp.x / cp.w + 1) * 0.5 * surf.x;
-        sx = pv + (sx - pv) * (zparams.w - 2 * an);
+        if (zparams.w > 0) { float an = floor(zparams.w * 0.5), pv = an - 4096; sx = pv + (sx - pv) * (zparams.w - 2 * an); }
+        sx += hud.x;
         cp.x = (sx / (0.5 * surf.x) - 1) * cp.w;
     }
     // like the pretransformed ones, target sized passes end half a console pixel short of the far edges

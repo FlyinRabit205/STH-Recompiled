@@ -696,7 +696,12 @@ private:
     void BuildPipelineKey(const State& s, const Assembled& a, uint64_t vh, uint64_t ph, PsoKey& k);
     void KeyDepthStencil(const State& s, const Assembled& a, PsoKey& k);
     ID3D12PipelineState* EnsurePipeline(const PsoKey& k, ID3DBlob* vs, ID3DBlob* ps);
-    float squeeze_ = 0;  // this draw's HudSqueeze code
+    int hud_block_ = -1;  // this draw's widescreen 2D block (HudPiece), -1 for none
+    bool force_dc_ = false;  // the last constants upload is a 2D piece's, filled in later: not to be shared
+    // widescreen 2D pieces of the frame being recorded: their constants (in the upload ring) and blocks, filled in
+    // from the whole frame's layout just before it goes to the GPU
+    std::vector<std::pair<DrawConstants*, int>> hud_pending_;
+    void PatchHud();
     void FillPipelineDesc(const PsoKey& k, ID3DBlob* vs, ID3DBlob* ps, D3D12_GRAPHICS_PIPELINE_STATE_DESC& d) const;
     void ExpandPoints(D3D12_GRAPHICS_PIPELINE_STATE_DESC& d, bool sprite);
     float TargetScale() const;  // host pixels per console pixel of the bound target
@@ -1125,7 +1130,21 @@ void D3D12Backend::Begin() {
     binds_ = {};
 }
 
+// the frame's 2D pieces get their widescreen placement, worked out from all of the frame recorded so far
+void D3D12Backend::PatchHud() {
+    if (hud_pending_.empty()) return;
+    HudLayoutFrame();
+    for (auto& [dc, block] : hud_pending_) {
+        float code = 0, shift = 0;
+        if (!HudResult(block, code, shift)) continue;
+        dc->zparams[3] = code;
+        dc->hud[0] = shift;
+    }
+    hud_pending_.clear();
+}
+
 void D3D12Backend::Submit(bool wait) {
+    PatchHud();  // before the GPU reads the constants
     last_vsc_gpu_ = 0;
     last_dc_gpu_ = 0;
     cl_->Close();
@@ -2352,32 +2371,30 @@ constexpr size_t kTsWorld = 256;
 
 void MatMul(const float* x, const float* y, float* o);
 
-// the widescreen HudSqueeze code of a draw: screen space 2D (XYZRHW, screen space programs, fixed function through an
-// orthographic projection) onto the screen; 0 for everything else
-float DrawHudSqueeze(const State& s, const Assembled& a, bool prog, uint32_t w) {
-    if (w != 640) return 0;
+// the widescreen 2D block of a draw (HudPiece): screen space 2D (XYZRHW, screen space programs, fixed function with no
+// depth test) onto the screen; -1 for everything else
+int DrawHudPiece(const State& s, const Assembled& a, bool prog, uint32_t w) {
+    if (w != 640) return -1;
     float mx[4] = {1, 0, 0, 0}, my[4] = {0, 1, 0, 0};
     float wv[16], m[16], vpr[4];
     bool mapped = false, projected = false;
     if (prog) {
-        if (!ScreenProgram(s)) return 0;
+        if (!ScreenProgram(s)) return -1;
         // oPos = v0 * c[96] + c[97] (hardware constants)
         mx[0] = s.vsc[96][0], mx[3] = s.vsc[97][0];
         my[1] = s.vsc[96][1], my[0] = 0, my[3] = s.vsc[97][1];
         mapped = true;
     } else if (!a.pretransformed) {
         // 2D drawn through the transform pipeline: onto the screen with no depth test
-        if (s.rs[kRsZEnable]) return 0;
+        if (s.rs[kRsZEnable]) return -1;
         MatMul(s.transforms[kTsWorld].data(), s.transforms[kTsView].data(), wv);
         MatMul(wv, s.transforms[kTsProjection].data(), m);
         vpr[0] = float(s.viewport.x), vpr[1] = float(s.viewport.y), vpr[2] = float(s.viewport.w), vpr[3] = float(s.viewport.h);
         projected = true;
         mapped = true;
     }
-    TextureDesc td;
-    bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
-    return HudSqueeze(a, w, s.textures[0] != 0, s.textures[0], scene_tex, mapped, mapped && !projected ? mx : nullptr,
-                      mapped && !projected ? my : nullptr, projected ? m : nullptr, projected ? vpr : nullptr);
+    return HudPiece(a, w, s.textures[0] != 0, s.textures[0], mapped, mapped && !projected ? mx : nullptr,
+                    mapped && !projected ? my : nullptr, projected ? m : nullptr, projected ? vpr : nullptr);
 }
 
 DrawShaders ClassifyShaders(const State& s, const Assembled& a, uint32_t count) {
@@ -2809,17 +2826,20 @@ void D3D12Backend::UploadConstants(const State& s, const DrawShaders& sh, const 
     FillCombinerConstants(s, c);
     if (ext_) ext_->Constants(reinterpret_cast<float(*)[4]>(vsc), c.ext, bound_rt_, k.blend ? k.src : 1);
     FillDepthConstants(s, sh, k, c);
-    c.zparams[3] = squeeze_;  // HudSqueeze, read by screen space fixed function vertices
+    c.zparams[3] = 0;  // widescreen 2D: filled in by PatchHud
     FillTextureConstants(s, sh, stages, c);
     if (sh.fixed_transform) {
         FillTransformConstants(s, size, c);
         FillLightConstants(s, sh.fk, c);
     }
-    if (!last_dc_gpu_ || std::memcmp(&last_dc_, &c, sizeof(c))) {
+    bool hud = hud_block_ >= 0;
+    if (hud || force_dc_ || !last_dc_gpu_ || std::memcmp(&last_dc_, &c, sizeof(c))) {
         Alloc dc = Upload(sizeof(DrawConstants), 256);
         std::memcpy(dc.cpu, &c, sizeof(c));
         last_dc_ = c;
         last_dc_gpu_ = dc.gpu;
+        if (hud) hud_pending_.push_back({reinterpret_cast<DrawConstants*>(dc.cpu), hud_block_});
+        force_dc_ = hud;
     }
     if (last_vsc_gpu_ != binds_.vsc) cl_->SetGraphicsRootConstantBufferView(0, last_vsc_gpu_);
     if (last_dc_gpu_ != binds_.dc) cl_->SetGraphicsRootConstantBufferView(1, last_dc_gpu_);
@@ -2888,7 +2908,7 @@ void D3D12Backend::CaptureDraw(const State& s, uint32_t prim, uint32_t count, co
             cap_i_++, s.rt.data, bound_ds_ ? s.zs.data : 0, prim, count, s.vs_handle, s.ps ? s.ps->handle : 0, k.blend,
             k.src, k.dst, k.zen, k.zfunc, k.zwrite, k.zbias, k.zslope, k.cull, k.wmask, c.pc[0][0], c.pc[0][1],
             c.pc[0][2], c.pc[0][3]);
-    if (squeeze_ > 0) fprintf(cap_, " | hud %.3f", squeeze_);  // widescreen: factor + 2 * anchor (0 left, 1 centre, 2 right)
+    if (hud_block_ >= 0) fprintf(cap_, " | hud block %d", hud_block_);  // widescreen 2D block (HudPiece)
     // the fixed function inputs that decide a draw's alpha: lighting, material sources, material, texture factor and
     // each stage's colour key and alpha operation
     const auto& m = s.material;
@@ -3229,8 +3249,7 @@ void D3D12Backend::Draw(const State& s, uint32_t prim, uint32_t start, uint32_t 
     GuestExtent size;
     SurfaceSize(bound_rt_ ? s.rt : s.zs, size.w, size.h);
     DrawConstants c{};
-    squeeze_ = 0.0f;
-    if (g_hud_squeeze > 0) squeeze_ = DrawHudSqueeze(s, a, sh.prog, size.w);
+    hud_block_ = g_hud_squeeze > 0 ? DrawHudPiece(s, a, sh.prog, size.w) : -1;
     UploadConstants(s, sh, k, stages, size, c);
     if (ext_) binds_ = {};
 
@@ -3728,7 +3747,9 @@ void LogPerf() {
 
 void D3D12Backend::Present(const Surface& front) {
     PerfScope perf_present{g_perf.present};
-    HudFrameEnd();  // widescreen HUD blocks of this frame -> anchors for the next
+    PatchHud();     // the frame's 2D pieces placed from the whole frame
+    if (cap_) HudDump(cap_);
+    HudFrameEnd();
     if (cap_) {
         FinishCapture(front);
     } else if (g_capture.exchange(false) && CaptureOn()) {

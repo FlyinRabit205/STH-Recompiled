@@ -107,6 +107,7 @@ struct DrawConstants {
     float lt[8][7][4];   // per light: diffuse, specular, ambient, position range, direction falloff, attenuation, cos theta/2 phi/2
     float rtshift[4];    // per kTexTarget stage: host pixels its reads move along x and y, negative up and left
     float zparams[4];    // ReversedDepthHlsl: a w buffer's scale (0 for a z buffer), its far w, the polygon offset
+    float hud[4];        // widescreen 2D (HudPiece): x the shift in console pixels after the squeeze in zparams.w
 };
 
 }  // namespace gpu
