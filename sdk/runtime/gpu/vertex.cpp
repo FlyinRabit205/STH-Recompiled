@@ -486,8 +486,8 @@ namespace {
 // with one texture that continue a line of text (same line, small gap) or start the next line below it. At the end
 // of the frame every block gets an anchor: the anchor of an earlier block containing it (text in its panel), else
 // left when it lies in the left half, right in the right half, centre when it crosses the middle. The next frame
-// uses those anchors, found by each block's texture and first piece position. Only while a 3D scene is shown (a
-// stage, its HUD and results); menus stay centred.
+// uses those anchors, found by each block's texture and first piece position (a block not seen then: from where it
+// is). Only while the stage HUD is up (its two top gauge bars were drawn last frame); menus stay centred.
 struct Block {
     uint32_t tex;
     float lo, hi, top, bottom;             // the block's extent
@@ -537,19 +537,31 @@ void HudFrameEnd() {
         got[i] = anchor;
         L.anchors[b.key] = anchor;
     }
+    // the stage HUD's two top bars (the hero gauge top left, the dark gauge top right): a stage is being played, its
+    // HUD goes to the edges; menus, the title and dialogs keep the centre
+    bool left = false, right = false;
+    for (const Block& b : L.blocks) {
+        if (b.top > 480 * 0.15f || b.bottom - b.top > 480 * 0.15f) continue;
+        if (b.lo < 640 * 0.15f && b.hi < 640 * 0.5f && b.hi - b.lo > 640 * 0.15f) left = true;
+        if (b.hi > 640 * 0.85f && b.lo > 640 * 0.5f && b.hi - b.lo > 640 * 0.15f) right = true;
+    }
+    L.scene = left && right;
     L.blocks.clear();
     L.scene_last = L.scene;
     L.scene = false;
     L.current = 0;
 }
 
-float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen, float sx,
-                 float ox, float sy, float oy) {
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bool scene_texture, bool screen,
+                 const float* mx, const float* my) {
     if (g_hud_squeeze <= 0 || !(a.pretransformed || screen) || !(a.regs & 1) || w != 640) return 0;
     float lo = 1e30f, hi = -1e30f, top = 1e30f, bottom = -1e30f;
-    auto add = [&](float x, float y) {
-        x = x * sx + ox;
-        y = y * sy + oy;
+    auto add = [&](const float* p) {
+        float x = p[0], y = p[1];
+        if (mx) {
+            x = p[0] * mx[0] + p[1] * mx[1] + p[2] * mx[2] + mx[3];
+            y = p[0] * my[0] + p[1] * my[1] + p[2] * my[2] + my[3];
+        }
         lo = std::min(lo, x);
         hi = std::max(hi, x);
         top = std::min(top, y);
@@ -558,10 +570,7 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
     if (!a.vertices.empty()) {
         uint32_t regs = 0;
         for (int r = 0; r < 16; r++) regs += (a.regs >> r) & 1;
-        for (uint32_t v = 0; v < a.vertex_count && v < 8192; v++) {
-            const float* p = &a.vertices[size_t(v) * regs * 4];
-            add(p[0], p[1]);
-        }
+        for (uint32_t v = 0; v < a.vertex_count && v < 8192; v++) add(&a.vertices[size_t(v) * regs * 4]);
     } else {
         const VertexElement& e = a.elements[0];
         const VertexBuffer& b = a.buffers[e.buffer];
@@ -569,9 +578,9 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
             return 0;
         uint32_t n = std::min<uint32_t>(b.bytes / b.stride, 8192);
         for (uint32_t v = 0; v < n; v++) {
-            float xy[2];
-            std::memcpy(xy, b.src + size_t(v) * b.stride + e.offset, 8);
-            add(xy[0], xy[1]);
+            float xyz[3];
+            std::memcpy(xyz, b.src + size_t(v) * b.stride + e.offset, 12);
+            add(xyz);
         }
     }
     if (!(hi > lo)) return 0;
@@ -579,7 +588,12 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
     std::lock_guard<std::mutex> l(g_layout_lock);
     HudLayout& L = g_layout;
     if (lo <= w * 0.02f && hi >= w * 0.98f) {
-        if (textured && scene_texture) L.scene = true;
+        L.current = 0;
+        return 0;
+    }
+    (void)scene_texture;
+    // a fade drawn as full height strips (the pause darkening is ten 64 pixel columns): left as it is
+    if (!textured && top <= 480 * 0.02f && bottom >= 480 * 0.98f) {
         L.current = 0;
         return 0;
     }
@@ -611,7 +625,8 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
     int anchor = 1;
     if (g_hud_anchor_edges && L.scene_last) {
         auto it = L.anchors.find(open->key);
-        if (it != L.anchors.end()) anchor = it->second;
+        // a block not seen last frame (new, or moving): from where its first piece is
+        anchor = it != L.anchors.end() ? it->second : RootAnchor(*open, float(w));
     }
     return std::min(g_hud_squeeze, 0.999f) + 2.0f * float(anchor);
 }

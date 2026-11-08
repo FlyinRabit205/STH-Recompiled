@@ -585,3 +585,11 @@ in-between frames.
   "d3d12: vertex program ... is screen space 2D"); HudSqueeze takes x = v0.x * c96.x + c97.x; the squeeze now runs in
   kVsEpilogue on p.x for both fixed and program paths. Captures: positions printed for every buffer draw, `hud` code.
   Harness reference renderer does not apply it to programs (no game data here to test anyway).
+- 12:50 captures (first real HUD test): gameplay HUD at the edges looked right (gauges, timer centred, rings left),
+  but: title logo and stage select grid split (the title/menus draw a 512x512 render target full screen, so the
+  "3D scene shown" test fired); pause darkening = ten untextured full-height 64 px strips anchored apart; dialog text
+  (FVF 0x142 = XYZ, not XYZRHW: glyphs through an orthographic World*View*Proj) never squeezed.
+- Round 2: gameplay = last frame had the stage HUD's two top bars (block in the top 15%, < 15% tall, > 15% wide, one
+  hugging the left, one the right); untextured full-height draws left alone; a block with no history takes its own
+  position's anchor; fixed function through an orthographic projection is mapped on the CPU (DrawHudSqueeze in
+  d3d12.cpp) and squeezed in clip space in FixedVertexHlsl. Installed for the user (exe 6910464 bytes).

@@ -865,6 +865,13 @@ std::string FixedVertexHlsl(uint16_t regs, bool pretransformed, uint64_t decode,
     if (pretransformed) return s + kVsEpilogue;
     s += R"(
     VOut o;
+    // widescreen HudSqueeze on 2D drawn through an orthographic projection: the screen x narrowed toward its anchor
+    if (zparams.w > 0) {
+        float an = floor(zparams.w * 0.5), pv = surf.x * 0.5 * an;
+        float sx = (cp.x / cp.w + 1) * 0.5 * surf.x;
+        sx = pv + (sx - pv) * (zparams.w - 2 * an);
+        cp.x = (sx / (0.5 * surf.x) - 1) * cp.w;
+    }
     // like the pretransformed ones, target sized passes end half a console pixel short of the far edges
     float2 sp = (float2(cp.x, -cp.y) / cp.w + 1) * 0.5 * surf.xy;
     if (surf.w == 0 && abs(sp.x - (surf.x - 0.5)) < 1e-3) cp.x = cp.w;

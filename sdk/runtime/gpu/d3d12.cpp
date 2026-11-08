@@ -2344,6 +2344,43 @@ bool ScreenProgram(const State& s) {
     return yes;
 }
 
+// D3DTRANSFORMSTATETYPE indices into s.transforms
+constexpr size_t kTsView = 2;
+constexpr size_t kTsProjection = 3;
+constexpr size_t kTsTexture0 = 16;
+constexpr size_t kTsWorld = 256;
+
+void MatMul(const float* x, const float* y, float* o);
+
+// the widescreen HudSqueeze code of a draw: screen space 2D (XYZRHW, screen space programs, fixed function through an
+// orthographic projection) onto the screen; 0 for everything else
+float DrawHudSqueeze(const State& s, const Assembled& a, bool prog, uint32_t w) {
+    if (w != 640) return 0;
+    float mx[4] = {1, 0, 0, 0}, my[4] = {0, 1, 0, 0};
+    bool mapped = false;
+    if (prog) {
+        if (!ScreenProgram(s)) return 0;
+        // oPos = v0 * c[96] + c[97] (hardware constants)
+        mx[0] = s.vsc[96][0], mx[3] = s.vsc[97][0];
+        my[1] = s.vsc[96][1], my[0] = 0, my[3] = s.vsc[97][1];
+        mapped = true;
+    } else if (!a.pretransformed) {
+        float wv[16], m[16];
+        MatMul(s.transforms[kTsWorld].data(), s.transforms[kTsView].data(), wv);
+        MatMul(wv, s.transforms[kTsProjection].data(), m);
+        // orthographic only (w = 1 for every vertex): 2D drawn through the transform pipeline
+        if (std::fabs(m[3]) + std::fabs(m[7]) + std::fabs(m[11]) > 1e-6f || std::fabs(m[15] - 1) > 1e-4f) return 0;
+        float hw = s.viewport.w * 0.5f, hh = s.viewport.h * 0.5f;
+        mx[0] = m[0] * hw, mx[1] = m[4] * hw, mx[2] = m[8] * hw, mx[3] = (m[12] + 1) * hw + float(s.viewport.x);
+        my[0] = -m[1] * hh, my[1] = -m[5] * hh, my[2] = -m[9] * hh, my[3] = (1 - m[13]) * hh + float(s.viewport.y);
+        mapped = true;
+    }
+    TextureDesc td;
+    bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
+    return HudSqueeze(a, w, s.textures[0] != 0, s.textures[0], scene_tex, mapped, mapped ? mx : nullptr,
+                      mapped ? my : nullptr);
+}
+
 DrawShaders ClassifyShaders(const State& s, const Assembled& a, uint32_t count) {
     DrawShaders sh;
     // a shader made from a declaration alone (no program) is the fixed function pipeline on those inputs
@@ -2626,11 +2663,6 @@ void InverseTranspose3x3(const float* wv, float* n) {
     }
 }
 
-// D3DTRANSFORMSTATETYPE indices into s.transforms
-constexpr size_t kTsView = 2;
-constexpr size_t kTsProjection = 3;
-constexpr size_t kTsTexture0 = 16;
-constexpr size_t kTsWorld = 256;
 
 void FillTransformConstants(const State& s, GuestExtent size, DrawConstants& c) {
     uint32_t gw = size.w;
@@ -3199,17 +3231,7 @@ void D3D12Backend::Draw(const State& s, uint32_t prim, uint32_t start, uint32_t 
     SurfaceSize(bound_rt_ ? s.rt : s.zs, size.w, size.h);
     DrawConstants c{};
     squeeze_ = 0.0f;
-    if (g_hud_squeeze > 0) {
-        bool screen = sh.prog && ScreenProgram(s);
-        if ((!sh.prog && a.pretransformed) || screen) {
-            TextureDesc td;
-            bool scene_tex = s.textures[0] && Describe(s.textures[0], td) && td.width == 512 && td.height == 512;
-            // a screen space program: x = v0.x * c0.x + c1.x (hardware constants 96, 97)
-            float sx = 1, ox = 0, sy = 1, oy = 0;
-            if (screen) sx = s.vsc[96][0], ox = s.vsc[97][0], sy = s.vsc[96][1], oy = s.vsc[97][1];
-            squeeze_ = HudSqueeze(a, size.w, s.textures[0] != 0, s.textures[0], scene_tex, screen, sx, ox, sy, oy);
-        }
-    }
+    if (g_hud_squeeze > 0) squeeze_ = DrawHudSqueeze(s, a, sh.prog, size.w);
     UploadConstants(s, sh, k, stages, size, c);
     if (ext_) binds_ = {};
 
