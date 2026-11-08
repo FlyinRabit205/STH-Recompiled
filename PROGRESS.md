@@ -655,3 +655,17 @@ in-between frames.
 - **r9 text**: in-play game text (projected glyphs) now keeps its true shape like the HUD (held by its panel or the
   nearest edge) instead of being left stretched; subtitles keep their true shape at 1.15x (grown up from the last
   line: hud.y pivot / hud.z scale in both vertex paths), centred. Delivered r9 (exe 6941184).
+- **r10-r15 (checked live on the user's PC through computer use)**: the "squished text" cause: the port reports
+  the console in 16:9 mode (ExQueryNonVolatileSetting 8 -> 0x90000, widescreen flag), so Shadow already draws its
+  projected text (FVF 0x142 glyphs) anamorphically, x * 0.75 about the left edge. The HUD squeeze narrowed it
+  again (squished) and the game's scaling about x=0 put it left of centre (the old "text left of centre", the
+  "subtitles not in the middle"). Now: projected text is laid out at x/0.75 (its 4:3 place) and drawn unsqueezed,
+  moved by P*(1-f) for its pivot P (exact for f = 0.75; general factor f/0.75). Subtitle special case and the
+  glyph-widening experiment removed.
+- Panel text rows now take the panel's pivot (row centring broke the stage-select DARK/NORMAL/HERO columns).
+- Dialog panels must be < 75% of the screen tall (full-height side art no longer centres the story menu's "exit").
+- Tall background art doesn't glue groups; single-piece side art touching an edge goes to that edge (multi-piece
+  blocks also hold menu items: left alone). Small groups snap to an edge only if they start near it (< 20% / > 80%).
+- Verified live: load-data dialog centred, story menu prompts at both edges with items over their text column,
+  stage select columns aligned, pause menu, in-stage HUD at edges, cutscene and in-play subtitles natural shape.
+- Delivered r15 (exe 6940672).

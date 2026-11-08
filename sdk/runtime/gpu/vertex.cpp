@@ -569,17 +569,11 @@ bool HudBars(const std::vector<Block>& all, float w) {
     return false;
 }
 
-// subtitles: the game's text in the lower part of the screen, not inside a panel
-bool Subtitle(const std::vector<Block>& all, size_t i) {
-    const Block& b = all[i];
-    if (!b.projected || b.top < 480 * 0.6f || b.bottom - b.top > 480 * 0.3f) return false;
-    for (size_t j = 0; j < all.size(); j++)
-        if (j != i && !all[j].projected && Holds(all[j], b)) return false;
-    return true;
-}
-
 void Layout(HudLayout& L) {
-    const std::vector<Block>& all = L.blocks;
+    // the game's text is laid out where it would sit on the 4:3 screen (it draws it at x * 0.75, see below)
+    std::vector<Block> all = L.blocks;
+    for (Block& b : all)
+        if (b.projected) b.lo /= 0.75f, b.hi /= 0.75f;
     size_t n = all.size();
     const float w = 640.0f, f = std::min(g_hud_squeeze, 0.999f);
     L.results.assign(n, Result{});
@@ -628,10 +622,12 @@ void Layout(HudLayout& L) {
         while (parent[i] != i) i = parent[i] = parent[parent[i]];
         return i;
     };
+    // tall background art (full-height side pieces) holds no group together: the prompts drawn over it keep their own
+    auto tall = [&](size_t i) { return all[i].bottom - all[i].top >= 480 * 0.75f && !all[i].cover; };
     for (size_t i = 0; i < n; i++) {
-        if (!menu(i) || deco[i]) continue;
+        if (!menu(i) || deco[i] || tall(i)) continue;
         for (size_t j = i + 1; j < n; j++)
-            if (menu(j) && !deco[j] && Touch(all[i], all[j], 8)) parent[find(i)] = find(j);
+            if (menu(j) && !deco[j] && !tall(j) && Touch(all[i], all[j], 8)) parent[find(i)] = find(j);
     }
     std::vector<float> lo(n, 1e30f), hi(n, -1e30f), top(n, 1e30f), bottom(n, -1e30f);
     for (size_t i = 0; i < n; i++) {
@@ -650,9 +646,16 @@ void Layout(HudLayout& L) {
                 continue;
             }
             size_t r = find(i);
+            if (tall(i)) {  // side art at a screen edge stays at it (one piece: a block of several also holds menu items)
+                if (b.pieces > 1) continue;
+                if (b.lo <= 2 && b.hi < w * 0.6f) pivot[i] = kEdge[0];
+                else if (b.hi >= w - 2 && b.lo > w * 0.4f) pivot[i] = kEdge[2];
+                continue;
+            }
             if (hi[r] - lo[r] <= w * 0.35f && bottom[r] - top[r] <= 480 * 0.35f) {
-                if (hi[r] < w * 0.4f) pivot[i] = kEdge[0];
-                else if (lo[r] > w * 0.6f) pivot[i] = kEdge[2];
+                // only a group that starts near an edge (prompts, logos): menu items over the middle stay put
+                if (hi[r] < w * 0.4f && lo[r] < w * 0.2f) pivot[i] = kEdge[0];
+                else if (lo[r] > w * 0.6f && hi[r] > w * 0.8f) pivot[i] = kEdge[2];
             }
         } else {  // the stage HUD and the game's text during play: true shape, held by its panel or nearest edge
             int anchor = -1;
@@ -667,47 +670,37 @@ void Layout(HudLayout& L) {
             pivot[i] = kEdge[anchor];
         }
     }
-    // text rows in a dialog panel (a block at least 40% of the screen wide holding them): centred in the panel
-    auto where = [&](size_t i, float x) { return pivot[i] == kNoSqueeze ? x : pivot[i] + (x - pivot[i]) * f; };
+    // text rows in a dialog panel (a block at least 40% of the screen wide holding them): moved with the panel
     for (size_t i = 0; i < n; i++) {
         const Block& b = all[i];
-        if (!menu(i) || deco[i] || b.pieces < 2 || b.bottom - b.top > 40) continue;
+        if (!menu(i) || deco[i] || (b.pieces < 2 && !b.projected) || b.bottom - b.top > 40) continue;
         size_t panel = n;
         for (size_t j = i; j-- > 0;) {
-            if (menu(j) && !deco[j] && all[j].hi - all[j].lo >= w * 0.4f && Holds(all[j], b)) {
+            // a dialog panel, not a full-height background piece (the story menu's left art holds its "exit" prompt)
+            if (menu(j) && !deco[j] && all[j].hi - all[j].lo >= w * 0.4f && all[j].bottom - all[j].top < 480 * 0.75f &&
+                Holds(all[j], b)) {
                 panel = j;
                 break;
             }
         }
         if (panel == n) continue;
-        float rlo = b.lo, rhi = b.hi;
-        for (size_t k = 0; k < n; k++) {
-            const Block& t = all[k];
-            if (k == i || !menu(k) || deco[k] || t.pieces < 2 || std::fabs(t.top - b.top) > 6 || !Holds(all[panel], t))
-                continue;
-            rlo = std::min(rlo, t.lo), rhi = std::max(rhi, t.hi);
-        }
-        const Block& c = all[panel];
-        float target = where(panel, (c.lo + c.hi) * 0.5f), centre = (rlo + rhi) * 0.5f;
-        pivot[i] = (target - centre * f) / (1 - f);  // p + (centre - p) * f = target
+        // placed as its panel is, so rows and columns stay lined up (centred text stays centred)
+        pivot[i] = pivot[panel];
     }
-    // subtitles: their true shape a little larger (kSubtitleScale, grown up from the last line), the whole set of
-    // lines centred on the screen; the same size in events and in play
-    constexpr float kSubtitleScale = 1.15f;
-    std::vector<bool> sub(n, false);
-    float slo = 1e30f, shi = -1e30f, sbot = -1e30f;
-    for (size_t i = 0; i < n; i++)
-        if (Subtitle(all, i)) {
-            sub[i] = true;
-            slo = std::min(slo, all[i].lo), shi = std::max(shi, all[i].hi), sbot = std::max(sbot, all[i].bottom);
-        }
+    // the game's text: the console is reported in 16:9 mode, so the game already draws its text narrowed for a wide
+    // screen (x * 0.75, about the left edge). Its glyphs keep that width; the text only moves to where its block's
+    // placement puts it: x43 = x / 0.75 placed by the pivot P, P + (x43 - P) * f = x * f / 0.75 + P * (1 - f)
+    constexpr float kGameWide = 0.75f;
     for (size_t i = 0; i < n; i++) {
-        if (sub[i]) {
-            float c = (slo + shi) * 0.5f;
-            L.results[i] = {HudCode(f * kSubtitleScale, c), w * 0.5f - c, sbot, kSubtitleScale};
-        } else {
+        const Block& b = all[i];
+        if (!b.projected || deco[i]) {
             L.results[i] = {pivot[i] == kNoSqueeze ? 0.0f : HudCode(f, pivot[i]), shift[i]};
+            continue;
         }
+        float P = pivot[i] == kNoSqueeze ? w * 0.5f : pivot[i];
+        float g = f / kGameWide, add = P * (1 - f);
+        if (std::fabs(g - 1) < 1e-3f) L.results[i] = {0.0f, shift[i] + add};
+        else L.results[i] = {HudCode(g, add / (1 - g)), shift[i]};
     }
 }
 
