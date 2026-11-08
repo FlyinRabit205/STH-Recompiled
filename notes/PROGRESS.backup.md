@@ -669,3 +669,12 @@ in-between frames.
 - Verified live: load-data dialog centred, story menu prompts at both edges with items over their text column,
   stage select columns aligned, pause menu, in-stage HUD at edges, cutscene and in-play subtitles natural shape.
 - Delivered r15 (exe 6940672).
+- **Key rebinding in the options menu** (CONTROLS tab): actions listed in two columns, arrows move (left/right
+  switch column), ENTER / A or a click waits for the next key or mouse button (left/right Shift, Ctrl, Alt told
+  apart; F1 or pad Start cancels; 8 s timeout), the key moves off any other action, RESET ALL row; saved to
+  settings.toml at once (keyboard::Bind / ResetAll, a lock against the game's reads). Tested live on the user's PC.
+  Fixed: the tab reset the selection every frame (generic row clamp).
+- Seen once: guest thread 2C (ADX stream server 00328E80) null read at 1.86 s of boot (00349219, in 0034AB40),
+  shadow_048; next launch fine. Watch for repeats.
+- **Test package** ShadowNativePort-v1.3-test-Windows.zip (make_release.sh 1.3-test): full Setup package, since the
+  exe now overrides sub_002DD1C0 (Hor+ camera) which v1.2's compiler/Shadow.lib does not import.

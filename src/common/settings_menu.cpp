@@ -29,6 +29,7 @@ std::atomic<bool> g_menu_open{false};
 #include <windows.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cfloat>
 #include <cmath>
 #include <cstdio>
@@ -265,6 +266,16 @@ const char* kTabs[] = {"DISPLAY", "GRAPHICS", "GAME", "CONTROLS"};
 constexpr int kTabCount = 4;
 int g_tab = 0, g_row = 0;
 
+// CONTROLS tab: the action waiting for its new key (-1: none), set by the menu, ended by the window thread
+std::atomic<int> g_listen{-1};
+std::atomic<uint64_t> g_listen_since{0};
+std::atomic<bool> g_keys_changed{false};
+uint64_t NowMs() { return GetTickCount64(); }
+void Listen(int action) {
+    g_listen_since = NowMs();
+    g_listen = action;
+}
+
 
 void Draw() {
     ImGuiIO& io = ImGui::GetIO();
@@ -284,7 +295,7 @@ void Draw() {
     else if (g_tab == 1) rows = GraphicsRows();
     else if (g_tab == 2) rows = GameRows();
     int nrows = int(rows.size());
-    g_row = nrows ? std::clamp(g_row, 0, nrows - 1) : 0;
+    if (g_tab < 3) g_row = nrows ? std::clamp(g_row, 0, nrows - 1) : 0;
 
     // keys and pad
     std::vector<Nav> nav;
@@ -292,8 +303,29 @@ void Draw() {
         std::lock_guard<std::mutex> l(g_nav_lock);
         nav.swap(g_nav);
     }
+    auto binds = keyboard::Bindings();
+    int nkeys = int(binds.size()) + 1;  // the actions, then RESET ALL
+    int half = (nkeys + 1) / 2;
+    if (g_tab == 3) g_row = std::clamp(g_row, 0, nkeys - 1);
+    if (g_keys_changed.exchange(false)) Saved(false);
     for (Nav n : nav) {
+        if (g_tab == 3 && g_listen >= 0) continue;  // waiting for a key: the window thread takes it
+        if (g_tab == 3 && n != Nav::PrevTab && n != Nav::NextTab) {
+            if (n == Nav::Up) g_row = (g_row + nkeys - 1) % nkeys;
+            if (n == Nav::Down) g_row = (g_row + 1) % nkeys;
+            if (n == Nav::Left || n == Nav::Right) g_row = g_row < half ? std::min(g_row + half, nkeys - 1) : g_row - half;
+            if (n == Nav::Accept) {
+                if (g_row == nkeys - 1) {
+                    keyboard::ResetAll();
+                    Saved(false);
+                } else {
+                    Listen(g_row);
+                }
+            }
+            continue;
+        }
         if (n == Nav::PrevTab || n == Nav::NextTab) {
+            g_listen = -1;
             g_tab = (g_tab + (n == Nav::NextTab ? 1 : kTabCount - 1)) % kTabCount;
             g_row = 0;
             break;  // the rows belong to the old tab
@@ -391,24 +423,48 @@ void Draw() {
                         rows[size_t(g_row)].desc, nullptr, right - left - 30 * u);
         }
     } else {
-        // the keyboard bindings in use (settings.toml [keyboard_bindings]), two columns
-        auto binds = keyboard::Bindings();
-        binds.push_back({"Options menu", "F1   (controller: BACK + START)"});
-        float rh2 = t_small + 12 * u;
-        int half = int(binds.size() + 1) / 2;
+        // the keyboard bindings (settings.toml [keyboard_bindings]), two columns; ENTER / A or a click on one waits
+        // for its new key
+        float rh2 = t_small + 9 * u;
         float colw = (right - left + 16 * u) * 0.5f;
-        for (int i = 0; i < int(binds.size()); i++) {
+        int listen = g_listen;
+        if (listen >= 0 && NowMs() - g_listen_since > 8000) g_listen = listen = -1;  // nothing pressed: given up
+        for (int i = 0; i < nkeys; i++) {
             float x = left - 16 * u + (i < half ? 0 : colw), y = ry + (i % half) * (rh2 + 2 * u);
-            dl->AddRectFilled(ImVec2(x, y), ImVec2(x + colw - 8 * u, y + rh2), IM_COL32(255, 255, 255, (i & 1) ? 10 : 20));
+            ImVec2 a(x, y), b(x + colw - 8 * u, y + rh2);
+            bool over = ImGui::IsMouseHoveringRect(a, b);
+            if (over && (io.MouseDelta.x != 0 || io.MouseDelta.y != 0) && listen < 0) g_row = i;
+            bool sel = i == g_row;
+            if (sel) {
+                dl->AddRectFilledMultiColor(a, b, IM_COL32(205, 26, 34, 220), IM_COL32(110, 10, 16, 110),
+                                            IM_COL32(110, 10, 16, 110), IM_COL32(205, 26, 34, 220));
+                dl->AddRectFilled(a, ImVec2(a.x + 6 * u, b.y), kWhite);
+            } else {
+                dl->AddRectFilled(a, b, IM_COL32(255, 255, 255, (i & 1) ? 10 : 20));
+            }
             float cy = y + (rh2 - t_small) * 0.5f;
-            dl->AddText(small, t_small, ImVec2(x + 14 * u, cy), kGrey, binds[size_t(i)].first.c_str());
-            dl->AddText(small, t_small, ImVec2(x + colw * 0.55f, cy), kWhite, binds[size_t(i)].second.c_str());
+            if (i == nkeys - 1) {
+                dl->AddText(small, t_small, ImVec2(x + 14 * u, cy), sel ? kWhite : kGrey, "RESET ALL TO DEFAULTS");
+            } else {
+                dl->AddText(small, t_small, ImVec2(x + 14 * u, cy), sel ? kWhite : kGrey, binds[size_t(i)].first.c_str());
+                const char* v = i == listen ? "PRESS A KEY..." : binds[size_t(i)].second.c_str();
+                dl->AddText(small, t_small, ImVec2(x + colw * 0.55f, cy), i == listen ? IM_COL32(255, 220, 90, 255) : kWhite, v);
+            }
+            if (over && listen < 0 && ImGui::IsMouseClicked(0)) {
+                g_row = i;
+                if (i == nkeys - 1) {
+                    keyboard::ResetAll();
+                    Saved(false);
+                } else {
+                    Listen(i);
+                }
+            }
         }
         ry += half * (rh2 + 2 * u);
-        dl->AddText(small, t_small, ImVec2(left, ry + 14 * u), kDim,
-                    "Change keys in settings.toml, [keyboard_bindings] (key names in CONTROLS.txt).");
-        dl->AddText(small, t_small, ImVec2(left, ry + 14 * u + t_small * 1.3f), kDim,
-                    "Xbox, PlayStation and Switch controllers work automatically.");
+        dl->AddText(small, t_small, ImVec2(left, ry + 12 * u), listen >= 0 ? IM_COL32(255, 220, 90, 255) : kDim,
+                    listen >= 0 ? "Press the new key or mouse button for it. F1 cancels."
+                                : "ENTER / A or click: change a key (a key moves off any action that had it). "
+                                  "Controllers work automatically.");
     }
 
     // button hints
@@ -454,8 +510,38 @@ void MenuWindow(void* hwnd) {
     LoadFonts();  // before the renderer builds ImGui's font atlas
 }
 
+// the key or mouse button a message is about, left and right modifiers apart; 0 for anything else
+int MessageKey(uint32_t msg, uintptr_t wp, intptr_t lp) {
+    switch (msg) {
+        case WM_LBUTTONDOWN: return NowMs() - g_listen_since > 300 ? VK_LBUTTON : 0;  // not the click that asked
+        case WM_RBUTTONDOWN: return VK_RBUTTON;
+        case WM_MBUTTONDOWN: return VK_MBUTTON;
+        case WM_XBUTTONDOWN: return HIWORD(wp) == XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2;
+        case WM_KEYDOWN: case WM_SYSKEYDOWN: break;
+        default: return 0;
+    }
+    if (lp & (1 << 30)) return 0;  // held, repeating
+    bool ext = (lp >> 24) & 1;
+    if (wp == VK_SHIFT) return int(MapVirtualKeyW(UINT((lp >> 16) & 0xFF), MAPVK_VSC_TO_VK_EX));
+    if (wp == VK_CONTROL) return ext ? VK_RCONTROL : VK_LCONTROL;
+    if (wp == VK_MENU) return ext ? VK_RMENU : VK_LMENU;
+    return int(wp);
+}
+
 bool MenuMessage(void* hwnd, uint32_t msg, uintptr_t wp, intptr_t lp, intptr_t* result) {
     (void)hwnd;
+    if (g_menu_open && g_listen >= 0) {
+        int vk = MessageKey(msg, wp, lp);
+        if (!vk) return false;
+        if (vk == VK_F1) {
+            g_listen = -1;
+        } else if (keyboard::Bind(size_t(g_listen.load()), vk)) {
+            g_listen = -1;
+            g_keys_changed = true;
+        }
+        *result = 0;
+        return true;
+    }
     if (msg != WM_KEYDOWN) return false;
     bool repeat = (lp & (1 << 30)) != 0;
     if (wp == VK_F1) {
@@ -495,7 +581,10 @@ void MenuPad(int port, const input::Pad& pad) {
         if (pressed & kDown) Push(Nav::Down);
         if (pressed & kLeft) Push(Nav::Left);
         if (pressed & kRight) Push(Nav::Right);
-        if (pressed & kStart) g_menu_open = false;
+        if (pressed & kStart) {
+            if (g_listen >= 0) g_listen = -1;
+            else g_menu_open = false;
+        }
         if (edge(0)) Push(Nav::Accept);
         if (edge(6) || edge(5)) Push(Nav::PrevTab);  // left trigger, White
         if (edge(7) || edge(4)) Push(Nav::NextTab);  // right trigger, Black

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -123,6 +124,14 @@ std::vector<Action> g_actions = {
     {"dpad_right", "D-pad right", kButton, kDpadRight, 0, {0x27}},
 };
 
+// the defaults, for RESET ALL; the lock keeps the menu's rebinding off the keys the game is reading
+const std::vector<std::vector<int>> kDefaults = [] {
+    std::vector<std::vector<int>> d;
+    for (const Action& a : g_actions) d.push_back(a.keys);
+    return d;
+}();
+std::mutex g_lock;
+
 #ifdef _WIN32
 HWND g_window = nullptr;
 
@@ -160,6 +169,7 @@ void ApplyToPad(int port, input::Pad& pad) {
     pad.connected = true;
     if (!Focused()) return;
 
+    std::lock_guard<std::mutex> l(g_lock);
     uint16_t b = 0;
     uint8_t an[8] = {};
     int axis[4][2] = {};  // [axis][negative, positive] held
@@ -215,6 +225,7 @@ void Load(const void* table) {
 void Save(void* table) {
 #if KEYBOARD_SETTINGS
     toml::table& t = *static_cast<toml::table*>(table);
+    std::lock_guard<std::mutex> l(g_lock);
     toml::table kb;
     for (const Action& a : g_actions) {
         toml::array arr;
@@ -229,6 +240,7 @@ void Save(void* table) {
 }
 
 std::vector<std::pair<std::string, std::string>> Bindings() {
+    std::lock_guard<std::mutex> l(g_lock);
     std::vector<std::pair<std::string, std::string>> out;
     for (const Action& a : g_actions) {
         std::string keys;
@@ -241,6 +253,20 @@ std::vector<std::pair<std::string, std::string>> Bindings() {
         out.push_back({a.label, keys.empty() ? "(none)" : keys});
     }
     return out;
+}
+
+bool Bind(size_t action, int vk) {
+    if (NameOf(vk).empty()) return false;
+    std::lock_guard<std::mutex> l(g_lock);
+    if (action >= g_actions.size()) return false;
+    for (Action& a : g_actions) a.keys.erase(std::remove(a.keys.begin(), a.keys.end(), vk), a.keys.end());
+    g_actions[action].keys = {vk};
+    return true;
+}
+
+void ResetAll() {
+    std::lock_guard<std::mutex> l(g_lock);
+    for (size_t i = 0; i < g_actions.size(); i++) g_actions[i].keys = kDefaults[i];
 }
 
 void WriteControlsFile() {
