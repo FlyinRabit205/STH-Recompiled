@@ -6,7 +6,7 @@
 #include "common/settings_menu.h"
 
 #ifndef SHADOW_PORT_VERSION
-#define SHADOW_PORT_VERSION "1.2"  // shown in the options menu
+#define SHADOW_PORT_VERSION "1.3"  // shown in the options menu
 #endif
 
 #include "common/keyboard.h"
@@ -185,6 +185,13 @@ std::vector<Row> GraphicsRows() {
                      Saved(false);
                  },
                  "Keeps ground and wall textures sharp when seen at an angle."});
+    r.push_back({"WIDESCREEN", [] { return std::string(g_widescreen ? "ON" : "OFF"); },
+                 [](int) {
+                     g_widescreen = !g_widescreen;
+                     Saved(false);
+                 },
+                 "Shows more to the sides on a widescreen display instead of stretching the 4:3 picture; the HUD keeps "
+                 "its shape. A change takes effect at the next stage or area."});
     r.push_back({"HD 3D WORLD", [] { return std::string(g_hd_scene ? "ON" : "OFF"); },
                  [](int) {
                      g_hd_scene = !g_hd_scene;

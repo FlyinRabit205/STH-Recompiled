@@ -1152,6 +1152,7 @@ void Draw(const State& s, uint32_t prim, uint32_t start, uint32_t count, const u
     auto input = [&](uint32_t v, int r) { return &as.vertices[(size_t(v) * regs + slot[r]) * 4]; };
     uint32_t gw = rt.ok ? rt.w : zs.w, gh = rt.ok ? rt.h : zs.h;
     std::vector<Shaded> verts(as.vertex_count);
+    const float squeeze = program ? 0.0f : gpu::HudSqueeze(as, gw, s.textures[0] != 0);  // widescreen 2D
     for (uint32_t vi = 0; vi < as.vertex_count; vi++) {
         VertexProgram vp{s};
         for (int r = 0; r < 16; r++) {
@@ -1176,7 +1177,7 @@ void Draw(const State& s, uint32_t prim, uint32_t start, uint32_t count, const u
         } else {
             const Vec& q = vp.in[0];
             if (as.pretransformed) {
-                o.pos = V(q[0], q[1], q[2] * s.zscale, q[3] == 0 ? 1 : 1 / q[3]);
+                o.pos = V(gpu::HudSqueezeX(q[0], squeeze, float(gw)), q[1], q[2] * s.zscale, q[3] == 0 ? 1 : 1 / q[3]);
             } else {
                 // world, view, projection, then the viewport, as the D3D12 path builds it
                 auto mul = [](const float* x, const float* y, float* r) {

@@ -59,4 +59,22 @@ void FvfInputs(uint32_t fvf, VertexShader& out);
 // indices: the title's 16 bit indices, null for an unindexed draw
 bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, const uint8_t* indices, Assembled& out);
 
+// ShadowNativePort widescreen: a 4:3 picture shown on a 16:9 screen with its 3D view widened (Hor+) still has its 2D
+// (screen space, XYZRHW) draws stretched. g_hud_squeeze (0 = off) narrows each such draw by that factor toward the
+// screen's centre, so the HUD and menus keep their shape. With g_hud_anchor_edges the anchor is picked per draw from
+// where it sits instead (left edge, centre, right edge): not usable yet, text is drawn one glyph per draw. Only draws
+// onto the 640 wide screen; draws spanning its whole width (the 3D scene, fades, movies, backgrounds) stay full width.
+extern float g_hud_squeeze;
+extern bool g_hud_anchor_edges;
+// this draw's code for the shaders, 0 for none: factor + 2 * anchor (0 left, 1 centre, 2 right)
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured);
+// the screen space x of a vertex after HudSqueeze's code
+inline float HudSqueezeX(float x, float code, float w) {
+    if (code <= 0) return x;
+    float anchor = float(int(code * 0.5f));
+    float f = code - 2 * anchor;
+    float pivot = w * 0.5f * anchor;
+    return pivot + (x - pivot) * f;
+}
+
 }  // namespace gpu

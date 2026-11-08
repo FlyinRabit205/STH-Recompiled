@@ -551,3 +551,21 @@ in-between frames.
 - Released v1.2 (user published it); #1 closed, #3 answered (left open). **Next for Shadow (after Heroes):** rebinding
   keys from inside the F1 menu (promised on #3), plus more QOL; cheats like duartepedro03 asked (max rings, fill
   Dark/Hero gauge) are a candidate.
+
+## Session 14 (2026-11-08): true widescreen (#4), test build v1.3
+- #4 (XenonCF): 4:3 picture stretched on 16:9. duartepedro03 also asks for the HUD at the screen edges.
+- **Hor+ 3D:** RwCameraSetViewWindow is at **0x2DD1C0** in Shadow (same bytes as Heroes' 0x2A4C20; window at camera
+  +0x68, reciprocal +0x70). Hook in src/game/hooks.cpp widens a 4:3 window by (16/9)/(4/3) once per camera (map
+  of the window it gave each camera, so the game re-setting it is not widened twice). Setting `widescreen` (default
+  on), menu GRAPHICS > WIDESCREEN (takes effect when the game next sets its cameras).
+- **2D:** SDK gpu/vertex.cpp `HudSqueeze` (+ shaders.cpp fixed-function XYZRHW path, d3d12 zparams.w, harness
+  reference renderer): screen-space draws onto the 640-wide screen that do not span its whole width are narrowed by
+  0.75 toward the centre. Full-width draws stay (the 3D scene is a full-screen quad from the 512x512 scene target onto
+  the back buffer; fades, movies). Targets other than 640 wide (scene 512, glow 256/128/64) untouched.
+  Edge anchoring (left/centre/right per draw) is coded behind `gpu::g_hud_anchor_edges` (off): text is drawn one
+  glyph per draw, so per-draw anchors would split centred lines. Needs string grouping, then the HUD can go to the
+  edges (duartepedro03's request).
+- **Untested:** the game data is no longer here (rungame gone, no ISO on the PC). Test build
+  /home/claude/release/Shadow-v1.3-test.zip (Shadow.exe, version 1.3) for the user / issue reporters.
+- Unknowns to check in the test: does the stage HUD draw onto the 640 screen (then it is narrowed) or into the 512
+  scene target like event 2D (then it stays stretched); any 4:3 render-to-texture camera widened by mistake.

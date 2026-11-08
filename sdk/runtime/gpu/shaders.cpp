@@ -787,6 +787,9 @@ std::string FixedVertexHlsl(uint16_t regs, bool pretransformed, uint64_t decode,
     if (pretransformed) {
         s += "    float4 rhw = " + v(0, "float4(0,0,0,1)") + ";\n";
         s += "    float w = rhw.w == 0 ? 1 : 1 / rhw.w;\n";
+        // HudSqueeze (zparams.w = factor + 2 * anchor: 0 left edge, 1 centre, 2 right edge)
+        s += "    if (zparams.w > 0) { float an = floor(zparams.w * 0.5); float pv = surf.x * 0.5 * an;"
+             " rhw.x = pv + (rhw.x - pv) * (zparams.w - 2 * an); }\n";
         s += "    oPos = float4(rhw.xy, rhw.z / surf.z, w);\n";
     } else {
         s += "    float4 ip = float4(" + v(0, "float4(0,0,0,1)") + ".xyz, 1);\n";

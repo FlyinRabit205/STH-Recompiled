@@ -696,6 +696,7 @@ private:
     void BuildPipelineKey(const State& s, const Assembled& a, uint64_t vh, uint64_t ph, PsoKey& k);
     void KeyDepthStencil(const State& s, const Assembled& a, PsoKey& k);
     ID3D12PipelineState* EnsurePipeline(const PsoKey& k, ID3DBlob* vs, ID3DBlob* ps);
+    float squeeze_ = 0;  // this draw's HudSqueeze code
     void FillPipelineDesc(const PsoKey& k, ID3DBlob* vs, ID3DBlob* ps, D3D12_GRAPHICS_PIPELINE_STATE_DESC& d) const;
     void ExpandPoints(D3D12_GRAPHICS_PIPELINE_STATE_DESC& d, bool sprite);
     float TargetScale() const;  // host pixels per console pixel of the bound target
@@ -2755,6 +2756,7 @@ void D3D12Backend::UploadConstants(const State& s, const DrawShaders& sh, const 
     FillCombinerConstants(s, c);
     if (ext_) ext_->Constants(reinterpret_cast<float(*)[4]>(vsc), c.ext, bound_rt_, k.blend ? k.src : 1);
     FillDepthConstants(s, sh, k, c);
+    c.zparams[3] = squeeze_;  // HudSqueeze, read by screen space fixed function vertices
     FillTextureConstants(s, sh, stages, c);
     if (sh.fixed_transform) {
         FillTransformConstants(s, size, c);
@@ -3161,6 +3163,7 @@ void D3D12Backend::Draw(const State& s, uint32_t prim, uint32_t start, uint32_t 
     GuestExtent size;
     SurfaceSize(bound_rt_ ? s.rt : s.zs, size.w, size.h);
     DrawConstants c{};
+    squeeze_ = sh.prog ? 0.0f : HudSqueeze(a, size.w, s.textures[0] != 0);
     UploadConstants(s, sh, k, stages, size, c);
     if (ext_) binds_ = {};
 

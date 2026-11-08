@@ -6,6 +6,8 @@
 namespace shadow {
 extern bool g_skip_cutscenes;  // src/game/hooks.cpp
 extern bool g_cutscene_60;     // src/game/hooks.cpp
+extern bool g_widescreen;      // src/game/hooks.cpp
+void ApplyWidescreen();
 }
 
 // what the runtime asks of the game; strings must be set, hooks may stay null
@@ -18,14 +20,14 @@ const app::GameInfo app::kGame = {
     .splash = L"splash",                  // optional splash.png or splash.bmp beside the exe
     .missing = L"Put the game in the assets folder: its disc image (.iso), or default.xbe with its folders beside it.",
     .images = {{"default.xbe", "Shadow"}},  // each recompiled xbe and its exe, for title launches
-    .options = {{"keyboard", &keyboard::g_enabled, nullptr}, {"skip_cutscenes", &shadow::g_skip_cutscenes, nullptr}, {"cutscene_60fps", &shadow::g_cutscene_60, nullptr}, {"hd_scene", &shadow::g_hd_scene, nullptr}, {"show_fps", &shadow::g_show_fps, nullptr}},                        // game settings kept in the settings file
+    .options = {{"keyboard", &keyboard::g_enabled, nullptr}, {"skip_cutscenes", &shadow::g_skip_cutscenes, nullptr}, {"cutscene_60fps", &shadow::g_cutscene_60, nullptr}, {"hd_scene", &shadow::g_hd_scene, nullptr}, {"show_fps", &shadow::g_show_fps, nullptr}, {"widescreen", &shadow::g_widescreen, nullptr}},                        // game settings kept in the settings file
     .load = keyboard::Load,               // [keyboard_bindings] from the settings file's toml::table
     .save = keyboard::Save,               // and back into it
-    .init = [] { keyboard::WriteControlsFile(); shadow::InitRender(); },                      // after the settings load, before the window and boot
+    .init = [] { keyboard::WriteControlsFile(); shadow::InitRender(); shadow::ApplyWidescreen(); },                      // after the settings load, before the window and boot
     .loaded = nullptr,                    // image in memory, before its entry point runs
     .window = [](void* hwnd) { keyboard::OnWindow(hwnd); shadow::MenuWindow(hwnd); },                    // the game window is up
     .message = shadow::MenuMessage,                   // window messages first; true takes one
-    .ui = shadow::MenuUi,                        // ImGui drawing each frame
+    .ui = [](double fps) { shadow::ApplyWidescreen(); shadow::MenuUi(fps); },                        // ImGui drawing each frame
     .pad = [](int port, input::Pad& pad) {
         shadow::MenuPad(port, pad);  // controller drives the menu (before keyboard keys are merged in)
         keyboard::ApplyToPad(port, pad);

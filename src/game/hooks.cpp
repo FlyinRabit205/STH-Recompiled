@@ -153,3 +153,56 @@ X86_HOST_API void ShadowEventSkippable(X86Context& ctx, uint8_t* base) {
     (void)base;
     if (shadow::g_skip_cutscenes) ctx.eax = (ctx.eax & ~0xFFu) | 1u;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// True widescreen (Hor+, issue #4). The game draws a 4:3 view, which a 16:9 screen stretched. RwCameraSetViewWindow
+// (002DD1C0, cdecl camera, const RwV2d*: stores the window at camera + 0x68, its reciprocal at + 0x70, then syncs the
+// camera's frame; the same RenderWare code as Sonic Heroes) runs as before, then a 4:3 window is widened to the
+// screen's shape: the same height, more to the left and right, nothing stretched. Other shapes (render to texture
+// views) stay as the game asks. The 2D side (HUD, text, menus) is narrowed back to its 4:3 shape in the middle by
+// gpu::g_hud_squeeze (sdk/runtime/gpu/vertex.cpp). settings.toml: widescreen; the menu switch takes effect when the
+// game next sets its cameras (a new stage or area).
+// ---------------------------------------------------------------------------------------------------------------
+#include <mutex>
+#include <unordered_map>
+
+#include "gpu/vertex.h"
+
+namespace shadow {
+bool g_widescreen = true;
+// the frame is shown 16:9 when the output is widescreen (sdk/runtime/gpu/d3d12.cpp, Present)
+constexpr float kWide = (16.0f / 9.0f) / (4.0f / 3.0f);
+void ApplyWidescreen() { gpu::g_hud_squeeze = g_widescreen && app::Widescreen() ? 1.0f / kWide : 0.0f; }
+}  // namespace shadow
+
+X86_EXTERN_FUNC(__imp__sub_002DD1C0);
+X86_FUNC(sub_002DD1C0) {
+    uint32_t camera = kernel::R32(ctx.esp + 4), window = kernel::R32(ctx.esp + 8);
+    float asked = 0;
+    if (window) {
+        uint32_t v = kernel::R32(window);
+        std::memcpy(&asked, &v, 4);
+    }
+    __imp__sub_002DD1C0(ctx, base);
+    shadow::ApplyWidescreen();
+    if (!shadow::g_widescreen || !app::Widescreen() || !camera) return;
+    // the window this hook last gave each camera: the game handing it back (it re-sets a camera from its own
+    // fields) must not be widened a second time
+    static std::mutex lock;
+    static std::unordered_map<uint32_t, float> given;
+    std::lock_guard<std::mutex> l(lock);
+    auto it = given.find(camera);
+    if (it != given.end() && it->second == asked) return;
+    float x, y;
+    uint32_t xr = kernel::R32(camera + 0x68), yr = kernel::R32(camera + 0x6C);
+    std::memcpy(&x, &xr, 4);
+    std::memcpy(&y, &yr, 4);
+    if (!(x > 0 && y > 0) || std::fabs(x / y - 4.0f / 3.0f) > 0.03f) return;
+    x *= shadow::kWide;
+    float rx = 1.0f / x;
+    std::memcpy(&xr, &x, 4);
+    kernel::W32(camera + 0x68, xr);
+    std::memcpy(&xr, &rx, 4);
+    kernel::W32(camera + 0x70, xr);
+    given[camera] = x;
+}

@@ -472,4 +472,47 @@ bool Assemble(const State& s, uint32_t prim, uint32_t start, uint32_t count, con
     return AssembleConverted(s, inputs, d, out);
 }
 
+float g_hud_squeeze = 0;
+bool g_hud_anchor_edges = false;
+
+float HudSqueeze(const Assembled& a, uint32_t w, bool textured) {
+    // the screen only (640 wide): Shadow's 3D scene, glow and blur targets (512 and smaller) are left alone
+    if (g_hud_squeeze <= 0 || !a.pretransformed || !(a.regs & 1) || w != 640) return 0;
+    float lo = 1e30f, hi = -1e30f;
+    auto add = [&](float x) {
+        lo = std::min(lo, x);
+        hi = std::max(hi, x);
+    };
+    if (!a.vertices.empty()) {
+        uint32_t regs = 0;
+        for (int r = 0; r < 16; r++) regs += (a.regs >> r) & 1;
+        for (uint32_t v = 0; v < a.vertex_count && v < 8192; v++) add(a.vertices[size_t(v) * regs * 4]);
+    } else {
+        const VertexElement& e = a.elements[0];
+        const VertexBuffer& b = a.buffers[e.buffer];
+        if (!b.src || !b.stride || (e.format != DXGI_FORMAT_R32G32B32A32_FLOAT && e.format != DXGI_FORMAT_R32G32B32_FLOAT))
+            return 0;
+        uint32_t n = std::min<uint32_t>(b.bytes / b.stride, 8192);
+        for (uint32_t v = 0; v < n; v++) {
+            float x;
+            std::memcpy(&x, b.src + size_t(v) * b.stride + e.offset, 4);
+            add(x);
+        }
+    }
+    if (!(hi > lo)) return 0;
+    // over the whole width: the 3D scene stretched onto the screen, fades, movies, backgrounds: left full screen
+    if (lo <= w * 0.02f && hi >= w * 0.98f) return 0;
+    (void)textured;
+    // Anchor: the centre for every draw for now. Shadow draws text one glyph per draw, so picking the left or right
+    // edge per draw would pull a centred line's first letters away from the rest; edge anchoring needs whole strings
+    // (consecutive glyphs on one line) grouped first. g_hud_anchor_edges turns the per-draw choice on for testing.
+    int anchor = 1;
+    if (g_hud_anchor_edges) {
+        float c = (lo + hi) * 0.5f;
+        if (c < w * 0.4f) anchor = 0;
+        else if (c > w * 0.6f) anchor = 2;
+    }
+    return std::min(g_hud_squeeze, 0.999f) + 2.0f * float(anchor);
+}
+
 }  // namespace gpu
