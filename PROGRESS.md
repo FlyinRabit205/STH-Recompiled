@@ -608,3 +608,9 @@ in-between frames.
   the frame as an overlay screen -> centre anchor; HUD signature now needs a matching pair of top bars (same top
   within 8 px, widths within 20%). The ten full-height strips after the HUD are the game's column wipe fade (outer
   columns fade last by design); left untouched since round 2. Installed round 4 (exe 6912000).
+- 13:45 captures (round 4): dialog text inside the box, title card whole and centred, stage HUD at edges.
+  User wants everything that sat at a 4:3 edge to sit at the widescreen edge, menus too. Round 5: menu/overlay blocks
+  are grouped by touching (8 px slack, union find); a group within 10% of a 4:3 edge and at most 35% of the screen
+  each way goes to that edge, the rest stays centred (dialog with frame and prompts, title logo, card lines stay
+  whole). Checked offline on the captures: "loading" goes right; title/dialog/grid stay whole. Stage HUD rules
+  unchanged. Installed (exe 6913536).

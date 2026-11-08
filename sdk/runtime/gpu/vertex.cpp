@@ -493,6 +493,7 @@ struct Block {
     float lo, hi, top, bottom;             // the block's extent
     float last_lo, last_hi, last_top, last_bottom;  // its last piece
     uint64_t key;
+    bool menu;                             // drawn on a menu / overlay screen (not the stage HUD)
 };
 
 struct HudLayout {
@@ -516,6 +517,48 @@ int RootAnchor(const Block& b, float w) {
     return 1;
 }
 
+// On menus and overlay screens pieces that touch (within 8 pixels) form groups; a group within 10% of a screen edge
+// in the 4:3 layout, and no bigger than 35% of the screen each way, goes to that edge as one (an icon with its label, the
+// "loading" text); the rest keeps the centre (a dialog with its frame, a title logo made of overlapping parts).
+std::vector<int> MenuAnchors(const std::vector<Block>& all, float w) {
+    size_t n = all.size();
+    std::vector<size_t> parent(n);
+    for (size_t i = 0; i < n; i++) parent[i] = i;
+    auto find = [&](size_t i) {
+        while (parent[i] != i) i = parent[i] = parent[parent[i]];
+        return i;
+    };
+    const float slack = 8;
+    for (size_t i = 0; i < n; i++) {
+        if (!all[i].menu) continue;
+        for (size_t j = i + 1; j < n; j++) {
+            if (!all[j].menu) continue;
+            const Block &a = all[i], &b = all[j];
+            if (a.lo < b.hi + slack && b.lo < a.hi + slack && a.top < b.bottom + slack && b.top < a.bottom + slack)
+                parent[find(i)] = find(j);
+        }
+    }
+    std::vector<float> lo(n, 1e30f), hi(n, -1e30f), top(n, 1e30f), bottom(n, -1e30f);
+    for (size_t i = 0; i < n; i++) {
+        if (!all[i].menu) continue;
+        size_t r = find(i);
+        lo[r] = std::min(lo[r], all[i].lo);
+        hi[r] = std::max(hi[r], all[i].hi);
+        top[r] = std::min(top[r], all[i].top);
+        bottom[r] = std::max(bottom[r], all[i].bottom);
+    }
+    std::vector<int> out(n, 1);
+    for (size_t i = 0; i < n; i++) {
+        if (!all[i].menu) continue;
+        size_t r = find(i);
+        // small groups only (labels, prompts, icons): a decoration line or panel crossing the screen stays whole
+        if (hi[r] - lo[r] > w * 0.35f || bottom[r] - top[r] > 480 * 0.35f) continue;
+        if (lo[r] < w * 0.1f) out[i] = 0;
+        else if (hi[r] > w * 0.9f) out[i] = 2;
+    }
+    return out;
+}
+
 }  // namespace
 
 void HudFrameEnd() {
@@ -523,11 +566,12 @@ void HudFrameEnd() {
     HudLayout& L = g_layout;
     L.anchors.clear();
     std::vector<int> got(L.blocks.size(), 1);
+    const std::vector<int> menu = MenuAnchors(L.blocks, 640.0f);
     for (size_t i = 0; i < L.blocks.size(); i++) {
         const Block& b = L.blocks[i];
         int anchor = -1;
         // the latest earlier block holding this one (a panel and its text), with a little slack
-        for (size_t j = i; j-- > 0;) {
+        for (size_t j = i; j-- > 0 && !b.menu;) {
             const Block& c = L.blocks[j];
             if (c.lo <= b.lo + 2 && c.hi >= b.hi - 2 && c.top <= b.top + 2 && c.bottom >= b.bottom - 2 &&
                 (c.hi - c.lo) * (c.bottom - c.top) > (b.hi - b.lo) * (b.bottom - b.top) * 1.2f) {
@@ -535,7 +579,7 @@ void HudFrameEnd() {
                 break;
             }
         }
-        if (anchor < 0) anchor = RootAnchor(b, 640.0f);
+        if (anchor < 0) anchor = b.menu ? menu[i] : RootAnchor(b, 640.0f);
         got[i] = anchor;
         L.anchors[b.key] = anchor;
     }
@@ -634,16 +678,18 @@ float HudSqueeze(const Assembled& a, uint32_t w, bool textured, uint32_t tex, bo
         open->bottom = std::max(open->bottom, bottom);
         open->last_lo = lo, open->last_hi = hi, open->last_top = top, open->last_bottom = bottom;
     } else {
-        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top)};
+        Block b{tex, lo, hi, top, bottom, lo, hi, top, bottom, KeyOf(tex, lo, top), !L.scene_last || L.overlay};
         L.blocks.push_back(b);
         open = &L.blocks.back();
         L.current = b.key;
     }
     int anchor = 1;
-    if (g_hud_anchor_edges && L.scene_last && !L.overlay) {
+    if (g_hud_anchor_edges) {
         auto it = L.anchors.find(open->key);
-        // a block not seen last frame (new, or moving): from where its first piece is
-        anchor = it != L.anchors.end() ? it->second : RootAnchor(*open, float(w));
+        if (it != L.anchors.end()) anchor = it->second;
+        // a stage HUD block not seen last frame (new, or moving): from where its first piece is; on menus the
+        // centre until the whole screen has been seen once
+        else if (!open->menu) anchor = RootAnchor(*open, float(w));
     }
     return std::min(g_hud_squeeze, 0.999f) + 2.0f * float(anchor);
 }
