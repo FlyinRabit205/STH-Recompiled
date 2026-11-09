@@ -684,3 +684,6 @@ in-between frames.
 - **v2.0 headline: Shadow The Hedgehog: Reloaded support** (fan mod for the GameCube version; issue #5 asked for it).
   Big project: Reloaded targets the GameCube build (Dolphin), this port the Xbox build, so its data and code changes
   would have to be mapped across. Sidelined until after 1.x.
+  Source: github.com/ShadowTheHedgehogHacking/ShdTH-Reloaded (code/, workspace/ to build; AFS + ISO EDITS assets;
+  releases are xdelta patches per region; v1.2 final, 2024-07-01). No license stated: ask the authors before
+  shipping their code/assets, credit them. Follow-up posted on #5 (planned for 2.0).
