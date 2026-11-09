@@ -685,5 +685,6 @@ in-between frames.
   Big project: Reloaded targets the GameCube build (Dolphin), this port the Xbox build, so its data and code changes
   would have to be mapped across. Sidelined until after 1.x.
   Source: github.com/ShadowTheHedgehogHacking/ShdTH-Reloaded (code/, workspace/ to build; AFS + ISO EDITS assets;
-  releases are xdelta patches per region; v1.2 final, 2024-07-01). No license stated: ask the authors before
-  shipping their code/assets, credit them. Follow-up posted on #5 (planned for 2.0).
+  releases are xdelta patches per region; v1.2 final, 2024-07-01). Approach (user): we ship NONE of Reloaded's code or
+  assets (like the texture pack): the port gains a mods folder; users drop in their own copy of Reloaded and turn it
+  on themselves; we add the support and test it heavily. Credit the Reloaded team. Follow-up posted on #5 (planned for 2.0).
