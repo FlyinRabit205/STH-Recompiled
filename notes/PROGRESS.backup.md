@@ -678,3 +678,9 @@ in-between frames.
   shadow_048; next launch fine. Watch for repeats.
 - **Test package** ShadowNativePort-v1.3-test-Windows.zip (make_release.sh 1.3-test): full Setup package, since the
   exe now overrides sub_002DD1C0 (Hor+ camera) which v1.2's compiler/Shadow.lib does not import.
+
+### Roadmap (user, 2026-11-09)
+- **v1.3**: true widescreen + in-menu key rebinding (test build out on #4, waiting for testers).
+- **v2.0 headline: Shadow The Hedgehog: Reloaded support** (fan mod for the GameCube version; issue #5 asked for it).
+  Big project: Reloaded targets the GameCube build (Dolphin), this port the Xbox build, so its data and code changes
+  would have to be mapped across. Sidelined until after 1.x.
