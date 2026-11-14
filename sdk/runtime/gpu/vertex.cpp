@@ -524,7 +524,23 @@ struct HudLayout {
     bool overlay = false;          // a full height cover was drawn this frame
     bool open = false;             // the last block may take the next piece
     int hud_frames = 0;            // recent frames with the stage HUD: > 0 for a few frames after one
+    // placements remembered per piece (texture, text or not, place to 32 pixels): a new placement takes over only
+    // after kSettle frames in a row, so animated menus (buttons growing on a press) don't jump between anchors
+    struct Kept {
+        float pivot, wanted;
+        int frames = 0;        // frames in a row the layout wanted `wanted`
+        uint64_t seen = 0;     // the frame it was last laid out
+    };
+    std::unordered_map<uint64_t, Kept> kept;
+    std::unordered_map<uint64_t, float> proposed;  // this frame's placements, settled at its end
+    uint64_t frame = 0;
 };
+constexpr int kSettle = 6;
+uint64_t PieceKey(const Block& b) {
+    auto cell = [](float v) { return uint64_t(int64_t(std::floor(v / 32.0f)) & 0xFFFF); };
+    return (uint64_t(b.tex) << 32) ^ (cell((b.lo + b.hi) * 0.5f) << 16) ^ cell((b.top + b.bottom) * 0.5f) ^
+           (b.projected ? 0x8000000000000000ull : 0) ^ (b.cover ? 0x4000000000000000ull : 0);
+}
 HudLayout g_layout;
 std::mutex g_layout_lock;
 
@@ -637,6 +653,28 @@ void Layout(HudLayout& L) {
         top[r] = std::min(top[r], all[i].top), bottom[r] = std::max(bottom[r], all[i].bottom);
     }
     const float kEdge[3] = {-64.0f, w * 0.5f, w + 64.0f};  // past the safe area margin: at the very edges
+    // the stage HUD: pieces that touch are one element (a boss bar and its end caps) and take one anchor
+    std::vector<size_t> sp(n);
+    for (size_t i = 0; i < n; i++) sp[i] = i;
+    auto sfind = [&](size_t i) {
+        while (sp[i] != i) i = sp[i] = sp[sp[i]];
+        return i;
+    };
+    for (size_t i = 0; i < n; i++) {
+        if (menu(i) || all[i].projected) continue;
+        for (size_t j = i + 1; j < n; j++)
+            if (!menu(j) && !all[j].projected && Touch(all[i], all[j], 2)) sp[sfind(i)] = sfind(j);
+    }
+    std::vector<Block> sbox(n);
+    std::vector<bool> sset(n, false);
+    for (size_t i = 0; i < n; i++) {
+        if (menu(i) || all[i].projected) continue;
+        size_t r = sfind(i);
+        if (!sset[r]) sbox[r] = all[i], sset[r] = true;
+        Block& g = sbox[r];
+        g.lo = std::min(g.lo, all[i].lo), g.hi = std::max(g.hi, all[i].hi);
+        g.top = std::min(g.top, all[i].top), g.bottom = std::max(g.bottom, all[i].bottom);
+    }
     std::vector<int> got(n, 1);
     for (size_t i = 0; i < n; i++) {
         const Block& b = all[i];
@@ -665,7 +703,7 @@ void Layout(HudLayout& L) {
                     break;
                 }
             }
-            if (anchor < 0) anchor = RootAnchor(b, w);
+            if (anchor < 0) anchor = RootAnchor(b.projected ? b : sbox[sfind(i)], w);
             got[i] = anchor;
             pivot[i] = kEdge[anchor];
         }
@@ -690,6 +728,12 @@ void Layout(HudLayout& L) {
     // the game's text: the console is reported in 16:9 mode, so the game already draws its text narrowed for a wide
     // screen (x * 0.75, about the left edge). Its glyphs keep that width; the text only moves to where its block's
     // placement puts it: x43 = x / 0.75 placed by the pivot P, P + (x43 - P) * f = x * f / 0.75 + P * (1 - f)
+    for (size_t i = 0; i < n; i++) {
+        uint64_t k = PieceKey(all[i]);
+        L.proposed[k] = pivot[i];
+        auto it = L.kept.find(k);
+        if (it != L.kept.end()) pivot[i] = it->second.pivot;
+    }
     constexpr float kGameWide = 0.75f;
     for (size_t i = 0; i < n; i++) {
         const Block& b = all[i];
@@ -815,6 +859,26 @@ void HudFrameEnd() {
         if (HudBars(L.blocks, 640.0f)) L.hud_frames = 3;
         else if (L.hud_frames > 0) L.hud_frames--;
     }
+    L.frame++;
+    for (auto& [k, want] : L.proposed) {
+        auto it = L.kept.find(k);
+        if (it == L.kept.end()) {
+            L.kept[k] = {want, want, 0, L.frame};
+            continue;
+        }
+        HudLayout::Kept& kp = it->second;
+        kp.seen = L.frame;
+        if (want == kp.pivot) {
+            kp.frames = 0;
+        } else if (want == kp.wanted) {
+            if (++kp.frames >= kSettle) kp.pivot = want, kp.frames = 0;
+        } else {
+            kp.wanted = want, kp.frames = 1;
+        }
+    }
+    L.proposed.clear();
+    if (L.frame % 60 == 0)
+        for (auto it = L.kept.begin(); it != L.kept.end();) it = L.frame - it->second.seen > 120 ? L.kept.erase(it) : std::next(it);
     L.blocks.clear();
     L.results.clear();
     L.overlay = false;

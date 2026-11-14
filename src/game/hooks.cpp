@@ -172,7 +172,17 @@ namespace shadow {
 bool g_widescreen = true;
 // the frame is shown 16:9 when the output is widescreen (sdk/runtime/gpu/d3d12.cpp, Present)
 constexpr float kWide = (16.0f / 9.0f) / (4.0f / 3.0f);
-void ApplyWidescreen() { gpu::g_hud_squeeze = g_widescreen && app::Widescreen() ? 1.0f / kWide : 0.0f; }
+void ApplyWidescreen() {
+    gpu::g_hud_squeeze = g_widescreen && app::Widescreen() ? 1.0f / kWide : 0.0f;
+    static int last = -1;
+    int now = g_widescreen ? (app::Widescreen() ? 2 : 1) : 0;
+    if (now != last) {
+        last = now;
+        app::Mode m = app::Output();
+        LOGI("widescreen: %s (output %ux%u)", now == 2 ? "on" : now == 1 ? "on, but the output is not wide (4:3 shown)" : "off",
+             m.width, m.height);
+    }
+}
 }  // namespace shadow
 
 X86_EXTERN_FUNC(__imp__sub_002DD1C0);
@@ -205,4 +215,9 @@ X86_FUNC(sub_002DD1C0) {
     std::memcpy(&xr, &rx, 4);
     kernel::W32(camera + 0x70, xr);
     given[camera] = x;
+    static int logged = 0;
+    if (logged < 8) {
+        logged++;
+        LOGI("widescreen: camera %08X view window %.4f x %.4f widened to %.4f", camera, x / shadow::kWide, y, x);
+    }
 }

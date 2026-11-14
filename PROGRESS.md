@@ -688,3 +688,18 @@ in-between frames.
   releases are xdelta patches per region; v1.2 final, 2024-07-01). Approach (user): we ship NONE of Reloaded's code or
   assets (like the texture pack): the port gains a mods folder; users drop in their own copy of Reloaded and turn it
   on themselves; we add the support and test it heavily. Credit the Reloaded team. Follow-up posted on #5 (planned for 2.0).
+
+### Session 16 (2026-11-14): tester feedback on #4 (test2), test3
+- Popularity: v1.2 Windows 206 / Linux 51 downloads, Reddit top referrer, on RecompLauncher (+ a YouTube video).
+- #7 (Linux via RecompLauncher, "Wine is not installed"): replied with Wine 9 / Proton steps.
+- #6 (duartepedro03): cheats (max rings, fill Hero/Dark gauge) + invert camera X/Y options: to do.
+- #4 testers (test2): text wobbling/resizing when pressing buttons, UI shifting on some frames, boss health bar
+  broken, XenonCF "still stretched".
+  - Boss bar (XenonCF capture 115604): body centred but its end caps (separate blocks) went to the screen edges ->
+    stage HUD pieces that touch (2 px) are one group and take the anchor of the group's box.
+  - Wobble/shift: the round 7 sticky pivots were lost in the same-frame rewrite; layout memory back: per piece
+    (texture, text flag, cover flag, centre to 32 px) the kept pivot changes only when a new one is wanted
+    kSettle = 6 frames in a row; entries dropped after 120 unseen frames.
+  - Logs: "widescreen: on/off (output WxH)" and the first camera widenings, to tell a toggle-off / mid-stage toggle
+    / odd display from a real bug next time ("still stretched").
+- test3 zip = release exe + compiler/Shadow.lib (Shadow-v1.3-test3.zip).
